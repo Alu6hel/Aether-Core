@@ -77,14 +77,87 @@ class GameApp {
             if (menuHubModal) menuHubModal.classList.remove('hidden');
         }
 
-        // 5. Start 60 FPS Game Loop
+        // 5. Render Pixel Art Canvases & Update UI Visibility
+        this.renderUIPixelCanvases();
+        this.updateTouchControlsVisibility();
+
+        // 6. Start 60 FPS Game Loop
         this.lastTime = performance.now();
         requestAnimationFrame(this.loop.bind(this));
 
-        // 6. Sync with edge gateway in background
+        // 7. Sync with edge gateway in background
         this.edgeClient.mintWorldCoin(this.currentSeed).then(res => {
             console.log("[EDGE SYNC]", res);
         });
+    }
+
+    renderUIPixelCanvases() {
+        const pal = this.currentMap ? this.currentMap.palette.colors : ['#0a0a0f', '#1e2430', '#37474f', '#607d8b', '#00e5ff', '#ff9800', '#ffd54f', '#ffffff'];
+        
+        // 1. Guide Portrait (Chief Overseer Vance from Image 4 reference)
+        const guideCanvas = document.getElementById('guide-portrait-canvas');
+        if (guideCanvas) {
+            const ctx = guideCanvas.getContext('2d');
+            const portrait = this.renderer.sprites.getPortrait('OVERSEER', pal);
+            ctx.imageSmoothingEnabled = false;
+            ctx.clearRect(0, 0, 48, 48);
+            ctx.drawImage(portrait, 0, 0, 48, 48);
+        }
+
+        // 2. Class Card Canvases
+        const cWarrior = document.getElementById('canvas-warrior');
+        if (cWarrior) {
+            const ctx = cWarrior.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            ctx.clearRect(0, 0, 32, 32);
+            ctx.drawImage(this.renderer.sprites.getClassPreview('SUPER_SOLDIER'), 0, 0);
+        }
+
+        const cMage = document.getElementById('canvas-mage');
+        if (cMage) {
+            const ctx = cMage.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            ctx.clearRect(0, 0, 32, 32);
+            ctx.drawImage(this.renderer.sprites.getClassPreview('TECHNO_MAGE'), 0, 0);
+        }
+
+        const cFarmer = document.getElementById('canvas-farmer');
+        if (cFarmer) {
+            const ctx = cFarmer.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            ctx.clearRect(0, 0, 32, 32);
+            ctx.drawImage(this.renderer.sprites.getClassPreview('FARMER_GOD'), 0, 0);
+        }
+
+        // 3. Gold Coin Medallion
+        const cCoin = document.getElementById('canvas-coin');
+        if (cCoin) {
+            const ctx = cCoin.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            ctx.clearRect(0, 0, 16, 16);
+            ctx.drawImage(this.renderer.sprites.getCoinSprite(), 0, 0);
+        }
+
+        // 4. Pioneer Mini Icon
+        const cPioneer = document.getElementById('canvas-pioneer-icon');
+        if (cPioneer && this.player) {
+            const ctx = cPioneer.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            ctx.clearRect(0, 0, 20, 20);
+            ctx.drawImage(this.renderer.sprites.getClassPreview(this.player.charClass), 0, 0, 20, 20);
+        }
+    }
+
+    updateTouchControlsVisibility() {
+        const touchControls = document.getElementById('touch-controls');
+        if (!touchControls) return;
+
+        const anyModalOpen = document.querySelector('.game-modal:not(.hidden)');
+        if (anyModalOpen || this.screens.currentScreen !== 'GAMEPLAY') {
+            touchControls.classList.add('controls-hidden');
+        } else {
+            touchControls.classList.remove('controls-hidden');
+        }
     }
 
     loadNewWorld(seed) {
@@ -104,6 +177,7 @@ class GameApp {
             hubTickerInfo.innerText = `${this.currentMap.bondingCurve.ticker} • SEED: 0x${seed.toString(16).toUpperCase()}`;
         }
 
+        this.renderUIPixelCanvases();
         this.updateHUD();
         this.saveState();
     }
@@ -120,6 +194,7 @@ class GameApp {
                 layerBadge.style.background = "#4a148c";
                 layerBadge.style.color = "#ea80fc";
             }
+            if (this.soundEnabled && this.bgmEnabled) this.renderer.audio.startBgm('SUB_CORE');
         } else {
             this.currentMap = this.surfaceMap;
             const caveExit = this.surfaceMap.caveEntrance;
@@ -130,6 +205,7 @@ class GameApp {
                 layerBadge.style.background = "#2a3b4c";
                 layerBadge.style.color = "#64b5f6";
             }
+            if (this.soundEnabled && this.bgmEnabled) this.renderer.audio.startBgm('OVERWORLD');
         }
         if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(330, 'sine', 0.2, 0.1);
         this.updateHUD();
@@ -185,26 +261,26 @@ class GameApp {
     }
 
     setupTouchControls() {
-        // D-Pad
+        // D-Pad with multi-directional touch slide support
         const dpadButtons = document.querySelectorAll('.dpad-btn');
         dpadButtons.forEach(btn => {
             const dir = btn.getAttribute('data-dir');
             const press = (e) => {
-                e.preventDefault();
+                if (e.cancelable) e.preventDefault();
                 this.touchDirs[dir] = true;
                 btn.classList.add('pressed');
                 this.renderer.audio.init();
             };
             const release = (e) => {
-                e.preventDefault();
+                if (e.cancelable) e.preventDefault();
                 this.touchDirs[dir] = false;
                 btn.classList.remove('pressed');
             };
             btn.addEventListener('touchstart', press, { passive: false });
             btn.addEventListener('touchend', release, { passive: false });
-            btn.addEventListener('mousedown', press);
-            btn.addEventListener('mouseup', release);
-            btn.addEventListener('mouseleave', release);
+            btn.addEventListener('pointerdown', press);
+            btn.addEventListener('pointerup', release);
+            btn.addEventListener('pointerleave', release);
         });
 
         // Action Buttons: C (Dash), B (Parry), A (Attack / Examine)
@@ -215,12 +291,11 @@ class GameApp {
         const bindAction = (elem, cb) => {
             if (!elem) return;
             const act = (e) => {
-                e.preventDefault();
+                if (e.cancelable) e.preventDefault();
                 this.renderer.audio.init();
                 cb();
             };
-            elem.addEventListener('touchstart', act, { passive: false });
-            elem.addEventListener('click', act);
+            elem.addEventListener('pointerdown', act);
         };
 
         // A Button: Context-sensitive (Attack or Examine)
@@ -260,21 +335,24 @@ class GameApp {
 
         const btnRandomName = document.getElementById('btn-random-name');
         if (btnRandomName) {
-            btnRandomName.addEventListener('click', () => {
+            btnRandomName.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 const names = ['ALU-01', 'CIPHER-9', 'CHRONO-X', 'NEO-PIONEER', 'DYSON-VALKYRIE', 'VOID-WALKER', 'SOL-7', 'NEXUS-PRIME', 'HARVESTER-OMEGA'];
                 const picked = names[Math.floor(Math.random() * names.length)];
                 callsignInput.value = picked;
                 this.pioneerName = picked;
-                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(480, 'sine', 0.1, 0.08);
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playRoll();
             });
         }
 
         // Setup Class Selection Cards
         const cards = document.querySelectorAll('.class-card');
         cards.forEach(card => {
-            card.addEventListener('click', () => {
+            card.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 const targetClass = card.getAttribute('data-class');
                 if (targetClass === 'FARMER_GOD' && !this.isFarmerUnlocked) {
+                    if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
                     alert("🌾 The Farmer is locked! Discover the ancient 3x3 arable plot beneath the sub-bedrock reactor, or use Dev Tools to awaken the Deific Harvester.");
                     return;
                 }
@@ -285,16 +363,18 @@ class GameApp {
                 if (this.player) {
                     this.player.charClass = targetClass;
                     this.player.applyClassStats();
+                    this.renderUIPixelCanvases();
                     this.updateHUD();
                 }
-                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(550, 'triangle', 0.15, 0.1);
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuMove();
             });
         });
 
         // Setup Confirm Button -> Moves to Menu Hub
         const btnConfirmSetup = document.getElementById('btn-confirm-setup');
         if (btnConfirmSetup) {
-            btnConfirmSetup.addEventListener('click', () => {
+            btnConfirmSetup.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 if (callsignInput && callsignInput.value.trim()) {
                     this.pioneerName = callsignInput.value.trim().toUpperCase();
                 }
@@ -306,7 +386,8 @@ class GameApp {
                 document.getElementById('setup-modal').classList.add('hidden');
                 document.getElementById('menu-hub-modal').classList.remove('hidden');
                 this.screens.currentScreen = 'MENU';
-                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCoin();
+                this.updateTouchControlsVisibility();
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
             });
         }
 
@@ -322,15 +403,23 @@ class GameApp {
         // 1. Menu Hub Modal Controls
         const menuHubModal = document.getElementById('menu-hub-modal');
         const menuClose = document.getElementById('menu-close');
-        if (menuClose) menuClose.addEventListener('click', () => this.toggleMenuHub());
+        if (menuClose) {
+            menuClose.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                this.toggleMenuHub();
+            });
+        }
 
         // Hub: Start Game
         const hubStartGame = document.getElementById('hub-start-game');
         if (hubStartGame) {
-            hubStartGame.addEventListener('click', () => {
+            hubStartGame.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 menuHubModal.classList.add('hidden');
                 this.screens.currentScreen = 'GAMEPLAY';
-                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(600, 'triangle', 0.2, 0.1);
+                this.updateTouchControlsVisibility();
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
+                if (this.soundEnabled && this.bgmEnabled) this.renderer.audio.startBgm(this.currentLayer);
                 
                 // Play intro cutscene if not yet completed
                 if (!this.cutscenes.isComplete && this.cutscenes.activeSequence.length === 0) {
@@ -344,7 +433,8 @@ class GameApp {
         // Hub: Market
         const hubOpenMarket = document.getElementById('hub-open-market');
         if (hubOpenMarket) {
-            hubOpenMarket.addEventListener('click', () => {
+            hubOpenMarket.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 menuHubModal.classList.add('hidden');
                 this.toggleMarket();
             });
@@ -353,7 +443,8 @@ class GameApp {
         // Hub: New Seed
         const hubNewSeed = document.getElementById('hub-new-seed');
         if (hubNewSeed) {
-            hubNewSeed.addEventListener('click', () => {
+            hubNewSeed.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 const inputSeed = prompt("Enter 32-bit World Seed (hex or integer):", "0x" + Math.floor(Math.random() * 0xFFFFFFFF).toString(16).toUpperCase());
                 if (inputSeed) {
                     const parsed = parseInt(inputSeed, inputSeed.startsWith('0x') ? 16 : 10);
@@ -369,7 +460,8 @@ class GameApp {
         // Hub: Sound Settings
         const hubSoundSettings = document.getElementById('hub-sound-settings');
         if (hubSoundSettings) {
-            hubSoundSettings.addEventListener('click', () => {
+            hubSoundSettings.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 menuHubModal.classList.add('hidden');
                 this.toggleSoundModal();
             });
@@ -378,17 +470,21 @@ class GameApp {
         // Hub: Reconfigure Pioneer (Back to Setup)
         const hubChangePioneer = document.getElementById('hub-change-pioneer');
         if (hubChangePioneer) {
-            hubChangePioneer.addEventListener('click', () => {
+            hubChangePioneer.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 menuHubModal.classList.add('hidden');
                 document.getElementById('setup-modal').classList.remove('hidden');
                 this.screens.currentScreen = 'SETUP';
+                this.updateTouchControlsVisibility();
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuMove();
             });
         }
 
         // Hub: Dev Tools
         const hubDevTools = document.getElementById('hub-dev-tools');
         if (hubDevTools) {
-            hubDevTools.addEventListener('click', () => {
+            hubDevTools.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 menuHubModal.classList.add('hidden');
                 this.toggleDevModal();
             });
@@ -397,42 +493,54 @@ class GameApp {
         // 2. Market Modal Controls
         const marketModal = document.getElementById('market-modal');
         const marketClose = document.getElementById('market-close');
-        if (marketClose) marketClose.addEventListener('click', () => marketModal.classList.add('hidden'));
+        if (marketClose) {
+            marketClose.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                marketModal.classList.add('hidden');
+                this.updateTouchControlsVisibility();
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+            });
+        }
 
-        document.getElementById('btn-buy-coin').addEventListener('click', () => {
+        document.getElementById('btn-buy-coin').addEventListener('pointerdown', (e) => {
+            e.preventDefault();
             const curve = this.currentMap.bondingCurve;
             const res = curve.buy(10.0);
             this.player.coinsCollected += Math.round(res.tokensReceived);
-            document.getElementById('market-log').innerText = `Bought ${res.tokensReceived.toFixed(2)} tokens for 10 ALU. Floor backed: ${res.floor.toFixed(3)} ALU`;
+            document.getElementById('market-log').innerText = `Bought ${res.tokensReceived.toFixed(2)} tokens for 10 ALU. Floor: ${res.floor.toFixed(3)} ALU`;
             this.updateHUD();
             this.renderMarketModal();
             if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCoin();
         });
 
-        document.getElementById('btn-sell-coin').addEventListener('click', () => {
+        document.getElementById('btn-sell-coin').addEventListener('pointerdown', (e) => {
+            e.preventDefault();
             const curve = this.currentMap.bondingCurve;
             if (this.player.coinsCollected < 5) {
                 document.getElementById('market-log').innerText = "Insufficient ALU tokens to sell!";
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
                 return;
             }
             const res = curve.sell(5.0);
             this.player.coinsCollected -= 5;
-            document.getElementById('market-log').innerText = `Sold 5 tokens for ${res.aluReturned.toFixed(2)} ALU. Current Price: ${res.newPrice.toFixed(3)} ALU`;
+            document.getElementById('market-log').innerText = `Sold 5 tokens for ${res.aluReturned.toFixed(2)} ALU. Price: ${res.newPrice.toFixed(3)} ALU`;
             this.updateHUD();
             this.renderMarketModal();
             if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(400, 'triangle', 0.1, 0.1);
         });
 
-        document.getElementById('btn-burn-floor').addEventListener('click', () => {
+        document.getElementById('btn-burn-floor').addEventListener('pointerdown', (e) => {
+            e.preventDefault();
             const curve = this.currentMap.bondingCurve;
             if (this.player.coinsCollected <= 0) {
                 document.getElementById('market-log').innerText = "No tokens to burn for floor payout!";
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
                 return;
             }
             const tokens = Math.min(10, this.player.coinsCollected);
             const res = curve.burnForFloor(tokens);
             this.player.coinsCollected -= tokens;
-            document.getElementById('market-log').innerText = `Emergency Floor Burn: Redeemed ${tokens} tokens for ${res.aluRedeemed.toFixed(3)} ALU reserve.`;
+            document.getElementById('market-log').innerText = `Emergency Burn: Redeemed ${tokens} tokens for ${res.aluRedeemed.toFixed(3)} ALU floor.`;
             this.updateHUD();
             this.renderMarketModal();
             if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playParry();
@@ -441,29 +549,45 @@ class GameApp {
         // 3. Sound Modal Controls
         const soundModal = document.getElementById('sound-modal');
         const soundClose = document.getElementById('sound-close');
-        if (soundClose) soundClose.addEventListener('click', () => soundModal.classList.add('hidden'));
+        if (soundClose) {
+            soundClose.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                soundModal.classList.add('hidden');
+                this.updateTouchControlsVisibility();
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+            });
+        }
 
         const toggleMaster = document.getElementById('toggle-audio-master');
         if (toggleMaster) {
-            toggleMaster.addEventListener('click', () => {
+            toggleMaster.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 this.soundEnabled = !this.soundEnabled;
                 toggleMaster.className = `gba-btn-sm ${this.soundEnabled ? 'toggle-on' : 'toggle-off'}`;
                 toggleMaster.innerText = this.soundEnabled ? "ENABLED (ON)" : "MUTED (OFF)";
+                if (this.soundEnabled) this.renderer.audio.init();
             });
         }
 
         const toggleBgm = document.getElementById('toggle-audio-bgm');
         if (toggleBgm) {
-            toggleBgm.addEventListener('click', () => {
+            toggleBgm.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 this.bgmEnabled = !this.bgmEnabled;
                 toggleBgm.className = `gba-btn-sm ${this.bgmEnabled ? 'toggle-on' : 'toggle-off'}`;
                 toggleBgm.innerText = this.bgmEnabled ? "ENABLED (ON)" : "DISABLED (OFF)";
+                if (this.bgmEnabled && this.screens.currentScreen === 'GAMEPLAY') {
+                    this.renderer.audio.startBgm(this.currentLayer);
+                } else {
+                    this.renderer.audio.stopBgm();
+                }
             });
         }
 
         const toggleSfx = document.getElementById('toggle-audio-sfx');
         if (toggleSfx) {
-            toggleSfx.addEventListener('click', () => {
+            toggleSfx.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 this.sfxEnabled = !this.sfxEnabled;
                 toggleSfx.className = `gba-btn-sm ${this.sfxEnabled ? 'toggle-on' : 'toggle-off'}`;
                 toggleSfx.innerText = this.sfxEnabled ? "ENABLED (ON)" : "DISABLED (OFF)";
@@ -471,25 +595,33 @@ class GameApp {
         }
 
         const btnTestParry = document.getElementById('btn-test-parry');
-        if (btnTestParry) btnTestParry.addEventListener('click', () => this.renderer.audio.playParry());
+        if (btnTestParry) btnTestParry.addEventListener('pointerdown', (e) => { e.preventDefault(); this.renderer.audio.playParry(); });
 
         const btnTestCoin = document.getElementById('btn-test-coin');
-        if (btnTestCoin) btnTestCoin.addEventListener('click', () => this.renderer.audio.playCoin());
+        if (btnTestCoin) btnTestCoin.addEventListener('pointerdown', (e) => { e.preventDefault(); this.renderer.audio.playCoin(); });
 
         const btnTestHit = document.getElementById('btn-test-hit');
-        if (btnTestHit) btnTestHit.addEventListener('click', () => this.renderer.audio.playSlash());
+        if (btnTestHit) btnTestHit.addEventListener('pointerdown', (e) => { e.preventDefault(); this.renderer.audio.playSlash(); });
 
         // 4. Dev / Debug Modal Controls
         const devModal = document.getElementById('dev-modal');
         const devClose = document.getElementById('dev-close');
-        if (devClose) devClose.addEventListener('click', () => devModal.classList.add('hidden'));
+        if (devClose) {
+            devClose.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                devModal.classList.add('hidden');
+                this.updateTouchControlsVisibility();
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+            });
+        }
 
         const devSkipScene = document.getElementById('dev-skip-scene');
-        if (devSkipScene) devSkipScene.addEventListener('click', () => this.devSkip());
+        if (devSkipScene) devSkipScene.addEventListener('pointerdown', (e) => { e.preventDefault(); this.devSkip(); });
 
         const devToggleLayer = document.getElementById('dev-toggle-layer');
         if (devToggleLayer) {
-            devToggleLayer.addEventListener('click', () => {
+            devToggleLayer.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 this.switchLayer(this.currentLayer === 'SURFACE' ? 'SUB_CORE' : 'SURFACE');
                 devToggleLayer.innerText = this.currentLayer === 'SURFACE' ? "🌀 TELEPORT TO SUB-BEDROCK CORE" : "☀️ TELEPORT TO SURFACE OVERWORLD";
             });
@@ -497,7 +629,8 @@ class GameApp {
 
         const devTeleportBoss = document.getElementById('dev-teleport-boss');
         if (devTeleportBoss) {
-            devTeleportBoss.addEventListener('click', () => {
+            devTeleportBoss.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 if (this.currentLayer !== 'SUB_CORE') this.switchLayer('SUB_CORE');
                 const boss = this.currentMap.enemies.find(e => e.isBoss && e.hp > 0);
                 if (boss) {
@@ -505,42 +638,54 @@ class GameApp {
                     this.player.vel.set(0, 0);
                     devModal.classList.add('hidden');
                     this.screens.currentScreen = 'GAMEPLAY';
+                    this.updateTouchControlsVisibility();
                 }
             });
         }
 
         const devTeleportPlot = document.getElementById('dev-teleport-plot');
         if (devTeleportPlot) {
-            devTeleportPlot.addEventListener('click', () => {
+            devTeleportPlot.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 if (this.currentLayer !== 'SUB_CORE') this.switchLayer('SUB_CORE');
                 this.player.pos.set(36 * 16 + 8, 25 * 16 + 8);
                 this.player.vel.set(0, 0);
                 devModal.classList.add('hidden');
                 this.screens.currentScreen = 'GAMEPLAY';
+                this.updateTouchControlsVisibility();
             });
         }
 
         const devToggleGod = document.getElementById('dev-toggle-god');
-        if (devToggleGod) devToggleGod.addEventListener('click', () => this.toggleGodMode());
+        if (devToggleGod) devToggleGod.addEventListener('pointerdown', (e) => { e.preventDefault(); this.toggleGodMode(); });
 
         const devUnlockFarmer = document.getElementById('dev-unlock-farmer');
-        if (devUnlockFarmer) devUnlockFarmer.addEventListener('click', () => this.unlockFarmerDev());
+        if (devUnlockFarmer) devUnlockFarmer.addEventListener('pointerdown', (e) => { e.preventDefault(); this.unlockFarmerDev(); });
 
         const devGrantCoins = document.getElementById('dev-grant-coins');
-        if (devGrantCoins) devGrantCoins.addEventListener('click', () => this.grantCoinsDev(100));
+        if (devGrantCoins) devGrantCoins.addEventListener('pointerdown', (e) => { e.preventDefault(); this.grantCoinsDev(100); });
 
         const devInstantRestart = document.getElementById('dev-instant-restart');
         if (devInstantRestart) {
-            devInstantRestart.addEventListener('click', () => {
+            devInstantRestart.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 this.restartPioneer();
                 devModal.classList.add('hidden');
+                this.updateTouchControlsVisibility();
             });
         }
 
         // 5. Inventory Modal Controls
         const invModal = document.getElementById('inventory-modal');
         const invClose = document.getElementById('inv-close');
-        if (invClose) invClose.addEventListener('click', () => invModal.classList.add('hidden'));
+        if (invClose) {
+            invClose.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                invModal.classList.add('hidden');
+                this.updateTouchControlsVisibility();
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+            });
+        }
     }
 
     toggleMenuHub() {
@@ -549,10 +694,13 @@ class GameApp {
         if (modal.classList.contains('hidden')) {
             modal.classList.remove('hidden');
             this.screens.currentScreen = 'MENU';
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuMove();
         } else {
             modal.classList.add('hidden');
             this.screens.currentScreen = 'GAMEPLAY';
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
         }
+        this.updateTouchControlsVisibility();
     }
 
     toggleSoundModal() {
@@ -560,6 +708,8 @@ class GameApp {
         if (!modal) return;
         if (modal.classList.contains('hidden')) modal.classList.remove('hidden');
         else modal.classList.add('hidden');
+        this.updateTouchControlsVisibility();
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuMove();
     }
 
     toggleDevModal() {
@@ -567,6 +717,8 @@ class GameApp {
         if (!modal) return;
         if (modal.classList.contains('hidden')) modal.classList.remove('hidden');
         else modal.classList.add('hidden');
+        this.updateTouchControlsVisibility();
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuMove();
     }
 
     toggleMarket() {
@@ -575,9 +727,12 @@ class GameApp {
         if (modal.classList.contains('hidden')) {
             this.renderMarketModal();
             modal.classList.remove('hidden');
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCoin();
         } else {
             modal.classList.add('hidden');
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
         }
+        this.updateTouchControlsVisibility();
     }
 
     renderMarketModal() {
@@ -594,9 +749,12 @@ class GameApp {
         if (modal.classList.contains('hidden')) {
             this.renderInventoryModal();
             modal.classList.remove('hidden');
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuMove();
         } else {
             modal.classList.add('hidden');
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
         }
+        this.updateTouchControlsVisibility();
     }
 
     renderInventoryModal() {
@@ -606,16 +764,18 @@ class GameApp {
         this.inventory.slots.forEach(slot => {
             const el = document.createElement('div');
             el.className = 'inv-slot';
-            el.innerHTML = `<strong>${slot.item.name}</strong><span>x${slot.count}</span>`;
-            el.addEventListener('click', () => {
+            el.innerHTML = `<strong>${slot.item.name}</strong><span style="color:#81c784;margin-top:2px;">x${slot.count}</span>`;
+            el.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
                 document.getElementById('item-details').innerHTML = `
-                    <strong>${slot.item.name}</strong> (${slot.item.type})<br>
+                    <strong style="color:#ffd54f;">${slot.item.name}</strong> (${slot.item.type})<br>
                     ${slot.item.desc}<br>
                     ${slot.item.type === 'CONSUMABLE' ? '<button id="btn-use-item" class="gba-btn-sm" style="margin-top:6px;">USE ITEM</button>' : ''}
                 `;
                 const useBtn = document.getElementById('btn-use-item');
                 if (useBtn) {
-                    useBtn.addEventListener('click', () => {
+                    useBtn.addEventListener('pointerdown', (ev) => {
+                        ev.preventDefault();
                         if (this.inventory.useItem(slot.item.id, this.player)) {
                             this.renderInventoryModal();
                             this.updateHUD();
@@ -623,6 +783,7 @@ class GameApp {
                         }
                     });
                 }
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuMove();
             });
             grid.appendChild(el);
         });
@@ -699,13 +860,13 @@ class GameApp {
 
     handleParry() {
         this.player.performParry();
-        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(880, 'sine', 0.1, 0.05);
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playParry();
     }
 
     handleDash() {
         if (!this.player) return;
         this.player.performSkill(this.currentMap.enemies);
-        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(420, 'sine', 0.1, 0.08);
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playShoot();
     }
 
     handleInteract() {
@@ -766,6 +927,7 @@ class GameApp {
         this.player.pos.set(this.currentMap.spawnPoint.x, this.currentMap.spawnPoint.y);
         this.player.vel.set(0, 0);
         this.screens.currentScreen = 'GAMEPLAY';
+        this.updateTouchControlsVisibility();
         if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(520, 'triangle', 0.25, 0.1);
         this.updateHUD();
     }
@@ -867,25 +1029,19 @@ class GameApp {
             if (interactable) {
                 btnASub.innerText = "EXAMINE";
                 btnA.style.borderColor = "#00e5ff";
-                btnA.style.boxShadow = "0 0 10px rgba(0, 229, 255, 0.6)";
+                btnA.style.boxShadow = "inset 2px 2px 0px rgba(255,255,255,0.4), 0 0 14px rgba(0, 229, 255, 0.7)";
             } else {
                 btnASub.innerText = "ATTACK";
-                btnA.style.borderColor = "#4db6ac";
-                btnA.style.boxShadow = "0 4px 10px rgba(0,0,0,0.5)";
+                btnA.style.borderColor = "#26a69a";
+                btnA.style.boxShadow = "inset 2px 2px 0px rgba(255,255,255,0.35), inset -2px -2px 0px rgba(0,0,0,0.7), 0 5px 10px rgba(0,0,0,0.6)";
             }
         }
 
         // 2. Pioneer Status in Footer
         const pioneerCallsignElem = document.getElementById('pioneer-callsign');
         const pioneerClassElem = document.getElementById('pioneer-class-tag');
-        const pioneerIconElem = document.getElementById('pioneer-icon');
         if (pioneerCallsignElem) pioneerCallsignElem.innerText = this.pioneerName || "ALU-01";
         if (pioneerClassElem && this.player) pioneerClassElem.innerText = this.player.charClass.replace('_', ' ');
-        if (pioneerIconElem && this.player) {
-            if (this.player.charClass === 'SUPER_SOLDIER') pioneerIconElem.innerText = "⚔️";
-            else if (this.player.charClass === 'TECHNO_MAGE') pioneerIconElem.innerText = "⚡";
-            else pioneerIconElem.innerText = "🌱";
-        }
 
         // 3. Player Bars
         if (this.player) {
@@ -905,6 +1061,8 @@ class GameApp {
             document.getElementById('coin-price').innerText = `${curve.getCurrentPrice().toFixed(3)} ALU`;
             document.getElementById('coin-floor').innerText = `Floor: ${curve.getGuaranteedFloor().toFixed(3)} ALU`;
         }
+
+        this.updateTouchControlsVisibility();
     }
 
     updateInput() {
@@ -982,10 +1140,10 @@ class GameApp {
             this.updateEnemies(dt);
         }
 
-        // 2. Camera Update
+        // 2. Camera Update (Follow player smoothly)
         this.renderer.updateCamera(this.player.pos, this.currentMap.width, this.currentMap.height, dt);
 
-        // 3. Render Pass
+        // 3. Render Pass (Canvas is ALWAYS rendering the living world map behind modals!)
         this.renderer.clear();
         this.renderer.renderMap(this.currentMap, dt);
         this.renderer.renderEnemies(this.currentMap.enemies, this.currentMap.palette.colors);

@@ -6,18 +6,19 @@
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
+    touch-action: manipulation;
 }
 
 body, html {
     width: 100%;
     height: 100%;
-    background-color: #0d1117;
+    background-color: #06090e;
     color: #e6edf3;
     font-family: 'JetBrains Mono', monospace;
     overflow: hidden;
 }
 
-/* App Main Container (GBA Aspect Ratio Container) */
+/* App Main Container (Authentic GBA Enclosure) */
 #app-container {
     display: flex;
     flex-direction: column;
@@ -28,23 +29,24 @@ body, html {
     margin: auto;
     position: absolute;
     inset: 0;
-    background: #141820;
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.85);
-    border: 3px solid #202634;
-    border-radius: 8px;
+    background: #0f131a;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.95);
+    border: 4px solid #1a2230;
+    border-radius: 12px;
     overflow: hidden;
 }
 
 /* Top Game Dashboard Header */
 #game-header {
-    background: #1a202c;
-    border-bottom: 2px solid #283344;
-    padding: 8px 14px;
+    background: #141b24;
+    border-bottom: 3px solid #202b3c;
+    padding: 6px 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 11px;
-    z-index: 10;
+    font-size: 10px;
+    z-index: 20;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
 }
 
 .header-left {
@@ -54,49 +56,50 @@ body, html {
 }
 
 .brand-logo {
-    width: 22px;
-    height: 22px;
-    filter: drop-shadow(0 0 4px #00e5ff);
+    width: 24px;
+    height: 24px;
+    filter: drop-shadow(0 0 5px #00e5ff);
 }
 
 .game-title {
     font-family: 'Press Start 2P', monospace;
-    font-size: 11px;
+    font-size: 10px;
     color: #ff9800;
     letter-spacing: 1px;
-    text-shadow: 1px 1px 0px #000;
+    text-shadow: 2px 2px 0px #000;
 }
 
 .badge {
-    background: #2a3b4c;
+    background: #1c2734;
     color: #64b5f6;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 9px;
-    font-weight: bold;
-    border: 1px solid #3d566e;
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    border: 1px solid #37474f;
+    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.1), inset -1px -1px 0px rgba(0,0,0,0.5);
 }
 
 .header-center {
     display: flex;
     align-items: center;
     gap: 12px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
 }
 
 .coin-ticker {
     color: #ffd54f;
-    font-weight: bold;
-    letter-spacing: 0.5px;
+    text-shadow: 1px 1px 0px #000;
 }
 
 .coin-price {
     color: #81c784;
-    font-weight: bold;
 }
 
 .coin-floor {
     color: #00bcd4;
-    font-size: 10px;
+    font-size: 7px;
     opacity: 0.9;
 }
 
@@ -105,20 +108,31 @@ body, html {
     gap: 6px;
 }
 
+/* Deathly Retro GBA Buttons (Beveled 3D Rim) */
 .gba-btn-sm {
-    background: #2c3440;
-    border: 1px solid #455a64;
+    background: #263238;
+    border: 2px solid #455a64;
     color: #eceff1;
-    padding: 4px 8px;
+    padding: 5px 8px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 9px;
-    font-weight: bold;
-    transition: background 0.1s;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    text-shadow: 1px 1px 0px #000;
+    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.25), inset -1px -1px 0px rgba(0,0,0,0.6), 0 2px 0px #000;
+    transition: transform 0.05s, box-shadow 0.05s, background 0.1s;
 }
 
 .gba-btn-sm:hover {
     background: #37474f;
+    border-color: #607d8b;
+}
+
+.gba-btn-sm:active {
+    transform: translateY(2px);
+    box-shadow: inset 1px 1px 0px rgba(0,0,0,0.6), 0 0px 0px #000;
+    background: #ff9800;
+    color: #000;
 }
 
 .dev-btn {
@@ -144,73 +158,103 @@ body, html {
     object-fit: contain;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.9);
+}
+
+/* Authentic CRT Retro Scanlines & Phosphor Shadow */
+.crt-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.22) 0px,
+        rgba(0, 0, 0, 0.22) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.75);
+    z-index: 40;
 }
 
 /* Modals */
 .game-modal {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(10, 14, 22, 0.78);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 100;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(2px);
 }
 
 .game-modal.hidden {
-    display: none;
+    display: none !important;
 }
 
 .modal-content {
-    background: #1e2430;
-    border: 2px solid #3f51b5;
+    background: #141b24;
+    border: 3px solid #ff9800;
     border-radius: 8px;
-    width: 85%;
-    max-width: 480px;
+    width: 90%;
+    max-width: 520px;
     padding: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
-    font-size: 11px;
+    box-shadow: inset 2px 2px 0px rgba(255,255,255,0.15), inset -2px -2px 0px rgba(0,0,0,0.7), 0 10px 40px rgba(0, 0, 0, 0.95);
+    font-size: 10px;
 }
 
 .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #37474f;
+    border-bottom: 2px solid #283344;
     padding-bottom: 8px;
     margin-bottom: 12px;
 }
 
 .modal-header h3 {
+    font-family: 'Press Start 2P', monospace;
     color: #ffd54f;
-    font-size: 12px;
+    font-size: 9px;
     margin: 0;
+    text-shadow: 1px 1px 0px #000;
 }
 
 .modal-close {
-    background: transparent;
-    border: none;
-    color: #ff5252;
-    font-size: 16px;
-    font-weight: bold;
+    background: #b71c1c;
+    border: 2px solid #e53935;
+    color: #fff;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 4px 8px;
+    border-radius: 4px;
     cursor: pointer;
+    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.3), 0 2px 0px #000;
 }
 
+.modal-close:active {
+    transform: translateY(2px);
+    box-shadow: none;
+}
+
+/* Market Modal Stats */
 .market-stats {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
-    background: #12161f;
+    background: #0b0f16;
     padding: 10px;
+    border: 2px solid #202b3c;
     border-radius: 6px;
     margin-bottom: 10px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    line-height: 1.6;
 }
 
 .modal-desc {
     color: #90a4ae;
-    font-size: 10px;
+    font-size: 9px;
     line-height: 1.4;
     margin-bottom: 12px;
 }
@@ -223,27 +267,29 @@ body, html {
 
 .market-action-btn {
     flex: 1;
-    padding: 8px 4px;
-    font-size: 9px;
-    font-weight: bold;
-    border: none;
+    padding: 10px 4px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    border: 2px solid #fff;
     border-radius: 4px;
     cursor: pointer;
-    transition: transform 0.1s;
+    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.3), 0 3px 0px #000;
+    transition: transform 0.05s;
 }
 
 .market-action-btn:active {
-    transform: scale(0.96);
+    transform: translateY(2px);
+    box-shadow: none;
 }
 
-.market-action-btn.buy { background: #2e7d32; color: #fff; }
-.market-action-btn.sell { background: #d84315; color: #fff; }
-.market-action-btn.floor { background: #00838f; color: #fff; }
+.market-action-btn.buy { background: #2e7d32; border-color: #66bb6a; color: #fff; }
+.market-action-btn.sell { background: #d84315; border-color: #ff7043; color: #fff; }
+.market-action-btn.floor { background: #00838f; border-color: #26c6da; color: #fff; }
 
 .market-log {
-    background: #090c10;
-    border: 1px solid #263238;
-    padding: 6px;
+    background: #070a0e;
+    border: 1px solid #1c2734;
+    padding: 8px;
     font-size: 9px;
     color: #64b5f6;
     border-radius: 4px;
@@ -261,8 +307,8 @@ body, html {
 
 .inv-slot {
     aspect-ratio: 1;
-    background: #141822;
-    border: 1px solid #37474f;
+    background: #0d121a;
+    border: 2px solid #2a3748;
     border-radius: 4px;
     display: flex;
     flex-direction: column;
@@ -270,34 +316,26 @@ body, html {
     align-items: center;
     position: relative;
     cursor: pointer;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 4px;
+    text-align: center;
+    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.08), 0 2px 0px #000;
 }
 
 .inv-slot.selected {
     border-color: #ffd54f;
-    box-shadow: 0 0 8px rgba(255, 213, 79, 0.4);
-}
-
-.inv-icon {
-    font-size: 18px;
-}
-
-.inv-count {
-    position: absolute;
-    bottom: 2px;
-    right: 4px;
-    font-size: 8px;
-    font-weight: bold;
-    color: #81c784;
+    box-shadow: inset 1px 1px 0px #fff, 0 0 10px rgba(255, 213, 79, 0.5);
 }
 
 .item-details {
-    background: #141822;
-    border: 1px solid #263238;
-    padding: 8px;
-    font-size: 10px;
+    background: #0d121a;
+    border: 2px solid #202b3c;
+    padding: 10px;
+    font-size: 9px;
     color: #cfd8dc;
     border-radius: 4px;
-    min-height: 40px;
+    min-height: 44px;
 }
 
 /* Touch Controls Virtual Overlay */
@@ -308,8 +346,12 @@ body, html {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    padding: 18px 24px;
+    padding: 16px 20px;
     z-index: 50;
+}
+
+#touch-controls.controls-hidden {
+    display: none !important;
 }
 
 #touch-controls button {
@@ -321,7 +363,7 @@ body, html {
     display: flex;
     flex-direction: column;
     align-items: center;
-    opacity: 0.88;
+    opacity: 0.92;
 }
 
 .dpad-row {
@@ -330,29 +372,34 @@ body, html {
 }
 
 .dpad-center {
-    width: 36px;
-    height: 36px;
-    background: #263238;
+    width: 38px;
+    height: 38px;
+    background: #1e2734;
+    border: 2px solid #2c3a4e;
+    box-shadow: inset 2px 2px 4px rgba(0,0,0,0.8);
 }
 
 .dpad-btn {
-    width: 40px;
-    height: 40px;
-    background: #37474f;
-    border: 1px solid #546e7a;
-    color: #b0bec5;
+    width: 42px;
+    height: 42px;
+    background: #2a374a;
+    border: 2px solid #485c78;
+    color: #cfd8dc;
     font-size: 14px;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
     border-radius: 4px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.25), inset -1px -1px 0px rgba(0,0,0,0.7), 0 4px 6px rgba(0,0,0,0.6);
+    transition: transform 0.04s, background 0.04s;
 }
 
 .dpad-btn:active, .dpad-btn.pressed {
-    background: #263238;
-    color: #ff9800;
+    transform: translateY(2px);
+    background: #ff9800;
+    color: #000;
+    box-shadow: inset 1px 1px 0px rgba(0,0,0,0.8);
 }
 
 /* Right Action Buttons (C = Dash, B = Parry, A = Attack/Examine) */
@@ -360,13 +407,13 @@ body, html {
     display: flex;
     align-items: flex-end;
     gap: 12px;
-    margin-bottom: 8px;
-    opacity: 0.92;
+    margin-bottom: 6px;
+    opacity: 0.95;
 }
 
 .action-btn {
-    width: 54px;
-    height: 54px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     color: #fff;
     display: flex;
@@ -374,56 +421,60 @@ body, html {
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     user-select: none;
-    transition: transform 0.05s, filter 0.05s;
+    box-shadow: inset 2px 2px 0px rgba(255,255,255,0.35), inset -2px -2px 0px rgba(0,0,0,0.7), 0 5px 10px rgba(0,0,0,0.6);
+    transition: transform 0.04s, filter 0.04s, box-shadow 0.04s;
 }
 
 #btn-c {
-    background: #d84315;
-    border: 2px solid #ff8a65;
-    margin-bottom: 28px;
+    background: #bf360c;
+    border: 3px solid #ff7043;
+    margin-bottom: 30px;
 }
 
 #btn-c:active, #btn-c.pressed {
-    background: #ff7043;
-    transform: translateY(2px) scale(0.96);
+    background: #ff5722;
+    transform: translateY(3px) scale(0.96);
+    box-shadow: inset 2px 2px 0px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6);
 }
 
 #btn-b {
-    background: #283593;
-    border: 2px solid #7986cb;
+    background: #1a237e;
+    border: 3px solid #5c6bc0;
     margin-bottom: 8px;
 }
 
 #btn-b:active, #btn-b.pressed {
-    background: #3f51b5;
-    transform: translateY(2px) scale(0.96);
+    background: #3949ab;
+    transform: translateY(3px) scale(0.96);
+    box-shadow: inset 2px 2px 0px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6);
 }
 
 #btn-a {
-    background: #00695c;
-    border: 2px solid #4db6ac;
-    margin-bottom: 20px;
+    background: #004d40;
+    border: 3px solid #26a69a;
+    margin-bottom: 22px;
 }
 
 #btn-a:active, #btn-a.pressed {
     background: #00897b;
-    transform: translateY(2px) scale(0.96);
+    transform: translateY(3px) scale(0.96);
+    box-shadow: inset 2px 2px 0px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6);
 }
 
 .btn-label {
     font-family: 'Press Start 2P', monospace;
     font-size: 13px;
-    text-shadow: 1px 1px 0px #000;
+    text-shadow: 2px 2px 0px #000;
 }
 
 .btn-sub {
-    font-size: 8px;
-    opacity: 0.9;
-    margin-top: 2px;
-    font-weight: bold;
-    letter-spacing: 0.3px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    opacity: 0.95;
+    margin-top: 3px;
+    letter-spacing: 0.5px;
+    text-shadow: 1px 1px 0px #000;
 }
 
 /* Center Meta Controls */
@@ -433,27 +484,27 @@ body, html {
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 12px;
-    opacity: 0.85;
+    gap: 10px;
+    opacity: 0.9;
 }
 
 .meta-btn {
-    background: #263238;
-    border: 1px solid #607d8b;
+    background: #202b3c;
+    border: 2px solid #435875;
     color: #cfd8dc;
-    font-size: 9px;
-    font-weight: bold;
-    padding: 5px 12px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 6px 10px;
     border-radius: 12px;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-    transition: background 0.1s;
+    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.2), inset -1px -1px 0px rgba(0,0,0,0.6), 0 2px 0px #000;
+    transition: transform 0.05s, background 0.1s;
 }
 
-.meta-btn:hover { background: #37474f; color: #fff; }
-.meta-btn:active { background: #ff9800; color: #000; transform: translateY(1px); }
+.meta-btn:hover { background: #2c3a4e; color: #fff; }
+.meta-btn:active { background: #ff9800; color: #000; transform: translateY(2px); box-shadow: none; }
 
-/* Setup Modal */
+/* Setup Modal (GBA Awakening Dialogue Style) */
 .setup-content {
     max-width: 580px;
     width: 90%;
@@ -464,86 +515,125 @@ body, html {
     display: flex;
     align-items: center;
     gap: 12px;
-    border-bottom: 1px solid #37474f;
+    border-bottom: 2px solid #283344;
     padding-bottom: 10px;
     margin-bottom: 12px;
 }
 
 .setup-logo {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     filter: drop-shadow(0 0 6px #ff9800);
 }
 
 .setup-header h2 {
-    font-size: 13px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
     color: #ff9800;
     letter-spacing: 1px;
     margin: 0;
+    text-shadow: 1px 1px 0px #000;
 }
 
 .setup-subtitle {
-    font-size: 9px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
     color: #78909c;
+    margin-top: 4px;
 }
 
+/* Authentic GBA Dialogue Capsule (Matching Image 4) */
 .setup-guide-box {
     display: flex;
     align-items: center;
-    gap: 12px;
-    background: #141822;
-    border: 1px solid #263238;
-    border-left: 3px solid #00e5ff;
-    padding: 8px 12px;
-    border-radius: 4px;
-    margin-bottom: 12px;
+    gap: 14px;
+    background: #fdfefe;
+    border: 3px solid #00bcd4;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    position: relative;
+    box-shadow: inset 0 0 8px rgba(0, 188, 212, 0.25), 0 4px 12px rgba(0,0,0,0.6);
 }
 
-.guide-portrait {
-    font-size: 26px;
+.guide-portrait-canvas {
+    width: 48px;
+    height: 48px;
+    image-rendering: pixelated;
+    border: 2px solid #00838f;
+    border-radius: 50%;
+    background: #e0f7fa;
+    flex-shrink: 0;
+}
+
+.guide-text-container {
+    flex: 1;
+}
+
+.guide-speaker {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: #00838f;
+    margin-bottom: 5px;
+    letter-spacing: 0.5px;
 }
 
 .guide-text {
-    font-size: 10px;
-    color: #cfd8dc;
-    line-height: 1.4;
-    font-style: italic;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: #212121;
+    line-height: 1.6;
+}
+
+.prompt-arrow {
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    color: #ff1744;
+    font-size: 9px;
+    animation: promptBounce 0.5s infinite alternate;
+}
+
+@keyframes promptBounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(3px); }
 }
 
 .setup-form-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
     gap: 10px;
+    font-family: 'Press Start 2P', monospace;
 }
 
 .setup-form-row label {
-    font-weight: bold;
-    color: #b0bec5;
-    font-size: 10px;
+    font-size: 8px;
+    color: #cfd8dc;
 }
 
 .input-with-random {
     display: flex;
-    gap: 6px;
+    gap: 8px;
 }
 
 #callsign-input {
-    background: #0f1217;
-    border: 1px solid #455a64;
+    background: #080c12;
+    border: 2px solid #37474f;
     color: #00e5ff;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: bold;
-    padding: 5px 10px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    padding: 6px 10px;
     border-radius: 4px;
     outline: none;
     width: 140px;
+    box-shadow: inset 1px 1px 0px rgba(0,0,0,0.8);
 }
 
 #callsign-input:focus {
     border-color: #00e5ff;
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
 }
 
 .class-cards-container {
@@ -554,40 +644,70 @@ body, html {
 }
 
 .class-card {
-    background: #181d26;
-    border: 1px solid #37474f;
+    background: #0e141d;
+    border: 2px solid #263342;
     border-radius: 6px;
-    padding: 10px;
+    padding: 10px 8px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
-    transition: all 0.15s ease;
+    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.1), 0 3px 0px #000;
+    transition: all 0.1s ease;
 }
 
 .class-card:hover {
-    border-color: #78909c;
-    background: #1f2531;
+    border-color: #607d8b;
+    background: #141c28;
 }
 
 .class-card.selected {
     border-color: #ff9800;
-    background: #252b38;
-    box-shadow: 0 0 10px rgba(255, 152, 0, 0.35);
+    background: #1b2332;
+    box-shadow: inset 1px 1px 0px #ffe082, 0 0 14px rgba(255, 152, 0, 0.45);
 }
 
 .class-card.locked {
-    opacity: 0.5;
+    opacity: 0.45;
     border-style: dashed;
     cursor: not-allowed;
 }
 
-.card-icon { font-size: 20px; margin-bottom: 4px; }
-.card-title { font-weight: bold; font-size: 11px; color: #ffd54f; }
-.card-subtitle { font-size: 8px; color: #90a4ae; margin-bottom: 6px; }
-.card-stats { font-size: 8px; color: #80cbc4; font-weight: bold; margin-bottom: 6px; }
-.card-desc { font-size: 8px; color: #b0bec5; line-height: 1.3; }
+.class-card-canvas {
+    width: 32px;
+    height: 32px;
+    image-rendering: pixelated;
+    margin-bottom: 6px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+.card-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: #ffd54f;
+    margin-bottom: 4px;
+}
+
+.card-subtitle {
+    font-size: 7px;
+    color: #90a4ae;
+    margin-bottom: 6px;
+}
+
+.card-stats {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    color: #80cbc4;
+    line-height: 1.4;
+    margin-bottom: 6px;
+}
+
+.card-desc {
+    font-size: 8px;
+    color: #b0bec5;
+    line-height: 1.3;
+}
 
 .setup-footer {
     display: flex;
@@ -596,17 +716,19 @@ body, html {
 
 .setup-submit-btn {
     background: #ff9800;
-    color: #0d1117;
-    border: none;
-    padding: 8px 18px;
+    color: #000;
+    border: 2px solid #ffe082;
+    padding: 10px 18px;
     border-radius: 4px;
-    font-weight: bold;
-    font-size: 11px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
     cursor: pointer;
-    transition: background 0.15s;
+    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.4), 0 3px 0px #000;
+    transition: transform 0.05s, background 0.1s;
 }
 
 .setup-submit-btn:hover { background: #ffa726; }
+.setup-submit-btn:active { transform: translateY(2px); box-shadow: none; }
 
 /* Menu Hub Modal */
 .hub-content {
@@ -622,19 +744,22 @@ body, html {
 }
 
 .hub-logo {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
 }
 
 .hub-header-title h3 {
-    font-size: 12px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
     color: #00bcd4;
     margin: 0;
 }
 
 .hub-ticker-info {
-    font-size: 9px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
     color: #78909c;
+    margin-top: 3px;
 }
 
 .hub-menu-list {
@@ -647,29 +772,36 @@ body, html {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: #141822;
-    border: 1px solid #263238;
+    background: #0e141d;
+    border: 2px solid #283344;
     border-radius: 6px;
-    padding: 10px 14px;
+    padding: 10px 12px;
     color: #cfd8dc;
     cursor: pointer;
     text-align: left;
-    transition: all 0.12s ease;
+    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.08), 0 2px 0px #000;
+    transition: all 0.1s ease;
 }
 
 .hub-btn:hover {
-    background: #1e2433;
-    border-color: #455a64;
+    background: #182230;
+    border-color: #4db6ac;
     transform: translateX(4px);
+}
+
+.hub-btn:active {
+    transform: translateX(4px) translateY(2px);
+    box-shadow: none;
 }
 
 .hub-btn.primary {
     border-color: #ff9800;
-    background: #25231c;
+    background: #1e1910;
 }
 
 .hub-btn.primary:hover {
-    background: #332d1f;
+    background: #2b2214;
+    border-color: #ffa726;
 }
 
 .hub-btn.dev-accent {
@@ -677,7 +809,7 @@ body, html {
 }
 
 .hub-icon {
-    font-size: 18px;
+    font-size: 16px;
     width: 24px;
     text-align: center;
 }
@@ -688,14 +820,15 @@ body, html {
 }
 
 .hub-text strong {
-    font-size: 11px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
     color: #fff;
 }
 
 .hub-text span {
     font-size: 8px;
     color: #90a4ae;
-    margin-top: 2px;
+    margin-top: 3px;
 }
 
 /* Sound Settings Modal */
@@ -703,21 +836,21 @@ body, html {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
 }
 
 .sound-toggle-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 10px;
     color: #cfd8dc;
 }
 
 .sound-test-row {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    font-size: 10px;
+    gap: 8px;
     color: #90a4ae;
     margin-top: 6px;
 }
@@ -744,21 +877,27 @@ body, html {
 }
 
 .dev-act-btn {
-    background: #181d26;
-    border: 1px solid #37474f;
+    background: #0f141d;
+    border: 2px solid #37474f;
     color: #cfd8dc;
-    padding: 8px 10px;
+    padding: 8px;
     border-radius: 4px;
-    font-size: 9px;
-    font-weight: bold;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
     cursor: pointer;
     text-align: left;
-    transition: all 0.1s;
+    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.1), 0 2px 0px #000;
+    transition: transform 0.05s, background 0.1s;
 }
 
 .dev-act-btn:hover {
-    background: #263238;
+    background: #1c2736;
     border-color: #90a4ae;
+}
+
+.dev-act-btn:active {
+    transform: translateY(2px);
+    box-shadow: none;
 }
 
 .dev-act-btn.highlight {
@@ -771,42 +910,46 @@ body, html {
     color: #ff5252;
 }
 
-/* Footer HUD (Clean) */
+/* Footer HUD (Authentic GBA Bevel) */
 #game-footer {
-    background: #1b2028;
-    border-top: 2px solid #282e38;
-    padding: 8px 16px;
+    background: #141b24;
+    border-top: 3px solid #202b3c;
+    padding: 6px 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.5);
+    z-index: 20;
 }
 
 .player-bars {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    min-width: 160px;
+    min-width: 150px;
 }
 
 .bar-row {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 10px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
 }
 
 .bar-label {
-    width: 28px;
-    font-weight: bold;
+    width: 22px;
+    color: #cfd8dc;
 }
 
 .bar-track {
-    width: 90px;
+    width: 80px;
     height: 8px;
-    background: #263238;
-    border-radius: 4px;
+    background: #080c12;
+    border-radius: 2px;
     overflow: hidden;
-    border: 1px solid #455a64;
+    border: 1px solid #37474f;
+    box-shadow: inset 1px 1px 2px rgba(0,0,0,0.8);
 }
 
 .bar-fill {
@@ -814,45 +957,62 @@ body, html {
     transition: width 0.15s ease-out;
 }
 
-.hp-fill { background: #e53935; }
-.energy-fill { background: #00bcd4; }
-.bar-num { font-size: 9px; color: #b0bec5; }
+.hp-fill { background: #e53935; box-shadow: inset 0 1px 0 #ef5350; }
+.energy-fill { background: #00bcd4; box-shadow: inset 0 1px 0 #4dd0e1; }
+.bar-num { font-size: 6px; color: #90a4ae; }
 
 .pioneer-status {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: #0f1217;
-    padding: 5px 12px;
-    border-radius: 6px;
-    border: 1px solid #37474f;
+    background: #080c12;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 2px solid #283344;
 }
 
-.pioneer-icon { font-size: 13px; }
-.pioneer-callsign { font-weight: bold; color: #64b5f6; font-size: 10px; }
+.pioneer-mini-canvas {
+    width: 20px;
+    height: 20px;
+    image-rendering: pixelated;
+}
+
+.pioneer-callsign {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: #64b5f6;
+}
+
 .pioneer-class-tag {
-    font-size: 8px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
     background: #ff9800;
-    color: #12161f;
-    padding: 2px 5px;
-    border-radius: 3px;
-    font-weight: bold;
+    color: #000;
+    padding: 2px 4px;
+    border-radius: 2px;
 }
 
 .wallet-display {
     display: flex;
     align-items: center;
     gap: 6px;
-    background: #0f1217;
-    padding: 6px 12px;
-    border-radius: 6px;
-    border: 1px solid #263238;
-    font-weight: bold;
+    background: #080c12;
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 2px solid #283344;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
     color: #ffd54f;
     cursor: pointer;
 }
 
+.wallet-coin-canvas {
+    width: 16px;
+    height: 16px;
+    image-rendering: pixelated;
+}
+
 .wallet-unit {
     color: #81c784;
-    font-size: 11px;
+    font-size: 8px;
 }

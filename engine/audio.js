@@ -5,7 +5,7 @@
  * - Lead melody (Square wave)
  * - Bassline (Triangle wave)
  * - Percussion (Procedural noise buffer)
- * - Atmospheric BGM tracks for Overworld, Sub-Bedrock Dungeons, and Boss Battles.
+ * - Authentic 8-bit / GBA Retro Sound FX for UI, Menus, Combat & Ambience.
  */
 
 class ChiptuneSynth {
@@ -19,13 +19,18 @@ class ChiptuneSynth {
 
     init() {
         if (!this.ctx && typeof AudioContext !== 'undefined') {
-            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
         }
     }
 
     playNote(freq, type = 'square', duration = 0.12, volume = 0.08) {
         if (!this.ctx) return;
         try {
+            if (this.ctx.state === 'suspended') this.ctx.resume();
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = type;
@@ -41,10 +46,15 @@ class ChiptuneSynth {
         } catch (e) {}
     }
 
+    playTone(freq, type = 'square', duration = 0.12, volume = 0.08) {
+        return this.playNote(freq, type, duration, volume);
+    }
+
     playNoise(duration = 0.08, volume = 0.06) {
         if (!this.ctx) return;
         try {
-            const bufferSize = this.ctx.sampleRate * duration;
+            if (this.ctx.state === 'suspended') this.ctx.resume();
+            const bufferSize = Math.floor(this.ctx.sampleRate * duration);
             const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
             const data = buffer.getChannelData(0);
             for (let i = 0; i < bufferSize; i++) {
@@ -63,7 +73,33 @@ class ChiptuneSynth {
         } catch (e) {}
     }
 
-    // SFX Methods
+    // UI & Menu Sound FX
+    playMenuMove() {
+        this.playNote(880, 'square', 0.04, 0.05);
+    }
+
+    playMenuSelect() {
+        this.playNote(523.25, 'square', 0.05, 0.07);
+        setTimeout(() => this.playNote(659.25, 'square', 0.08, 0.07), 40);
+        setTimeout(() => this.playNote(783.99, 'square', 0.12, 0.07), 80);
+    }
+
+    playRoll() {
+        for (let i = 0; i < 4; i++) {
+            setTimeout(() => this.playNote(300 + i * 120, 'triangle', 0.03, 0.06), i * 35);
+        }
+    }
+
+    playCancel() {
+        this.playNote(440, 'square', 0.06, 0.06);
+        setTimeout(() => this.playNote(220, 'square', 0.09, 0.06), 50);
+    }
+
+    playTypewriter() {
+        this.playNoise(0.02, 0.03);
+    }
+
+    // Combat SFX
     playSlash(comboStep = 1) {
         const freqs = [220, 280, 380];
         const f = freqs[(comboStep - 1) % 3] || 220;
@@ -106,7 +142,6 @@ class ChiptuneSynth {
         this.isPlayingBgm = true;
         this.noteIndex = 0;
 
-        // Note frequencies: [A3, C4, D4, E4, G4, A4, C5]
         const OVERWORLD_MELODY = [
             220, 0, 261.63, 293.66, 329.63, 0, 392.00, 329.63,
             293.66, 0, 261.63, 220.00, 261.63, 293.66, 329.63, 0
