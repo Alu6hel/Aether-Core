@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aether-Core: Retro-Tactile Action RPG (ALU Coin Matrix)</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app-container">
+        <!-- Top Game Dashboard Bar (GBA Style) -->
+        <header id="game-header">
+            <div class="header-left">
+                <span class="game-title">AETHER-CORE</span>
+                <span id="layer-badge" class="badge">SURFACE OVERWORLD</span>
+            </div>
+            <div class="header-center">
+                <span class="coin-ticker" id="coin-ticker">$ALU-7F3A</span>
+                <span class="coin-price" id="coin-price">1.250 ALU</span>
+                <span class="coin-floor" id="coin-floor">Floor: 0.125 ALU</span>
+            </div>
+            <div class="header-right">
+                <button id="btn-seed" class="gba-btn-sm" title="Generate New Seed Map">NEW SEED</button>
+                <button id="btn-sound" class="gba-btn-sm">SOUND: ON</button>
+            </div>
+        </header>
+
+        <!-- Main Viewport Container -->
+        <main id="viewport-wrapper">
+            <canvas id="game-canvas" width="480" height="320"></canvas>
+
+            <!-- On-Screen Virtual Controller Overlay (Inspired by User Screenshot) -->
+            <div id="touch-controls">
+                <!-- Left D-Pad -->
+                <div id="dpad-container">
+                    <button class="dpad-btn" id="dpad-up" data-dir="up">▲</button>
+                    <div class="dpad-row">
+                        <button class="dpad-btn" id="dpad-left" data-dir="left">◀</button>
+                        <div class="dpad-center"></div>
+                        <button class="dpad-btn" id="dpad-right" data-dir="right">▶</button>
+                    </div>
+                    <button class="dpad-btn" id="dpad-down" data-dir="down">▼</button>
+                </div>
+
+                <!-- Shoulder L & R Buttons -->
+                <button class="shoulder-btn" id="btn-l" data-action="dash">L (DASH)</button>
+                <button class="shoulder-btn" id="btn-r" data-action="interact">R (EXAMINE)</button>
+
+                <!-- Right Action Buttons (A & B) -->
+                <div id="action-buttons">
+                    <button class="action-btn" id="btn-b" data-action="parry">
+                        <span class="btn-label">B</span>
+                        <span class="btn-sub">PARRY</span>
+                    </button>
+                    <button class="action-btn" id="btn-a" data-action="attack">
+                        <span class="btn-label">A</span>
+                        <span class="btn-sub">ATTACK</span>
+                    </button>
+                </div>
+
+                <!-- Select & Start -->
+                <div id="center-buttons">
+                    <button class="meta-btn" id="btn-select">SELECT</button>
+                    <button class="meta-btn" id="btn-start">START</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Player HUD & Class Selector Footer -->
+        <footer id="game-footer">
+            <div class="player-bars">
+                <div class="bar-row">
+                    <span class="bar-label">HP:</span>
+                    <div class="bar-track"><div id="hp-bar" class="bar-fill hp-fill" style="width: 100%;"></div></div>
+                    <span id="hp-text" class="bar-num">140/140</span>
+                </div>
+                <div class="bar-row">
+                    <span class="bar-label">NRG:</span>
+                    <div class="bar-track"><div id="energy-bar" class="bar-fill energy-fill" style="width: 100%;"></div></div>
+                    <span id="energy-text" class="bar-num">90/90</span>
+                </div>
+            </div>
+
+            <div class="class-selector">
+                <button class="class-btn active" data-class="SUPER_SOLDIER">WARRIOR</button>
+                <button class="class-btn" data-class="TECHNO_MAGE">TECHNO-MAGE</button>
+                <button class="class-btn locked" id="btn-farmer" data-class="FARMER_GOD">??? (LOCKED)</button>
+            </div>
+
+            <div class="wallet-display">
+                <span class="wallet-icon">💎</span>
+                <span id="wallet-coins">0</span>
+                <span class="wallet-unit">$ALU</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="engine/alu_core.js"></script>
+    <script src="engine/physics.js"></script>
+    <script src="engine/world_generator.js"></script>
+    <script src="engine/combat.js"></script>
+    <script src="engine/cutscenes.js"></script>
+    <script src="engine/renderer.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

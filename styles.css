@@ -1,0 +1,356 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+body {
+    background-color: #0d0f12;
+    color: #e0e0e0;
+    font-family: 'JetBrains Mono', monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+#app-container {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    max-width: 900px;
+    height: 100vh;
+    max-height: 720px;
+    background: #14171c;
+    border: 2px solid #282e38;
+    border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Header Dashboard Bar */
+#game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1b2028;
+    padding: 8px 16px;
+    border-bottom: 2px solid #282e38;
+    font-size: 11px;
+}
+
+.game-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    color: #ff9800;
+    letter-spacing: 1px;
+    margin-right: 8px;
+}
+
+.badge {
+    background: #2a3b4c;
+    color: #64b5f6;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: bold;
+}
+
+.header-center {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.coin-ticker {
+    color: #ffd54f;
+    font-weight: bold;
+}
+
+.coin-price {
+    color: #81c784;
+}
+
+.coin-floor {
+    color: #4dd0e1;
+    font-size: 10px;
+}
+
+.gba-btn-sm {
+    background: #2c3440;
+    border: 1px solid #455a64;
+    color: #eceff1;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: bold;
+    transition: background 0.1s;
+}
+
+.gba-btn-sm:hover {
+    background: #37474f;
+}
+
+/* Main Viewport & Canvas */
+#viewport-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+    overflow: hidden;
+}
+
+#game-canvas {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.9);
+}
+
+/* On-Screen Virtual Controller (GBA Style from User Screenshots) */
+#touch-controls {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 16px 20px;
+}
+
+#touch-controls button {
+    pointer-events: auto;
+    touch-action: manipulation;
+}
+
+/* D-Pad */
+#dpad-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0.85;
+}
+
+.dpad-row {
+    display: flex;
+    align-items: center;
+}
+
+.dpad-center {
+    width: 36px;
+    height: 36px;
+    background: #263238;
+}
+
+.dpad-btn {
+    width: 38px;
+    height: 38px;
+    background: #37474f;
+    border: 1px solid #546e7a;
+    color: #b0bec5;
+    font-size: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.dpad-btn:active, .dpad-btn.pressed {
+    background: #263238;
+    color: #ff9800;
+}
+
+/* Shoulder L & R */
+.shoulder-btn {
+    position: absolute;
+    top: 14px;
+    background: rgba(38, 50, 56, 0.8);
+    border: 1px solid #78909c;
+    color: #cfd8dc;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#btn-l { left: 20px; }
+#btn-r { right: 20px; }
+.shoulder-btn:active { background: #ff9800; color: #000; }
+
+/* Action Buttons (A & B) */
+#action-buttons {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 12px;
+    opacity: 0.88;
+}
+
+.action-btn {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: #455a64;
+    border: 2px solid #90a4ae;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+}
+
+.action-btn:active, .action-btn.pressed {
+    transform: translateY(2px);
+    background: #ff7043;
+}
+
+#btn-b {
+    margin-top: 24px;
+    background: #3949ab;
+    border-color: #7986cb;
+}
+
+#btn-b:active { background: #00e5ff; }
+
+.btn-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+}
+
+.btn-sub {
+    font-size: 8px;
+    opacity: 0.85;
+    margin-top: 2px;
+}
+
+/* Select & Start */
+#center-buttons {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 18px;
+    opacity: 0.75;
+}
+
+.meta-btn {
+    background: #263238;
+    border: 1px solid #607d8b;
+    color: #b0bec5;
+    font-size: 9px;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.meta-btn:active { background: #ff9800; color: #000; }
+
+/* Footer HUD */
+#game-footer {
+    background: #1b2028;
+    border-top: 2px solid #282e38;
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.player-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 160px;
+}
+
+.bar-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+}
+
+.bar-label {
+    width: 28px;
+    font-weight: bold;
+}
+
+.bar-track {
+    width: 90px;
+    height: 8px;
+    background: #263238;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #455a64;
+}
+
+.bar-fill {
+    height: 100%;
+    transition: width 0.15s ease-out;
+}
+
+.hp-fill { background: #e53935; }
+.energy-fill { background: #00bcd4; }
+.bar-num { font-size: 9px; color: #b0bec5; }
+
+.class-selector {
+    display: flex;
+    gap: 8px;
+}
+
+.class-btn {
+    background: #263238;
+    border: 1px solid #455a64;
+    color: #b0bec5;
+    font-size: 10px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.15s;
+}
+
+.class-btn:hover { background: #37474f; color: #fff; }
+.class-btn.active {
+    background: #ff9800;
+    color: #14171c;
+    border-color: #ffa726;
+}
+
+.class-btn.locked {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: #1e2229;
+}
+
+.wallet-display {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #0f1217;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #263238;
+    font-weight: bold;
+    color: #ffd54f;
+}
+
+.wallet-unit {
+    color: #81c784;
+    font-size: 11px;
+}
