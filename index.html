@@ -9,18 +9,22 @@
 </head>
 <body>
     <div id="app-container">
-        <!-- Top Game Dashboard Bar (GBA Style) -->
+        <!-- Top Game Dashboard Bar (With Company Logo Placeholder/Emblem) -->
         <header id="game-header">
             <div class="header-left">
+                <!-- Alumungandr Company Logo as Brand Placeholder / Emblem -->
+                <img src="assets/logo.svg" alt="Company Logo" id="company-logo" class="brand-logo" />
                 <span class="game-title">AETHER-CORE</span>
                 <span id="layer-badge" class="badge">SURFACE OVERWORLD</span>
             </div>
             <div class="header-center">
                 <span class="coin-ticker" id="coin-ticker">$ALU-7F3A</span>
                 <span class="coin-price" id="coin-price">1.250 ALU</span>
-                <span class="coin-floor" id="coin-floor">Floor: 0.125 ALU</span>
+                <span class="coin-floor" id="coin-floor" title="Genesis Floor: Guaranteed minimum redemption value">Floor: 0.125 ALU</span>
             </div>
             <div class="header-right">
+                <button id="btn-market" class="gba-btn-sm" title="Trade ALU World Coin on Bonding Curve">MARKET</button>
+                <button id="btn-inventory" class="gba-btn-sm" title="View Equipment & Keycards">BAG</button>
                 <button id="btn-seed" class="gba-btn-sm" title="Generate New Seed Map">NEW SEED</button>
                 <button id="btn-sound" class="gba-btn-sm">SOUND: ON</button>
             </div>
@@ -61,8 +65,47 @@
 
                 <!-- Select & Start -->
                 <div id="center-buttons">
-                    <button class="meta-btn" id="btn-select">SELECT</button>
+                    <button class="meta-btn" id="btn-select">MARKET</button>
                     <button class="meta-btn" id="btn-start">START</button>
+                </div>
+            </div>
+
+            <!-- Bonding Curve Market Modal -->
+            <div id="market-modal" class="game-modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>🪙 ALU WORLD-COIN BONDING CURVE</h3>
+                        <button class="modal-close" id="market-close">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="market-stats">
+                            <div><strong>Ticker:</strong> <span id="m-ticker">$ALU-7F3A</span></div>
+                            <div><strong>Current Price:</strong> <span id="m-price">1.250 ALU</span></div>
+                            <div><strong>Genesis Floor:</strong> <span id="m-floor" class="text-cyan">0.125 ALU</span></div>
+                            <div><strong>Circulating:</strong> <span id="m-supply">100.0</span></div>
+                        </div>
+                        <p class="modal-desc">Every map is backed by an automated mathematical curve. 2.5% of all transactions go directly into the immutable Genesis Vault.</p>
+                        <div class="market-actions">
+                            <button id="btn-buy-coin" class="market-action-btn buy">BUY 10 ALU WORTH</button>
+                            <button id="btn-sell-coin" class="market-action-btn sell">SELL 5 TOKENS</button>
+                            <button id="btn-burn-floor" class="market-action-btn floor">EMERGENCY FLOOR BURN</button>
+                        </div>
+                        <div id="market-log" class="market-log">Market ready. Connect to trade on-chain.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory / Bag Modal -->
+            <div id="inventory-modal" class="game-modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>🎒 PIONEER INVENTORY</h3>
+                        <button class="modal-close" id="inv-close">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="inventory-grid" class="inventory-grid"></div>
+                        <div id="item-details" class="item-details">Select an item to inspect or use.</div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -88,7 +131,7 @@
                 <button class="class-btn locked" id="btn-farmer" data-class="FARMER_GOD">??? (LOCKED)</button>
             </div>
 
-            <div class="wallet-display">
+            <div class="wallet-display" id="hud-wallet">
                 <span class="wallet-icon">💎</span>
                 <span id="wallet-coins">0</span>
                 <span class="wallet-unit">$ALU</span>
@@ -99,6 +142,9 @@
     <!-- Scripts -->
     <script src="engine/alu_core.js"></script>
     <script src="engine/physics.js"></script>
+    <script src="engine/inventory.js"></script>
+    <script src="engine/storage.js"></script>
+    <script src="engine/edge_client.js"></script>
     <script src="engine/world_generator.js"></script>
     <script src="engine/combat.js"></script>
     <script src="engine/cutscenes.js"></script>

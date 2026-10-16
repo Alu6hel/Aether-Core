@@ -2,7 +2,8 @@
  * Aether-Core: Main Game Orchestrator & Input Pipeline
  * 
  * Binds the ALU Seed Matrix, 8-Color Palettes, Kinematics,
- * Nine-Sols Tactical Combat, Sub-Bedrock Dungeons, and GBA Cutscenes.
+ * Nine-Sols Tactical Combat, Sub-Bedrock Dungeons, Inventory,
+ * Bonding Curve Market, and GBA Cutscenes.
  */
 
 class GameApp {
@@ -10,6 +11,9 @@ class GameApp {
         this.canvas = document.getElementById('game-canvas');
         this.renderer = new RetroRenderer(this.canvas);
         this.cutscenes = new CutsceneEngine();
+        this.storage = new GameStorage();
+        this.edgeClient = new EdgeWorldClient();
+        this.inventory = new Inventory();
         
         // Game State
         this.currentSeed = 0x7F3A59DF;
@@ -30,13 +34,24 @@ class GameApp {
     }
 
     init() {
+        // Load persistent state if exists
+        const saved = this.storage.load();
+        if (saved) {
+            if (saved.seed) this.currentSeed = saved.seed;
+            if (saved.isFarmerUnlocked) {
+                this.isFarmerUnlocked = true;
+                this.updateFarmerButton();
+            }
+        }
+
         // 1. Generate Maps from Master Seed
         this.loadNewWorld(this.currentSeed);
 
-        // 2. Setup Input Handlers
+        // 2. Setup Input Handlers & Modals
         this.setupKeyboard();
         this.setupTouchControls();
         this.setupUI();
+        this.setupModals();
 
         // 3. Play GBA Intro Cutscene
         this.cutscenes.startIntroSequence(() => {
@@ -46,6 +61,11 @@ class GameApp {
         // 4. Start 60 FPS Game Loop
         this.lastTime = performance.now();
         requestAnimationFrame(this.loop.bind(this));
+
+        // Sync with edge gateway in background
+        this.edgeClient.mintWorldCoin(this.currentSeed).then(res => {
+            console.log("[EDGE SYNC]", res);
+        });
     }
 
     loadNewWorld(seed) {
@@ -60,6 +80,7 @@ class GameApp {
         this.player = new Character(this.selectedClass, this.currentMap.spawnPoint.x, this.currentMap.spawnPoint.y);
         
         this.updateHUD();
+        this.saveState();
     }
 
     switchLayer(newLayer) {
@@ -104,6 +125,10 @@ class GameApp {
                 this.handleSkill();
             } else if (e.key.toLowerCase() === 'e') { // Interact
                 this.handleInteract();
+            } else if (e.key.toLowerCase() === 'b' || e.key.toLowerCase() === 'i') {
+                this.toggleInventory();
+            } else if (e.key.toLowerCase() === 'm') {
+                this.toggleMarket();
             }
         });
 
@@ -141,6 +166,7 @@ class GameApp {
         const btnR = document.getElementById('btn-r');
 
         const bindAction = (elem, cb) => {
+            if (!elem) return;
             const act = (e) => {
                 e.preventDefault();
                 this.renderer.audio.init();
@@ -163,9 +189,13 @@ class GameApp {
         bindAction(btnL, () => this.handleSkill());
         bindAction(btnR, () => this.handleInteract());
 
+        const btnSelect = document.getElementById('btn-select');
+        bindAction(btnSelect, () => this.toggleMarket());
+
         const btnStart = document.getElementById('btn-start');
         bindAction(btnStart, () => {
             if (!this.cutscenes.isComplete) this.cutscenes.skipStep();
+            else this.toggleInventory();
         });
     }
 
@@ -203,6 +233,120 @@ class GameApp {
         sndBtn.addEventListener('click', () => {
             this.soundEnabled = !this.soundEnabled;
             sndBtn.innerText = `SOUND: ${this.soundEnabled ? 'ON' : 'OFF'}`;
+        });
+
+        // Market button & ticker click
+        document.getElementById('btn-market').addEventListener('click', () => this.toggleMarket());
+        document.getElementById('coin-ticker').addEventListener('click', () => this.toggleMarket());
+        document.getElementById('hud-wallet').addEventListener('click', () => this.toggleMarket());
+
+        // Inventory button
+        document.getElementById('btn-inventory').addEventListener('click', () => this.toggleInventory());
+    }
+
+    setupModals() {
+        // Market Modal Controls
+        const marketModal = document.getElementById('market-modal');
+        document.getElementById('market-close').addEventListener('click', () => marketModal.classList.add('hidden'));
+
+        document.getElementById('btn-buy-coin').addEventListener('click', () => {
+            const curve = this.currentMap.bondingCurve;
+            const res = curve.buy(10.0);
+            this.player.coinsCollected += Math.round(res.tokensReceived);
+            document.getElementById('market-log').innerText = `Bought ${res.tokensReceived.toFixed(2)} tokens for 10 ALU. Floor backed: ${res.floor.toFixed(3)} ALU`;
+            this.updateHUD();
+            this.renderMarketModal();
+            if (this.soundEnabled) this.renderer.audio.playCoin();
+        });
+
+        document.getElementById('btn-sell-coin').addEventListener('click', () => {
+            const curve = this.currentMap.bondingCurve;
+            if (this.player.coinsCollected < 5) {
+                document.getElementById('market-log').innerText = "Insufficient ALU tokens to sell!";
+                return;
+            }
+            const res = curve.sell(5.0);
+            this.player.coinsCollected -= 5;
+            document.getElementById('market-log').innerText = `Sold 5 tokens for ${res.aluReturned.toFixed(2)} ALU. Current Price: ${res.newPrice.toFixed(3)} ALU`;
+            this.updateHUD();
+            this.renderMarketModal();
+            if (this.soundEnabled) this.renderer.audio.playTone(400, 'triangle', 0.1, 0.1);
+        });
+
+        document.getElementById('btn-burn-floor').addEventListener('click', () => {
+            const curve = this.currentMap.bondingCurve;
+            if (this.player.coinsCollected <= 0) {
+                document.getElementById('market-log').innerText = "No tokens to burn for floor payout!";
+                return;
+            }
+            const tokens = Math.min(10, this.player.coinsCollected);
+            const res = curve.burnForFloor(tokens);
+            this.player.coinsCollected -= tokens;
+            document.getElementById('market-log').innerText = `Emergency Floor Burn: Redeemed ${tokens} tokens for ${res.aluRedeemed.toFixed(3)} ALU reserve.`;
+            this.updateHUD();
+            this.renderMarketModal();
+            if (this.soundEnabled) this.renderer.audio.playParry();
+        });
+
+        // Inventory Modal Controls
+        const invModal = document.getElementById('inventory-modal');
+        document.getElementById('inv-close').addEventListener('click', () => invModal.classList.add('hidden'));
+    }
+
+    toggleMarket() {
+        const modal = document.getElementById('market-modal');
+        if (modal.classList.contains('hidden')) {
+            this.renderMarketModal();
+            modal.classList.remove('hidden');
+        } else {
+            modal.classList.add('hidden');
+        }
+    }
+
+    renderMarketModal() {
+        const curve = this.currentMap.bondingCurve;
+        document.getElementById('m-ticker').innerText = curve.ticker;
+        document.getElementById('m-price').innerText = `${curve.getCurrentPrice().toFixed(3)} ALU`;
+        document.getElementById('m-floor').innerText = `${curve.getGuaranteedFloor().toFixed(3)} ALU`;
+        document.getElementById('m-supply').innerText = curve.circulatingSupply.toFixed(1);
+    }
+
+    toggleInventory() {
+        const modal = document.getElementById('inventory-modal');
+        if (modal.classList.contains('hidden')) {
+            this.renderInventoryModal();
+            modal.classList.remove('hidden');
+        } else {
+            modal.classList.add('hidden');
+        }
+    }
+
+    renderInventoryModal() {
+        const grid = document.getElementById('inventory-grid');
+        grid.innerHTML = '';
+
+        this.inventory.slots.forEach(slot => {
+            const el = document.createElement('div');
+            el.className = 'inv-slot';
+            el.innerHTML = `<strong>${slot.item.name}</strong><span>x${slot.count}</span>`;
+            el.addEventListener('click', () => {
+                document.getElementById('item-details').innerHTML = `
+                    <strong>${slot.item.name}</strong> (${slot.item.type})<br>
+                    ${slot.item.desc}<br>
+                    ${slot.item.type === 'CONSUMABLE' ? '<button id="btn-use-item" class="gba-btn-sm" style="margin-top:6px;">USE ITEM</button>' : ''}
+                `;
+                const useBtn = document.getElementById('btn-use-item');
+                if (useBtn) {
+                    useBtn.addEventListener('click', () => {
+                        if (this.inventory.useItem(slot.item.id, this.player)) {
+                            this.renderInventoryModal();
+                            this.updateHUD();
+                            if (this.soundEnabled) this.renderer.audio.playTone(660, 'sine', 0.2, 0.1);
+                        }
+                    });
+                }
+            });
+            grid.appendChild(el);
         });
     }
 
@@ -277,16 +421,31 @@ class GameApp {
 
     unlockFarmer() {
         this.isFarmerUnlocked = true;
-        const btn = document.getElementById('btn-farmer');
-        btn.classList.remove('locked');
-        btn.innerText = "THE FARMER (UNLOCKED!)";
-        btn.style.color = "#76ff03";
-        btn.style.borderColor = "#76ff03";
+        this.updateFarmerButton();
+        this.saveState();
 
         if (this.soundEnabled) this.renderer.audio.playCoin();
 
         this.cutscenes.startFarmerUnlockSequence(() => {
             console.log("The Farmer has joined your roster!");
+        });
+    }
+
+    updateFarmerButton() {
+        const btn = document.getElementById('btn-farmer');
+        if (btn) {
+            btn.classList.remove('locked');
+            btn.innerText = "THE FARMER (UNLOCKED!)";
+            btn.style.color = "#76ff03";
+            btn.style.borderColor = "#76ff03";
+        }
+    }
+
+    saveState() {
+        this.storage.save({
+            seed: this.currentSeed,
+            isFarmerUnlocked: this.isFarmerUnlocked,
+            coins: this.player ? this.player.coinsCollected : 0
         });
     }
 
@@ -390,5 +549,5 @@ class GameApp {
 // Launch on page load
 window.addEventListener('DOMContentLoaded', () => {
     window.game = new GameApp();
-    console.log("Aether-Core Game App running successfully.");
+    console.log("Aether-Core Game App running successfully with full logic.");
 });
