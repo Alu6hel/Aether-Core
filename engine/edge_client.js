@@ -8,12 +8,33 @@
 
 class EdgeWorldClient {
     constructor(baseUrl = '') {
-        // Automatically default to current origin if in browser, or Alumungandr production
-        if (typeof window !== 'undefined' && window.location && window.location.origin) {
+        // If running in Android APK WebView (file:///android_asset) or without valid HTTP origin,
+        // target the official Alumungandr low-latency Cloudflare Edge backend.
+        if (baseUrl) {
+            this.baseUrl = baseUrl;
+        } else if (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin.startsWith('http')) {
             this.baseUrl = window.location.origin;
         } else {
-            this.baseUrl = baseUrl || 'https://alumungandr.com';
+            this.baseUrl = 'https://alumungandr.com';
         }
+    }
+
+    async ping() {
+        const t0 = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+        try {
+            const resp = await fetch(`${this.baseUrl}/api/world/ping`, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
+            if (resp.ok) {
+                const data = await resp.json();
+                const latency = Math.round(((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) - t0);
+                return { ok: true, latencyMs: latency, ...data };
+            }
+        } catch (e) {
+            // Offline fallback
+        }
+        return { ok: false, latencyMs: -1, status: 'OFFLINE_LOCAL' };
     }
 
     async getSeedData(seed) {

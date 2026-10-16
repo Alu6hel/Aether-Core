@@ -5,8 +5,10 @@
  * and the secret god-like Farmer reality-warping mechanics.
  */
 
-if (typeof require !== 'undefined') {
-    var { KinematicBody, Vector2 } = require('./physics.js');
+if (typeof require !== 'undefined' && typeof window === 'undefined') {
+    const _phys = require('./physics.js');
+    global.KinematicBody = _phys.KinematicBody;
+    global.Vector2 = _phys.Vector2;
 }
 
 const CHARACTER_CLASS = {

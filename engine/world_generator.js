@@ -6,8 +6,11 @@
  * Uses Marching Bitmask Autotiling for seamless GBA-style aesthetics.
  */
 
-if (typeof require !== 'undefined') {
-    var { AluPrng, AluPaletteGenerator, AluCoinBondingCurve } = require('./alu_core.js');
+if (typeof require !== 'undefined' && typeof window === 'undefined') {
+    const _core = require('./alu_core.js');
+    global.AluPrng = _core.AluPrng;
+    global.AluPaletteGenerator = _core.AluPaletteGenerator;
+    global.AluCoinBondingCurve = _core.AluCoinBondingCurve;
 }
 
 // Tile Type Indices

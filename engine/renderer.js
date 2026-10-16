@@ -5,9 +5,11 @@
  * boss telegraph warnings, 96x96 dialogue portraits, and UI overlays.
  */
 
-if (typeof require !== 'undefined') {
-    var { SpriteSheet } = require('./sprites.js');
-    var { ChiptuneSynth } = require('./audio.js');
+if (typeof require !== 'undefined' && typeof window === 'undefined') {
+    const _sprites = require('./sprites.js');
+    const _audio = require('./audio.js');
+    global.SpriteSheet = _sprites.SpriteSheet;
+    global.ChiptuneSynth = _audio.ChiptuneSynth;
 }
 
 class RetroRenderer {

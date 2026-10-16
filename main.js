@@ -91,8 +91,24 @@ class GameApp {
         });
     }
 
+    bindTap(elem, cb) {
+        if (!elem) return;
+        let lastTrigger = 0;
+        const trigger = (e) => {
+            const now = Date.now();
+            if (now - lastTrigger < 250) return;
+            lastTrigger = now;
+            if (e && e.cancelable && e.type === 'pointerdown') e.preventDefault();
+            if (this.renderer && this.renderer.audio) this.renderer.audio.init();
+            cb(e);
+        };
+        elem.addEventListener('pointerdown', trigger);
+        elem.addEventListener('click', trigger);
+    }
+
     renderUIPixelCanvases() {
         const pal = this.currentMap ? this.currentMap.palette.colors : ['#0a0a0f', '#1e2430', '#37474f', '#607d8b', '#00e5ff', '#ff9800', '#ffd54f', '#ffffff'];
+        console.log("[UI CANVASES] Rendering pixel canvases with palette:", pal[0], pal[4]);
         
         // 1. Guide Portrait (Chief Overseer Vance from Image 4 reference)
         const guideCanvas = document.getElementById('guide-portrait-canvas');
@@ -102,6 +118,9 @@ class GameApp {
             ctx.imageSmoothingEnabled = false;
             ctx.clearRect(0, 0, 48, 48);
             ctx.drawImage(portrait, 0, 0, 48, 48);
+            console.log("[UI CANVASES] Drew guide portrait. Size:", portrait.width, portrait.height);
+        } else {
+            console.warn("[UI CANVASES] guide-portrait-canvas NOT found!");
         }
 
         // 2. Class Card Canvases
@@ -111,6 +130,7 @@ class GameApp {
             ctx.imageSmoothingEnabled = false;
             ctx.clearRect(0, 0, 32, 32);
             ctx.drawImage(this.renderer.sprites.getClassPreview('SUPER_SOLDIER'), 0, 0);
+            console.log("[UI CANVASES] Drew warrior preview.");
         }
 
         const cMage = document.getElementById('canvas-mage');
@@ -119,6 +139,7 @@ class GameApp {
             ctx.imageSmoothingEnabled = false;
             ctx.clearRect(0, 0, 32, 32);
             ctx.drawImage(this.renderer.sprites.getClassPreview('TECHNO_MAGE'), 0, 0);
+            console.log("[UI CANVASES] Drew mage preview.");
         }
 
         const cFarmer = document.getElementById('canvas-farmer');
@@ -127,6 +148,7 @@ class GameApp {
             ctx.imageSmoothingEnabled = false;
             ctx.clearRect(0, 0, 32, 32);
             ctx.drawImage(this.renderer.sprites.getClassPreview('FARMER_GOD'), 0, 0);
+            console.log("[UI CANVASES] Drew farmer preview.");
         }
 
         // 3. Gold Coin Medallion
@@ -288,15 +310,7 @@ class GameApp {
         const btnB = document.getElementById('btn-b');
         const btnC = document.getElementById('btn-c');
 
-        const bindAction = (elem, cb) => {
-            if (!elem) return;
-            const act = (e) => {
-                if (e.cancelable) e.preventDefault();
-                this.renderer.audio.init();
-                cb();
-            };
-            elem.addEventListener('pointerdown', act);
-        };
+        const bindAction = (elem, cb) => this.bindTap(elem, cb);
 
         // A Button: Context-sensitive (Attack or Examine)
         bindAction(btnA, () => this.handleAction());
@@ -335,8 +349,7 @@ class GameApp {
 
         const btnRandomName = document.getElementById('btn-random-name');
         if (btnRandomName) {
-            btnRandomName.addEventListener('pointerdown', (e) => {
-                e.preventDefault();
+            this.bindTap(btnRandomName, () => {
                 const names = ['ALU-01', 'CIPHER-9', 'CHRONO-X', 'NEO-PIONEER', 'DYSON-VALKYRIE', 'VOID-WALKER', 'SOL-7', 'NEXUS-PRIME', 'HARVESTER-OMEGA'];
                 const picked = names[Math.floor(Math.random() * names.length)];
                 callsignInput.value = picked;
@@ -348,8 +361,7 @@ class GameApp {
         // Setup Class Selection Cards
         const cards = document.querySelectorAll('.class-card');
         cards.forEach(card => {
-            card.addEventListener('pointerdown', (e) => {
-                e.preventDefault();
+            this.bindTap(card, () => {
                 const targetClass = card.getAttribute('data-class');
                 if (targetClass === 'FARMER_GOD' && !this.isFarmerUnlocked) {
                     if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
@@ -373,8 +385,7 @@ class GameApp {
         // Setup Confirm Button -> Moves to Menu Hub
         const btnConfirmSetup = document.getElementById('btn-confirm-setup');
         if (btnConfirmSetup) {
-            btnConfirmSetup.addEventListener('pointerdown', (e) => {
-                e.preventDefault();
+            this.bindTap(btnConfirmSetup, () => {
                 if (callsignInput && callsignInput.value.trim()) {
                     this.pioneerName = callsignInput.value.trim().toUpperCase();
                 }
@@ -1169,3 +1180,10 @@ window.addEventListener('DOMContentLoaded', () => {
     window.game = new GameApp();
     console.log("Aether-Core Game App running successfully with full logic.");
 });
+
+// Native Android back button dispatcher
+window.handleAndroidBack = function() {
+    if (window.game && window.game.screens) {
+        window.game.screens.handleEscape();
+    }
+};
