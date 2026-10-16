@@ -62,6 +62,7 @@ case "$1" in
         node "$DIR/tests/test_full_logic.js"
         node "$DIR/tests/test_simulation.js"
         node "$DIR/tests/test_screens.js"
+        node "$DIR/tests/test_controls_and_setup.js"
         ;;
     *)
         start_server

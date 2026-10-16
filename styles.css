@@ -1,3 +1,4 @@
+/* Reset & Base Fonts */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -7,41 +8,43 @@
     -webkit-touch-callout: none;
 }
 
-body {
-    background-color: #0d0f12;
-    color: #e0e0e0;
+body, html {
+    width: 100%;
+    height: 100%;
+    background-color: #0d1117;
+    color: #e6edf3;
     font-family: 'JetBrains Mono', monospace;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
     overflow: hidden;
 }
 
+/* App Main Container (GBA Aspect Ratio Container) */
 #app-container {
     display: flex;
     flex-direction: column;
     width: 100vw;
-    max-width: 900px;
     height: 100vh;
-    max-height: 720px;
-    background: #14171c;
-    border: 2px solid #282e38;
+    max-width: 960px;
+    max-height: 640px;
+    margin: auto;
+    position: absolute;
+    inset: 0;
+    background: #141820;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.85);
+    border: 3px solid #202634;
     border-radius: 8px;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
-    position: relative;
     overflow: hidden;
 }
 
-/* Header Dashboard Bar */
+/* Top Game Dashboard Header */
 #game-header {
+    background: #1a202c;
+    border-bottom: 2px solid #283344;
+    padding: 8px 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #1b2028;
-    padding: 8px 16px;
-    border-bottom: 2px solid #282e38;
     font-size: 11px;
+    z-index: 10;
 }
 
 .header-left {
@@ -51,9 +54,8 @@ body {
 }
 
 .brand-logo {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
+    width: 22px;
+    height: 22px;
     filter: drop-shadow(0 0 4px #00e5ff);
 }
 
@@ -62,41 +64,40 @@ body {
     font-size: 11px;
     color: #ff9800;
     letter-spacing: 1px;
-    margin-right: 4px;
+    text-shadow: 1px 1px 0px #000;
 }
 
 .badge {
     background: #2a3b4c;
     color: #64b5f6;
-    padding: 3px 6px;
+    padding: 2px 6px;
     border-radius: 4px;
     font-size: 9px;
     font-weight: bold;
+    border: 1px solid #3d566e;
 }
 
 .header-center {
     display: flex;
-    gap: 12px;
     align-items: center;
+    gap: 12px;
 }
 
 .coin-ticker {
     color: #ffd54f;
     font-weight: bold;
-    cursor: pointer;
-}
-
-.coin-ticker:hover {
-    text-decoration: underline;
+    letter-spacing: 0.5px;
 }
 
 .coin-price {
     color: #81c784;
+    font-weight: bold;
 }
 
 .coin-floor {
-    color: #4dd0e1;
+    color: #00bcd4;
     font-size: 10px;
+    opacity: 0.9;
 }
 
 .header-right {
@@ -118,6 +119,11 @@ body {
 
 .gba-btn-sm:hover {
     background: #37474f;
+}
+
+.dev-btn {
+    border-color: #ba68c8;
+    color: #ea80fc;
 }
 
 /* Main Viewport & Canvas */
@@ -178,9 +184,9 @@ body {
 }
 
 .modal-header h3 {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 10px;
     color: #ffd54f;
+    font-size: 12px;
+    margin: 0;
 }
 
 .modal-close {
@@ -188,97 +194,113 @@ body {
     border: none;
     color: #ff5252;
     font-size: 16px;
-    cursor: pointer;
     font-weight: bold;
+    cursor: pointer;
 }
 
 .market-stats {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
-    background: #141820;
+    background: #12161f;
     padding: 10px;
     border-radius: 6px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
-
-.text-cyan { color: #00e5ff; }
 
 .modal-desc {
     color: #90a4ae;
+    font-size: 10px;
     line-height: 1.4;
     margin-bottom: 12px;
 }
 
 .market-actions {
     display: flex;
-    flex-direction: column;
     gap: 8px;
     margin-bottom: 12px;
 }
 
 .market-action-btn {
-    padding: 8px;
-    border-radius: 4px;
-    border: 1px solid transparent;
+    flex: 1;
+    padding: 8px 4px;
+    font-size: 9px;
     font-weight: bold;
-    font-size: 10px;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
-    transition: opacity 0.15s;
+    transition: transform 0.1s;
+}
+
+.market-action-btn:active {
+    transform: scale(0.96);
 }
 
 .market-action-btn.buy { background: #2e7d32; color: #fff; }
-.market-action-btn.sell { background: #c62828; color: #fff; }
+.market-action-btn.sell { background: #d84315; color: #fff; }
 .market-action-btn.floor { background: #00838f; color: #fff; }
-.market-action-btn:hover { opacity: 0.9; }
 
 .market-log {
-    background: #0d1017;
+    background: #090c10;
     border: 1px solid #263238;
-    padding: 8px;
-    border-radius: 4px;
+    padding: 6px;
     font-size: 9px;
-    color: #81c784;
-    min-height: 28px;
+    color: #64b5f6;
+    border-radius: 4px;
+    max-height: 48px;
+    overflow-y: auto;
 }
 
 /* Inventory Modal */
 .inventory-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 8px;
     margin-bottom: 12px;
 }
 
 .inv-slot {
-    background: #141820;
+    aspect-ratio: 1;
+    background: #141822;
     border: 1px solid #37474f;
-    border-radius: 6px;
-    padding: 8px;
+    border-radius: 4px;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
+    position: relative;
     cursor: pointer;
-    font-size: 9px;
-    text-align: center;
-    transition: all 0.15s;
 }
 
-.inv-slot:hover, .inv-slot.selected {
-    border-color: #ff9800;
-    background: #263238;
+.inv-slot.selected {
+    border-color: #ffd54f;
+    box-shadow: 0 0 8px rgba(255, 213, 79, 0.4);
+}
+
+.inv-icon {
+    font-size: 18px;
+}
+
+.inv-count {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 8px;
+    font-weight: bold;
+    color: #81c784;
 }
 
 .item-details {
-    background: #0d1017;
+    background: #141822;
+    border: 1px solid #263238;
     padding: 8px;
+    font-size: 10px;
+    color: #cfd8dc;
     border-radius: 4px;
     min-height: 40px;
-    color: #cfd8dc;
-    font-size: 10px;
 }
 
-/* On-Screen Virtual Controller */
+/* Touch Controls Virtual Overlay */
 #touch-controls {
     position: absolute;
     inset: 0;
@@ -286,12 +308,12 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    padding: 16px 20px;
+    padding: 18px 24px;
+    z-index: 50;
 }
 
 #touch-controls button {
     pointer-events: auto;
-    touch-action: manipulation;
 }
 
 /* D-Pad */
@@ -299,7 +321,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    opacity: 0.85;
+    opacity: 0.88;
 }
 
 .dpad-row {
@@ -314,8 +336,8 @@ body {
 }
 
 .dpad-btn {
-    width: 38px;
-    height: 38px;
+    width: 40px;
+    height: 40px;
     background: #37474f;
     border: 1px solid #546e7a;
     color: #b0bec5;
@@ -325,6 +347,7 @@ body {
     align-items: center;
     cursor: pointer;
     border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
 }
 
 .dpad-btn:active, .dpad-btn.pressed {
@@ -332,96 +355,423 @@ body {
     color: #ff9800;
 }
 
-/* Shoulder L & R */
-.shoulder-btn {
-    position: absolute;
-    top: 14px;
-    background: rgba(38, 50, 56, 0.8);
-    border: 1px solid #78909c;
-    color: #cfd8dc;
-    font-size: 10px;
-    font-weight: bold;
-    padding: 6px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-#btn-l { left: 20px; }
-#btn-r { right: 20px; }
-.shoulder-btn:active { background: #ff9800; color: #000; }
-
-/* Action Buttons (A & B) */
+/* Right Action Buttons (C = Dash, B = Parry, A = Attack/Examine) */
 #action-buttons {
     display: flex;
-    gap: 16px;
-    margin-bottom: 12px;
-    opacity: 0.88;
+    align-items: flex-end;
+    gap: 12px;
+    margin-bottom: 8px;
+    opacity: 0.92;
 }
 
 .action-btn {
     width: 54px;
     height: 54px;
     border-radius: 50%;
-    background: #455a64;
-    border: 2px solid #90a4ae;
     color: #fff;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    user-select: none;
+    transition: transform 0.05s, filter 0.05s;
 }
 
-.action-btn:active, .action-btn.pressed {
-    transform: translateY(2px);
+#btn-c {
+    background: #d84315;
+    border: 2px solid #ff8a65;
+    margin-bottom: 28px;
+}
+
+#btn-c:active, #btn-c.pressed {
     background: #ff7043;
+    transform: translateY(2px) scale(0.96);
 }
 
 #btn-b {
-    margin-top: 24px;
-    background: #3949ab;
-    border-color: #7986cb;
+    background: #283593;
+    border: 2px solid #7986cb;
+    margin-bottom: 8px;
 }
 
-#btn-b:active { background: #00e5ff; }
+#btn-b:active, #btn-b.pressed {
+    background: #3f51b5;
+    transform: translateY(2px) scale(0.96);
+}
+
+#btn-a {
+    background: #00695c;
+    border: 2px solid #4db6ac;
+    margin-bottom: 20px;
+}
+
+#btn-a:active, #btn-a.pressed {
+    background: #00897b;
+    transform: translateY(2px) scale(0.96);
+}
 
 .btn-label {
     font-family: 'Press Start 2P', monospace;
-    font-size: 14px;
+    font-size: 13px;
+    text-shadow: 1px 1px 0px #000;
 }
 
 .btn-sub {
     font-size: 8px;
-    opacity: 0.85;
+    opacity: 0.9;
     margin-top: 2px;
+    font-weight: bold;
+    letter-spacing: 0.3px;
 }
 
-/* Select & Start */
+/* Center Meta Controls */
 #center-buttons {
     position: absolute;
-    bottom: 14px;
+    bottom: 12px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 18px;
-    opacity: 0.75;
+    gap: 12px;
+    opacity: 0.85;
 }
 
 .meta-btn {
     background: #263238;
     border: 1px solid #607d8b;
-    color: #b0bec5;
+    color: #cfd8dc;
     font-size: 9px;
     font-weight: bold;
-    padding: 4px 10px;
+    padding: 5px 12px;
     border-radius: 12px;
     cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    transition: background 0.1s;
 }
 
-.meta-btn:active { background: #ff9800; color: #000; }
+.meta-btn:hover { background: #37474f; color: #fff; }
+.meta-btn:active { background: #ff9800; color: #000; transform: translateY(1px); }
 
-/* Footer HUD */
+/* Setup Modal */
+.setup-content {
+    max-width: 580px;
+    width: 90%;
+    border-color: #ff9800;
+}
+
+.setup-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #37474f;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+}
+
+.setup-logo {
+    width: 38px;
+    height: 38px;
+    filter: drop-shadow(0 0 6px #ff9800);
+}
+
+.setup-header h2 {
+    font-size: 13px;
+    color: #ff9800;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+.setup-subtitle {
+    font-size: 9px;
+    color: #78909c;
+}
+
+.setup-guide-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #141822;
+    border: 1px solid #263238;
+    border-left: 3px solid #00e5ff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+}
+
+.guide-portrait {
+    font-size: 26px;
+}
+
+.guide-text {
+    font-size: 10px;
+    color: #cfd8dc;
+    line-height: 1.4;
+    font-style: italic;
+}
+
+.setup-form-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    gap: 10px;
+}
+
+.setup-form-row label {
+    font-weight: bold;
+    color: #b0bec5;
+    font-size: 10px;
+}
+
+.input-with-random {
+    display: flex;
+    gap: 6px;
+}
+
+#callsign-input {
+    background: #0f1217;
+    border: 1px solid #455a64;
+    color: #00e5ff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 4px;
+    outline: none;
+    width: 140px;
+}
+
+#callsign-input:focus {
+    border-color: #00e5ff;
+}
+
+.class-cards-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.class-card {
+    background: #181d26;
+    border: 1px solid #37474f;
+    border-radius: 6px;
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: all 0.15s ease;
+}
+
+.class-card:hover {
+    border-color: #78909c;
+    background: #1f2531;
+}
+
+.class-card.selected {
+    border-color: #ff9800;
+    background: #252b38;
+    box-shadow: 0 0 10px rgba(255, 152, 0, 0.35);
+}
+
+.class-card.locked {
+    opacity: 0.5;
+    border-style: dashed;
+    cursor: not-allowed;
+}
+
+.card-icon { font-size: 20px; margin-bottom: 4px; }
+.card-title { font-weight: bold; font-size: 11px; color: #ffd54f; }
+.card-subtitle { font-size: 8px; color: #90a4ae; margin-bottom: 6px; }
+.card-stats { font-size: 8px; color: #80cbc4; font-weight: bold; margin-bottom: 6px; }
+.card-desc { font-size: 8px; color: #b0bec5; line-height: 1.3; }
+
+.setup-footer {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.setup-submit-btn {
+    background: #ff9800;
+    color: #0d1117;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.setup-submit-btn:hover { background: #ffa726; }
+
+/* Menu Hub Modal */
+.hub-content {
+    max-width: 440px;
+    width: 90%;
+    border-color: #00bcd4;
+}
+
+.hub-header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.hub-logo {
+    width: 32px;
+    height: 32px;
+}
+
+.hub-header-title h3 {
+    font-size: 12px;
+    color: #00bcd4;
+    margin: 0;
+}
+
+.hub-ticker-info {
+    font-size: 9px;
+    color: #78909c;
+}
+
+.hub-menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hub-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #141822;
+    border: 1px solid #263238;
+    border-radius: 6px;
+    padding: 10px 14px;
+    color: #cfd8dc;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.12s ease;
+}
+
+.hub-btn:hover {
+    background: #1e2433;
+    border-color: #455a64;
+    transform: translateX(4px);
+}
+
+.hub-btn.primary {
+    border-color: #ff9800;
+    background: #25231c;
+}
+
+.hub-btn.primary:hover {
+    background: #332d1f;
+}
+
+.hub-btn.dev-accent {
+    border-color: #7e57c2;
+}
+
+.hub-icon {
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+}
+
+.hub-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.hub-text strong {
+    font-size: 11px;
+    color: #fff;
+}
+
+.hub-text span {
+    font-size: 8px;
+    color: #90a4ae;
+    margin-top: 2px;
+}
+
+/* Sound Settings Modal */
+.sound-settings-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sound-toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    color: #cfd8dc;
+}
+
+.sound-test-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 10px;
+    color: #90a4ae;
+    margin-top: 6px;
+}
+
+.sound-test-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.toggle-on { background: #2e7d32; border-color: #4caf50; color: #fff; }
+.toggle-off { background: #c62828; border-color: #ef5350; color: #fff; }
+
+/* Dev & Debug Modal */
+.dev-content {
+    max-width: 480px;
+    width: 90%;
+    border-color: #e040fb;
+}
+
+.dev-tools-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.dev-act-btn {
+    background: #181d26;
+    border: 1px solid #37474f;
+    color: #cfd8dc;
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.1s;
+}
+
+.dev-act-btn:hover {
+    background: #263238;
+    border-color: #90a4ae;
+}
+
+.dev-act-btn.highlight {
+    border-color: #00e5ff;
+    color: #00e5ff;
+}
+
+.dev-act-btn.danger {
+    border-color: #ff5252;
+    color: #ff5252;
+}
+
+/* Footer HUD (Clean) */
 #game-footer {
     background: #1b2028;
     border-top: 2px solid #282e38;
@@ -468,34 +818,25 @@ body {
 .energy-fill { background: #00bcd4; }
 .bar-num { font-size: 9px; color: #b0bec5; }
 
-.class-selector {
+.pioneer-status {
     display: flex;
+    align-items: center;
     gap: 8px;
+    background: #0f1217;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid #37474f;
 }
 
-.class-btn {
-    background: #263238;
-    border: 1px solid #455a64;
-    color: #b0bec5;
-    font-size: 10px;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: all 0.15s;
-}
-
-.class-btn:hover { background: #37474f; color: #fff; }
-.class-btn.active {
+.pioneer-icon { font-size: 13px; }
+.pioneer-callsign { font-weight: bold; color: #64b5f6; font-size: 10px; }
+.pioneer-class-tag {
+    font-size: 8px;
     background: #ff9800;
-    color: #14171c;
-    border-color: #ffa726;
-}
-
-.class-btn.locked {
-    opacity: 0.45;
-    cursor: not-allowed;
-    background: #1e2229;
+    color: #12161f;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-weight: bold;
 }
 
 .wallet-display {

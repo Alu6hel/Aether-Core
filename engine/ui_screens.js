@@ -264,8 +264,12 @@ class ScreenManager {
             }
         } else if (this.currentScreen === 'GAMEOVER') {
             if (key === 'enter' || key === ' ') {
-                this.game.loadNewWorld(this.game.currentSeed);
-                this.currentScreen = 'GAMEPLAY';
+                if (this.game.restartPioneer) {
+                    this.game.restartPioneer();
+                } else {
+                    this.game.loadNewWorld(this.game.currentSeed);
+                    this.currentScreen = 'GAMEPLAY';
+                }
             }
         }
     }

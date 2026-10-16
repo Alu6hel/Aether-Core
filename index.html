@@ -23,10 +23,9 @@
                 <span class="coin-floor" id="coin-floor" title="Genesis Floor: Guaranteed minimum redemption value">Floor: 0.125 ALU</span>
             </div>
             <div class="header-right">
-                <button id="btn-market" class="gba-btn-sm" title="Trade ALU World Coin on Bonding Curve">MARKET</button>
-                <button id="btn-inventory" class="gba-btn-sm" title="View Equipment & Keycards">BAG</button>
-                <button id="btn-seed" class="gba-btn-sm" title="Generate New Seed Map">NEW SEED</button>
-                <button id="btn-sound" class="gba-btn-sm">SOUND: ON</button>
+                <button id="btn-menu-top" class="gba-btn-sm" title="Open Main System Menu">☰ MENU</button>
+                <button id="btn-inventory" class="gba-btn-sm" title="View Equipment & Keycards">🎒 BAG</button>
+                <button id="btn-dev-top" class="gba-btn-sm dev-btn" title="Developer & Debug Tools">⚡ DEV</button>
             </div>
         </header>
 
@@ -34,7 +33,7 @@
         <main id="viewport-wrapper">
             <canvas id="game-canvas" width="480" height="320"></canvas>
 
-            <!-- On-Screen Virtual Controller Overlay (Inspired by User Screenshot) -->
+            <!-- On-Screen Virtual Controller Overlay -->
             <div id="touch-controls">
                 <!-- Left D-Pad -->
                 <div id="dpad-container">
@@ -47,26 +46,145 @@
                     <button class="dpad-btn" id="dpad-down" data-dir="down">▼</button>
                 </div>
 
-                <!-- Shoulder L & R Buttons -->
-                <button class="shoulder-btn" id="btn-l" data-action="dash">L (DASH)</button>
-                <button class="shoulder-btn" id="btn-r" data-action="interact">R (EXAMINE)</button>
-
-                <!-- Right Action Buttons (A & B) -->
+                <!-- Right Action Buttons (C = Dash, B = Parry, A = Attack/Examine) -->
                 <div id="action-buttons">
-                    <button class="action-btn" id="btn-b" data-action="parry">
+                    <button class="action-btn" id="btn-c" data-action="dash" title="Kinetic Dash / Evasion">
+                        <span class="btn-label">C</span>
+                        <span class="btn-sub">DASH</span>
+                    </button>
+                    <button class="action-btn" id="btn-b" data-action="parry" title="Nine Sols Precision Deflect">
                         <span class="btn-label">B</span>
                         <span class="btn-sub">PARRY</span>
                     </button>
-                    <button class="action-btn" id="btn-a" data-action="attack">
+                    <button class="action-btn" id="btn-a" data-action="action" title="Context: Attack or Examine">
                         <span class="btn-label">A</span>
-                        <span class="btn-sub">ATTACK</span>
+                        <span class="btn-sub" id="btn-a-sub">ATTACK</span>
                     </button>
                 </div>
 
-                <!-- Select & Start -->
+                <!-- Center Controls (Restart, Dev Skip, Menu) -->
                 <div id="center-buttons">
-                    <button class="meta-btn" id="btn-select">MARKET</button>
-                    <button class="meta-btn" id="btn-start">START</button>
+                    <button class="meta-btn" id="btn-restart" title="Instant Pioneer Reboot">🔄 RESTART</button>
+                    <button class="meta-btn" id="btn-skip" title="Dev Fast-Forward / Skip">⏭️ SKIP</button>
+                    <button class="meta-btn" id="btn-start" title="Open Menu Hub">☰ MENU</button>
+                </div>
+            </div>
+
+            <!-- Character Creation / Setup Modal -->
+            <div id="setup-modal" class="game-modal">
+                <div class="modal-content setup-content">
+                    <div class="setup-header">
+                        <img src="assets/logo.svg" alt="Alumungandr" class="setup-logo" />
+                        <div>
+                            <h2>PIONEER AWAKENING PROTOCOL</h2>
+                            <div class="setup-subtitle">SYSTEM SETUP & CHARACTER INITIALIZATION</div>
+                        </div>
+                    </div>
+
+                    <div class="setup-guide-box">
+                        <div class="guide-portrait">👨‍🔬</div>
+                        <div class="guide-text">
+                            "Welcome to the Aether-Core matrix. Configure your Pioneer profile before initiating connection with the subterranean Dyson reactor."
+                        </div>
+                    </div>
+
+                    <div class="setup-form-row">
+                        <label for="callsign-input">PIONEER CALLSIGN:</label>
+                        <div class="input-with-random">
+                            <input type="text" id="callsign-input" value="ALU-01" maxlength="14" spellcheck="false" />
+                            <button id="btn-random-name" class="gba-btn-sm" type="button">🎲 ROLL</button>
+                        </div>
+                    </div>
+
+                    <div class="class-cards-container">
+                        <div class="class-card selected" data-class="SUPER_SOLDIER" id="card-warrior">
+                            <div class="card-icon">⚔️</div>
+                            <div class="card-title">WARRIOR</div>
+                            <div class="card-subtitle">The Dreadnought</div>
+                            <div class="card-stats">HP: 140 | SPD: 135 | NRG: 90</div>
+                            <div class="card-desc">Tungsten cyber-armor vanguard. Excels at Momentum Slash and high-impact kinetic shield parrying.</div>
+                        </div>
+
+                        <div class="class-card" data-class="TECHNO_MAGE" id="card-mage">
+                            <div class="card-icon">⚡</div>
+                            <div class="card-title">TECHNO-MAGE</div>
+                            <div class="card-subtitle">The Cyber-Arcanist</div>
+                            <div class="card-stats">HP: 90 | SPD: 155 | NRG: 150</div>
+                            <div class="card-desc">Quantum nanite channeler. Unleashes telekinetic arcs and rapidly-regenerating kinetic barriers.</div>
+                        </div>
+
+                        <div class="class-card locked" data-class="FARMER_GOD" id="card-farmer">
+                            <div class="card-icon">🌱</div>
+                            <div class="card-title" id="farmer-card-title">??? (LOCKED)</div>
+                            <div class="card-subtitle">The Deific Harvester</div>
+                            <div class="card-stats">HP: 999 | SPD: 190 | NRG: 999</div>
+                            <div class="card-desc" id="farmer-card-desc">Ancient entity sleeping beneath the reactor. Discovered by tilling the 3x3 subterranean soil patch or via Dev Tools.</div>
+                        </div>
+                    </div>
+
+                    <div class="setup-footer">
+                        <button id="btn-confirm-setup" class="setup-submit-btn">ENTER SYSTEM MENU ▶</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full System Menu Hub Modal -->
+            <div id="menu-hub-modal" class="game-modal hidden">
+                <div class="modal-content hub-content">
+                    <div class="modal-header">
+                        <div class="hub-header-title">
+                            <img src="assets/logo.svg" alt="Logo" class="hub-logo" />
+                            <div>
+                                <h3>AETHER-CORE SYSTEM MENU</h3>
+                                <div class="hub-ticker-info" id="hub-ticker-info">$ALU-7F3A • CURRENT EXPEDITION HUB</div>
+                            </div>
+                        </div>
+                        <button class="modal-close" id="menu-close">✕</button>
+                    </div>
+                    <div class="hub-menu-list">
+                        <button class="hub-btn primary" id="hub-start-game">
+                            <span class="hub-icon">▶</span>
+                            <div class="hub-text">
+                                <strong>START EXPEDITION</strong>
+                                <span>Deploy into the living procedural world map</span>
+                            </div>
+                        </button>
+                        <button class="hub-btn" id="hub-open-market">
+                            <span class="hub-icon">🪙</span>
+                            <div class="hub-text">
+                                <strong>WORLD-COIN MARKET</strong>
+                                <span>Bonding curve trading & Genesis Vault floor</span>
+                            </div>
+                        </button>
+                        <button class="hub-btn" id="hub-new-seed">
+                            <span class="hub-icon">🌍</span>
+                            <div class="hub-text">
+                                <strong>NEW WORLD SEED</strong>
+                                <span>Roll or enter custom 32-bit world generation seed</span>
+                            </div>
+                        </button>
+                        <button class="hub-btn" id="hub-sound-settings">
+                            <span class="hub-icon">🔊</span>
+                            <div class="hub-text">
+                                <strong>SOUND SETTINGS</strong>
+                                <span>Configure Chiptune SFX and BGM audio channels</span>
+                            </div>
+                        </button>
+                        <button class="hub-btn" id="hub-change-pioneer">
+                            <span class="hub-icon">👤</span>
+                            <div class="hub-text">
+                                <strong>RECONFIGURE PIONEER</strong>
+                                <span>Switch class, callsign, or view character lore</span>
+                            </div>
+                        </button>
+                        <button class="hub-btn dev-accent" id="hub-dev-tools">
+                            <span class="hub-icon">🛠️</span>
+                            <div class="hub-text">
+                                <strong>DEV & DEBUG SUITE</strong>
+                                <span>God mode, fast skip, instant teleport, grant coins</span>
+                            </div>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -95,6 +213,58 @@
                 </div>
             </div>
 
+            <!-- Sound & Audio Settings Modal -->
+            <div id="sound-modal" class="game-modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>🔊 SOUND & CHIPTUNE SYNTH SETTINGS</h3>
+                        <button class="modal-close" id="sound-close">✕</button>
+                    </div>
+                    <div class="modal-body sound-settings-body">
+                        <div class="sound-toggle-row">
+                            <span>Master Audio Output:</span>
+                            <button id="toggle-audio-master" class="gba-btn-sm toggle-on">ENABLED (ON)</button>
+                        </div>
+                        <div class="sound-toggle-row">
+                            <span>Background Chiptune BGM:</span>
+                            <button id="toggle-audio-bgm" class="gba-btn-sm toggle-on">ENABLED (ON)</button>
+                        </div>
+                        <div class="sound-toggle-row">
+                            <span>Combat & Tactical SFX:</span>
+                            <button id="toggle-audio-sfx" class="gba-btn-sm toggle-on">ENABLED (ON)</button>
+                        </div>
+                        <div class="sound-test-row">
+                            <span>Test Synthesizer Waves:</span>
+                            <div class="sound-test-buttons">
+                                <button id="btn-test-parry" class="gba-btn-sm">DEFLECT (Saw)</button>
+                                <button id="btn-test-coin" class="gba-btn-sm">COIN (Arp)</button>
+                                <button id="btn-test-hit" class="gba-btn-sm">STRIKE (Noise)</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Developer & Debug Modal -->
+            <div id="dev-modal" class="game-modal hidden">
+                <div class="modal-content dev-content">
+                    <div class="modal-header">
+                        <h3>⚡ DEVELOPER & DEBUG MATRIX</h3>
+                        <button class="modal-close" id="dev-close">✕</button>
+                    </div>
+                    <div class="modal-body dev-tools-grid">
+                        <button class="dev-act-btn" id="dev-skip-scene">⏭️ SKIP CURRENT SCENE / CUTSCENE</button>
+                        <button class="dev-act-btn" id="dev-toggle-layer">🌀 TELEPORT TO SUB-BEDROCK CORE</button>
+                        <button class="dev-act-btn" id="dev-teleport-boss">👾 TELEPORT TO AEGIS DREADNOUGHT BOSS</button>
+                        <button class="dev-act-btn" id="dev-teleport-plot">🌱 TELEPORT TO 3x3 SECRET SOIL PLOT</button>
+                        <button class="dev-act-btn highlight" id="dev-toggle-god">🛡️ TOGGLE GOD MODE (OFF)</button>
+                        <button class="dev-act-btn" id="dev-unlock-farmer">🌾 UNLOCK SECRET FARMER CLASS</button>
+                        <button class="dev-act-btn" id="dev-grant-coins">💎 GRANT +100 ALU COINS</button>
+                        <button class="dev-act-btn danger" id="dev-instant-restart">🔄 REBOOT PIONEER (RESTART)</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Inventory / Bag Modal -->
             <div id="inventory-modal" class="game-modal hidden">
                 <div class="modal-content">
@@ -110,7 +280,7 @@
             </div>
         </main>
 
-        <!-- Player HUD & Class Selector Footer -->
+        <!-- Player HUD Footer (Clean & Streamlined) -->
         <footer id="game-footer">
             <div class="player-bars">
                 <div class="bar-row">
@@ -125,13 +295,13 @@
                 </div>
             </div>
 
-            <div class="class-selector">
-                <button class="class-btn active" data-class="SUPER_SOLDIER">WARRIOR</button>
-                <button class="class-btn" data-class="TECHNO_MAGE">TECHNO-MAGE</button>
-                <button class="class-btn locked" id="btn-farmer" data-class="FARMER_GOD">??? (LOCKED)</button>
+            <div class="pioneer-status" id="pioneer-status">
+                <span class="pioneer-icon" id="pioneer-icon">⚔️</span>
+                <span class="pioneer-callsign" id="pioneer-callsign">ALU-01</span>
+                <span class="pioneer-class-tag" id="pioneer-class-tag">WARRIOR</span>
             </div>
 
-            <div class="wallet-display" id="hud-wallet">
+            <div class="wallet-display" id="hud-wallet" title="Your Harvested ALU Coins">
                 <span class="wallet-icon">💎</span>
                 <span id="wallet-coins">0</span>
                 <span class="wallet-unit">$ALU</span>
@@ -139,7 +309,7 @@
         </footer>
     </div>
 
-    <!-- Scripts -->
+    <!-- Engine Scripts -->
     <script src="engine/alu_core.js"></script>
     <script src="engine/physics.js"></script>
     <script src="engine/sprites.js"></script>

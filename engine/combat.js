@@ -252,6 +252,15 @@ class Character extends KinematicBody {
         }
     }
 
+    // Aliases for skills and dash (Virtual Button 'C')
+    performSkill(enemies = []) {
+        return this.specialSkill(enemies);
+    }
+
+    performDash() {
+        return this.specialSkill();
+    }
+
     takeDamage(amount, isParryable = true) {
         if (this.invulnerableTimer > 0) return { parried: false, damageTaken: 0 };
 
