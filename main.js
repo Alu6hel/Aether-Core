@@ -14,6 +14,7 @@ class GameApp {
         this.storage = new GameStorage();
         this.edgeClient = new EdgeWorldClient();
         this.inventory = new Inventory();
+        this.screens = new ScreenManager(this);
         
         // Game State
         this.currentSeed = 0x7F3A59DF;
@@ -109,6 +110,18 @@ class GameApp {
             this.keys[e.key.toLowerCase()] = true;
             this.renderer.audio.init();
 
+            // Screen manager navigation if not in gameplay
+            if (this.screens && this.screens.currentScreen !== 'GAMEPLAY') {
+                this.screens.handleInput(e.key.toLowerCase());
+                return;
+            }
+
+            // Pause toggle
+            if (e.key === 'Escape') {
+                this.screens.currentScreen = 'PAUSE';
+                return;
+            }
+
             // Advance / skip cutscenes on Enter or Space
             if ((e.key === 'Enter' || e.key === ' ') && !this.cutscenes.isComplete) {
                 this.cutscenes.skipStep();
@@ -146,6 +159,13 @@ class GameApp {
                 this.touchDirs[dir] = true;
                 btn.classList.add('pressed');
                 this.renderer.audio.init();
+
+                if (this.screens && this.screens.currentScreen !== 'GAMEPLAY') {
+                    if (dir === 'up') this.screens.handleInput('w');
+                    else if (dir === 'down') this.screens.handleInput('s');
+                    else if (dir === 'left') this.screens.handleInput('a');
+                    else if (dir === 'right') this.screens.handleInput('d');
+                }
             };
             const release = (e) => {
                 e.preventDefault();
@@ -177,13 +197,23 @@ class GameApp {
         };
 
         bindAction(btnA, () => {
-            if (!this.cutscenes.isComplete) this.cutscenes.skipStep();
-            else this.handleAttack();
+            if (this.screens && this.screens.currentScreen !== 'GAMEPLAY') {
+                this.screens.handleInput('enter');
+            } else if (!this.cutscenes.isComplete) {
+                this.cutscenes.skipStep();
+            } else {
+                this.handleAttack();
+            }
         });
 
         bindAction(btnB, () => {
-            if (!this.cutscenes.isComplete) this.cutscenes.skipStep();
-            else this.handleParry();
+            if (this.screens && this.screens.currentScreen !== 'GAMEPLAY') {
+                this.screens.handleInput('escape');
+            } else if (!this.cutscenes.isComplete) {
+                this.cutscenes.skipStep();
+            } else {
+                this.handleParry();
+            }
         });
 
         bindAction(btnL, () => this.handleSkill());
@@ -194,8 +224,17 @@ class GameApp {
 
         const btnStart = document.getElementById('btn-start');
         bindAction(btnStart, () => {
-            if (!this.cutscenes.isComplete) this.cutscenes.skipStep();
-            else this.toggleInventory();
+            if (this.screens && this.screens.currentScreen === 'TITLE') {
+                this.screens.handleInput('enter');
+            } else if (this.screens && this.screens.currentScreen === 'GAMEPLAY') {
+                this.screens.currentScreen = 'PAUSE';
+            } else if (this.screens && this.screens.currentScreen === 'PAUSE') {
+                this.screens.currentScreen = 'GAMEPLAY';
+            } else if (!this.cutscenes.isComplete) {
+                this.cutscenes.skipStep();
+            } else {
+                this.toggleInventory();
+            }
         });
     }
 
@@ -517,6 +556,21 @@ class GameApp {
         const dt = Math.min(0.05, (currentTime - this.lastTime) / 1000.0);
         this.lastTime = currentTime;
 
+        // If on Title, Roster, Pause, or GameOver Screen
+        if (this.screens && this.screens.currentScreen !== 'GAMEPLAY') {
+            this.screens.render(this.renderer.ctx, this.canvas.width, this.canvas.height);
+            requestAnimationFrame(this.loop.bind(this));
+            return;
+        }
+
+        // Check if player died
+        if (this.player && this.player.hp <= 0) {
+            this.screens.currentScreen = 'GAMEOVER';
+            this.screens.render(this.renderer.ctx, this.canvas.width, this.canvas.height);
+            requestAnimationFrame(this.loop.bind(this));
+            return;
+        }
+
         // 1. Update Cutscenes or Gameplay
         if (!this.cutscenes.isComplete) {
             this.cutscenes.update(dt);
@@ -539,7 +593,12 @@ class GameApp {
         // 4. Render Cutscenes & Overlays
         this.renderer.renderDialogue(this.cutscenes);
 
-        // 5. Update HUD metrics
+        // 5. Render Minimap Radar
+        if (this.screens) {
+            this.screens.renderMinimap(this.renderer.ctx, this.canvas.width, this.canvas.height);
+        }
+
+        // 6. Update HUD metrics
         this.updateHUD();
 
         requestAnimationFrame(this.loop.bind(this));

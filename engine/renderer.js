@@ -1,59 +1,13 @@
 /**
- * Aether-Core: Retro GBA Canvas Renderer & Chiptune Audio Synthesizer
+ * Aether-Core: Retro GBA Canvas Renderer with Sprite Support
  * 
- * Renders the 8-color procedural tilemap, animated pixel sprites,
- * dynamic parry flash indicators, and GBA dialogue boxes.
+ * Renders the 8-color procedural tilemap, pixel sprites,
+ * boss telegraph warnings, 96x96 dialogue portraits, and UI overlays.
  */
 
-class RetroAudio {
-    constructor() {
-        this.ctx = null;
-    }
-
-    init() {
-        if (!this.ctx && typeof AudioContext !== 'undefined') {
-            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-    }
-
-    playTone(freq, type = 'square', duration = 0.1, gainVal = 0.1) {
-        if (!this.ctx) return;
-        try {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-            gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start();
-            osc.stop(this.ctx.currentTime + duration);
-        } catch (e) {}
-    }
-
-    playTypewriter() {
-        this.playTone(480, 'square', 0.03, 0.04);
-    }
-
-    playSlash() {
-        this.playTone(220, 'sawtooth', 0.12, 0.08);
-    }
-
-    playShoot() {
-        this.playTone(720, 'triangle', 0.15, 0.08);
-    }
-
-    playParry() {
-        // High crisp dual-tone metallic "CLANG!"
-        this.playTone(1200, 'square', 0.25, 0.15);
-        setTimeout(() => this.playTone(1800, 'sine', 0.2, 0.1), 30);
-    }
-
-    playCoin() {
-        this.playTone(987.77, 'sine', 0.08, 0.1);
-        setTimeout(() => this.playTone(1318.51, 'sine', 0.18, 0.1), 80);
-    }
+if (typeof require !== 'undefined') {
+    var { SpriteSheet } = require('./sprites.js');
+    var { ChiptuneSynth } = require('./audio.js');
 }
 
 class RetroRenderer {
@@ -64,7 +18,8 @@ class RetroRenderer {
         this.height = canvas.height;
         this.camera = { x: 0, y: 0 };
         this.waterAnimTimer = 0;
-        this.audio = new RetroAudio();
+        this.audio = new ChiptuneSynth();
+        this.sprites = new SpriteSheet();
     }
 
     clear(bgColor = '#0a0a0f') {
@@ -73,13 +28,11 @@ class RetroRenderer {
     }
 
     updateCamera(playerPos, mapWidth, mapHeight, dt) {
-        // Smooth camera lerp with integer pixel snapping
         const targetX = playerPos.x - this.width / 2;
         const targetY = playerPos.y - this.height / 2;
         this.camera.x += (targetX - this.camera.x) * 8.0 * dt;
         this.camera.y += (targetY - this.camera.y) * 8.0 * dt;
 
-        // Clamp inside map boundaries
         this.camera.x = Math.max(0, Math.min(this.camera.x, mapWidth * 16 - this.width));
         this.camera.y = Math.max(0, Math.min(this.camera.y, mapHeight * 16 - this.height));
     }
@@ -95,7 +48,6 @@ class RetroRenderer {
         const startRow = Math.floor(camY / 16);
         const endRow = Math.min(map.height - 1, Math.ceil((camY + this.height) / 16));
 
-        // Render visible tiles
         for (let y = startRow; y <= endRow; y++) {
             for (let x = startCol; x <= endCol; x++) {
                 const tile = map.get(x, y);
@@ -119,7 +71,6 @@ class RetroRenderer {
             case 1: // DEEP_WATER
                 ctx.fillStyle = pal[5];
                 ctx.fillRect(sx, sy, 16, 16);
-                // GBA wave ripple diagonal pattern (animated)
                 ctx.fillStyle = pal[6];
                 const waveOffset = Math.floor((this.waterAnimTimer * 4 + tx + ty) % 4);
                 ctx.fillRect(sx + waveOffset * 4, sy + 4, 6, 2);
@@ -136,7 +87,6 @@ class RetroRenderer {
             case 3: // GROUND (Walkable terrain)
                 ctx.fillStyle = pal[2];
                 ctx.fillRect(sx, sy, 16, 16);
-                // Subtle stippling texture
                 ctx.fillStyle = pal[1];
                 if ((tx + ty) % 3 === 0) ctx.fillRect(sx + 4, sy + 4, 2, 2);
                 if ((tx * 3 + ty) % 5 === 0) ctx.fillRect(sx + 10, sy + 11, 2, 2);
@@ -145,7 +95,6 @@ class RetroRenderer {
             case 4: // FOIL_GRASS
                 ctx.fillStyle = pal[4];
                 ctx.fillRect(sx, sy, 16, 16);
-                // GBA grass tuft
                 ctx.fillStyle = pal[3];
                 ctx.fillRect(sx + 3, sy + 5, 2, 6);
                 ctx.fillRect(sx + 7, sy + 3, 2, 8);
@@ -156,7 +105,7 @@ class RetroRenderer {
                 ctx.fillStyle = pal[1];
                 ctx.fillRect(sx, sy, 16, 16);
                 ctx.fillStyle = pal[0];
-                ctx.fillRect(sx, sy + 13, 16, 3); // Shadow ledge
+                ctx.fillRect(sx, sy + 13, 16, 3);
                 ctx.fillStyle = pal[2];
                 ctx.fillRect(sx + 2, sy + 2, 12, 4);
                 break;
@@ -171,7 +120,7 @@ class RetroRenderer {
             case 7: // CAVE_ENTRANCE
                 ctx.fillStyle = pal[1];
                 ctx.fillRect(sx, sy, 16, 16);
-                ctx.fillStyle = pal[0]; // Deep black cavern void
+                ctx.fillStyle = pal[0];
                 ctx.beginPath();
                 ctx.arc(sx + 8, sy + 12, 6, Math.PI, 0, false);
                 ctx.fill();
@@ -181,7 +130,7 @@ class RetroRenderer {
             case 8: // SCIFI_CONDUIT (Hidden tech line)
                 ctx.fillStyle = pal[1];
                 ctx.fillRect(sx, sy, 16, 16);
-                ctx.fillStyle = pal[7]; // Neon glowing circuit line
+                ctx.fillStyle = pal[7];
                 ctx.fillRect(sx + 6, sy, 4, 16);
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(sx + 7, sy + 4, 2, 8);
@@ -190,7 +139,7 @@ class RetroRenderer {
             case 9: // ANCIENT_TERMINAL
                 ctx.fillStyle = pal[1];
                 ctx.fillRect(sx, sy, 16, 16);
-                ctx.fillStyle = pal[7]; // Screen monitor glow
+                ctx.fillStyle = pal[7];
                 ctx.fillRect(sx + 3, sy + 3, 10, 8);
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(sx + 5, sy + 5, 6, 3);
@@ -219,54 +168,42 @@ class RetroRenderer {
         ctx.ellipse(sx, sy + 6, 6, 3, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Invulnerability flicker
         if (char.invulnerableTimer > 0 && Math.floor(Date.now() / 60) % 2 === 0) {
             return;
         }
 
         // Draw Character based on Class
         if (char.charClass === 'TECHNO_MAGE') {
-            // Robe body
             ctx.fillStyle = pal[7]; // Arcane cyan
             ctx.fillRect(sx - 4, sy - 8, 8, 12);
-            // Hood & face
             ctx.fillStyle = pal[0];
             ctx.fillRect(sx - 3, sy - 12, 6, 5);
             ctx.fillStyle = '#ffcc80';
             ctx.fillRect(sx - 2, sy - 10, 4, 3);
-            // Staff
             ctx.fillStyle = '#ffb300';
             ctx.fillRect(sx + 4, sy - 12, 2, 16);
             ctx.fillStyle = pal[7];
             ctx.fillRect(sx + 3, sy - 14, 4, 3);
         } else if (char.charClass === 'SUPER_SOLDIER') {
-            // Modular Power Armor
-            ctx.fillStyle = pal[3]; // Metal plate
+            ctx.fillStyle = pal[3];
             ctx.fillRect(sx - 5, sy - 8, 10, 11);
-            // Helmet visor
             ctx.fillStyle = pal[0];
             ctx.fillRect(sx - 4, sy - 13, 8, 6);
-            ctx.fillStyle = '#00e5ff'; // Visor light
+            ctx.fillStyle = '#00e5ff';
             ctx.fillRect(sx - 3, sy - 10, 6, 2);
-            // Shoulder exhaust
             ctx.fillStyle = '#ff3d00';
             ctx.fillRect(sx - 6, sy - 8, 2, 4);
             ctx.fillRect(sx + 4, sy - 8, 2, 4);
-            // Broadsword on back
             ctx.fillStyle = '#cfd8dc';
             ctx.fillRect(sx + 5, sy - 14, 2, 14);
         } else if (char.charClass === 'FARMER_GOD') {
-            // Straw Hat & Overalls
-            ctx.fillStyle = '#ffb74d'; // Straw hat brim
+            ctx.fillStyle = '#ffb74d';
             ctx.fillRect(sx - 7, sy - 13, 14, 3);
             ctx.fillRect(sx - 4, sy - 16, 8, 4);
-            // Head
             ctx.fillStyle = '#ffcc80';
             ctx.fillRect(sx - 3, sy - 11, 6, 5);
-            // Overalls (denim blue)
             ctx.fillStyle = '#1565c0';
             ctx.fillRect(sx - 4, sy - 6, 8, 10);
-            // Cosmic Golden Hoe in hand
             ctx.fillStyle = '#ffd700';
             ctx.fillRect(sx + 4, sy - 10, 2, 14);
             ctx.fillRect(sx + 4, sy - 12, 5, 2);
@@ -277,7 +214,7 @@ class RetroRenderer {
             ctx.strokeStyle = '#00ffff';
             ctx.lineWidth = 2;
             ctx.beginPath();
-            ctx.arc(sx, sy - 2, 14, 0, Math.PI * 2);
+            ctx.arc(sx, sy - 2, 15, 0, Math.PI * 2);
             ctx.stroke();
         }
 
@@ -310,15 +247,32 @@ class RetroRenderer {
                 // Aegis Dreadnought Boss (Large 32x32)
                 ctx.fillStyle = pal[0];
                 ctx.fillRect(sx - 14, sy - 18, 28, 26);
-                ctx.fillStyle = '#ff1744'; // Glowing reactor eye
-                ctx.fillRect(sx - 4, sy - 10, 8, 6);
-                // Health bar
+                ctx.fillStyle = (Math.floor(Date.now() / 150) % 2 === 0) ? '#ff1744' : '#d50000';
+                ctx.fillRect(sx - 5, sy - 10, 10, 7);
+                // Heavy armor vents
+                ctx.fillStyle = pal[7];
+                ctx.fillRect(sx - 12, sy - 6, 3, 10);
+                ctx.fillRect(sx + 9, sy - 6, 3, 10);
+
+                // Telegraph beam line if charging attack
+                if (enemy.telegraphTimer > 0) {
+                    ctx.strokeStyle = '#ff1744';
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(sx, sy);
+                    ctx.lineTo(sx, sy + 80);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+
+                // Boss Health bar
                 ctx.fillStyle = '#000000';
-                ctx.fillRect(sx - 16, sy - 24, 32, 4);
+                ctx.fillRect(sx - 18, sy - 26, 36, 5);
                 ctx.fillStyle = '#ff1744';
-                ctx.fillRect(sx - 15, sy - 23, 30 * (enemy.hp / enemy.maxHp), 2);
+                ctx.fillRect(sx - 17, sy - 25, 34 * Math.max(0, enemy.hp / enemy.maxHp), 3);
             } else {
-                // Small Nanite Prowler (16x16)
+                // Small Nanite Prowler
                 ctx.fillStyle = pal[1];
                 ctx.fillRect(sx - 6, sy - 6, 12, 10);
                 ctx.fillStyle = '#ff5252';
@@ -328,37 +282,46 @@ class RetroRenderer {
         }
     }
 
-    renderDialogue(cutscene) {
+    renderDialogue(cutscene, pal) {
         if (!cutscene || cutscene.isComplete) return;
 
         const ctx = this.ctx;
         const boxX = 12;
-        const boxY = this.height - 84;
+        const boxY = this.height - 90;
         const boxW = this.width - 24;
-        const boxH = 72;
+        const boxH = 78;
 
-        // GBA Frosted Dialog Box (matching reference image 3)
-        ctx.fillStyle = 'rgba(235, 245, 255, 0.95)';
-        ctx.strokeStyle = '#5c6bc0';
+        // Frosted GBA Box
+        ctx.fillStyle = 'rgba(235, 245, 255, 0.96)';
+        ctx.strokeStyle = '#3949ab';
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.roundRect(boxX, boxY, boxW, boxH, 8);
         ctx.fill();
         ctx.stroke();
 
-        // Speaker Name Badge
+        let textOffsetX = 14;
+
+        // Render 96x96 Character Portrait if present
+        if (cutscene.portrait && typeof document !== 'undefined') {
+            const portraitCanvas = this.sprites.getPortrait(cutscene.portrait, pal || ['#000', '#222', '#444', '#666', '#888', '#aaa', '#ccc', '#00e5ff']);
+            ctx.drawImage(portraitCanvas, boxX + 8, boxY + 8, 62, 62);
+            textOffsetX = 78;
+        }
+
+        // Speaker Name
         if (cutscene.speakerName) {
             ctx.fillStyle = '#1a237e';
             ctx.font = 'bold 10px monospace';
-            ctx.fillText(cutscene.speakerName.toUpperCase(), boxX + 12, boxY + 16);
+            ctx.fillText(cutscene.speakerName.toUpperCase(), boxX + textOffsetX, boxY + 16);
         }
 
         // Typewriter Text
-        ctx.fillStyle = '#212121';
-        ctx.font = '11px monospace';
-        this.wrapText(ctx, cutscene.displayedText, boxX + 12, boxY + 32, boxW - 24, 14);
+        ctx.fillStyle = '#1b1b1b';
+        ctx.font = '10px monospace';
+        this.wrapText(ctx, cutscene.displayedText, boxX + textOffsetX, boxY + 30, boxW - textOffsetX - 12, 13);
 
-        // Advance prompt arrow (blinking red triangle)
+        // Blinking prompt arrow
         if (Math.floor(Date.now() / 300) % 2 === 0) {
             ctx.fillStyle = '#d32f2f';
             ctx.beginPath();
@@ -388,5 +351,5 @@ class RetroRenderer {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { RetroAudio, RetroRenderer };
+    module.exports = { RetroRenderer };
 }
