@@ -33,6 +33,7 @@ class GameApp {
         this.godMode = false;
         this.hasInitializedProfile = false;
         this.activeSlotIndex = 0;
+        this.pendingSlotIndex = null;
         this.saveSlots = [];
         this.dayTimer = 0.25; // 0.0 to 1.0 (0.25 = noon)
         this.currentDay = 1;
@@ -258,7 +259,11 @@ class GameApp {
             if (rusticHud) rusticHud.classList.remove('hidden');
             document.querySelectorAll('.game-modal').forEach(m => m.classList.add('hidden'));
             if (this.soundEnabled && this.bgmEnabled) {
-                this.renderer.audio.startBgm(this.currentLayer === 'SUB_CORE' ? 'SUB_CORE' : 'OVERWORLD');
+                let track = 'OVERWORLD';
+                if (this.currentAreaId === 'SUB_BEDROCK_CORE') track = 'SUB_CORE';
+                else if (this.currentAreaId === 'WHISPERING_WOODS') track = 'WHISPERING_WOODS';
+                else if (this.currentAreaId === 'SUNKEN_GROTTO') track = 'SUNKEN_GROTTO';
+                this.renderer.audio.startBgm(track);
             }
         }
     }
@@ -274,7 +279,13 @@ class GameApp {
         const tabRoster = document.getElementById('start-tab-roster');
         if (tabRoster) {
             this.bindTap(tabRoster, () => {
-                document.getElementById('setup-modal').classList.remove('hidden');
+                this.pendingSlotIndex = null;
+                const setupModal = document.getElementById('setup-modal');
+                if (setupModal) setupModal.classList.remove('hidden');
+                const confirmBtn = document.getElementById('btn-confirm-setup');
+                if (confirmBtn) {
+                    confirmBtn.innerText = 'ENTER SYSTEM MENU ▶';
+                }
                 this.screens.currentScreen = 'SETUP';
                 this.updateTouchControlsVisibility();
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
@@ -364,8 +375,27 @@ class GameApp {
                     <div class="slot-title">${slot.pioneerName || 'PIONEER'}</div>
                     <div class="slot-desc">${(slot.selectedClass || 'WARRIOR').replace('_', ' ')} • Day ${slot.currentDay || 1}</div>
                     <div class="slot-desc" style="color: #ffd54f;">🪙 ${slot.coins || 0} $ALU</div>
+                    <div class="slot-card-actions">
+                        <button class="slot-action-btn slot-resume-btn" type="button">RESUME ▶</button>
+                        <button class="slot-action-btn slot-delete-btn" type="button" title="Wipe Slot">🗑️ WIPE</button>
+                    </div>
                 `;
                 setTimeout(() => {
+                    const resumeBtn = card.querySelector('.slot-resume-btn');
+                    const deleteBtn = card.querySelector('.slot-delete-btn');
+                    
+                    if (resumeBtn) {
+                        this.bindTap(resumeBtn, (e) => {
+                            if (e && e.stopPropagation) e.stopPropagation();
+                            this.loadSlot(i);
+                        });
+                    }
+                    if (deleteBtn) {
+                        this.bindTap(deleteBtn, (e) => {
+                            if (e && e.stopPropagation) e.stopPropagation();
+                            this.deleteSlot(i);
+                        });
+                    }
                     this.bindTap(card, () => this.loadSlot(i));
                 }, 150);
             } else {
@@ -373,14 +403,52 @@ class GameApp {
                     <div class="slot-num">SLOT 0${i + 1}</div>
                     <div class="slot-title" style="color: #00e5ff;">+ NEW RUN</div>
                     <div class="slot-desc">START EXPEDITION</div>
+                    <div class="slot-card-actions">
+                        <button class="slot-action-btn slot-new-btn" type="button">CHOOSE CLASS ▶</button>
+                    </div>
                 `;
                 setTimeout(() => {
-                    this.bindTap(card, () => this.startNewExpeditionInSlot(i));
+                    const newBtn = card.querySelector('.slot-new-btn');
+                    if (newBtn) {
+                        this.bindTap(newBtn, (e) => {
+                            if (e && e.stopPropagation) e.stopPropagation();
+                            this.openCharacterSelectionForSlot(i);
+                        });
+                    }
+                    this.bindTap(card, () => this.openCharacterSelectionForSlot(i));
                 }, 150);
             }
 
             grid.appendChild(card);
         }
+    }
+
+    deleteSlot(slotIndex) {
+        if (slotIndex < 0 || slotIndex >= 10) return;
+        this.saveSlots[slotIndex] = null;
+        this.writeSaveSlots();
+        if (this.soundEnabled && this.sfxEnabled) {
+            this.renderer.audio.playCancel();
+        }
+        this.renderSaveSlots();
+    }
+
+    openCharacterSelectionForSlot(slotIndex) {
+        this.pendingSlotIndex = slotIndex;
+        const slotsModal = document.getElementById('save-slots-modal');
+        if (slotsModal) slotsModal.classList.add('hidden');
+
+        const setupModal = document.getElementById('setup-modal');
+        if (setupModal) {
+            setupModal.classList.remove('hidden');
+            const confirmBtn = document.getElementById('btn-confirm-setup');
+            if (confirmBtn) {
+                confirmBtn.innerText = `CONFIRM & EMBARK (SLOT 0${slotIndex + 1}) ▶`;
+            }
+        }
+        this.screens.currentScreen = 'SETUP';
+        this.updateTouchControlsVisibility();
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
     }
 
     startNewExpeditionInSlot(slotIndex) {
@@ -645,7 +713,10 @@ class GameApp {
         // Play ambient chime & update BGM
         if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(440, 'triangle', 0.25, 0.12);
         if (this.soundEnabled && this.bgmEnabled) {
-            const track = (newAreaId === 'SUB_BEDROCK_CORE') ? 'SUB_CORE' : 'OVERWORLD';
+            let track = 'OVERWORLD';
+            if (newAreaId === 'SUB_BEDROCK_CORE') track = 'SUB_CORE';
+            else if (newAreaId === 'WHISPERING_WOODS') track = 'WHISPERING_WOODS';
+            else if (newAreaId === 'SUNKEN_GROTTO') track = 'SUNKEN_GROTTO';
             this.renderer.audio.startBgm(track);
         }
 
@@ -875,7 +946,7 @@ class GameApp {
             });
         });
 
-        // Setup Confirm Button -> Moves to Menu Hub
+        // Setup Confirm Button -> Moves to Menu Hub or embarks into selected slot
         const btnConfirmSetup = document.getElementById('btn-confirm-setup');
         if (btnConfirmSetup) {
             this.bindTap(btnConfirmSetup, () => {
@@ -886,12 +957,36 @@ class GameApp {
                 this.saveState();
                 this.updateHUD();
 
-                // Transition from Setup to Menu Hub
+                const targetSlot = this.pendingSlotIndex;
+                this.pendingSlotIndex = null;
+
                 document.getElementById('setup-modal').classList.add('hidden');
-                document.getElementById('menu-hub-modal').classList.remove('hidden');
-                this.screens.currentScreen = 'MENU';
-                this.updateTouchControlsVisibility();
+
+                if (targetSlot !== null && targetSlot !== undefined) {
+                    // Chosen from save slot screen -> immediately embark into that run!
+                    this.startNewExpeditionInSlot(targetSlot);
+                } else {
+                    // Transition from Setup to Menu Hub
+                    document.getElementById('menu-hub-modal').classList.remove('hidden');
+                    this.screens.currentScreen = 'MENU';
+                    this.updateTouchControlsVisibility();
+                }
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
+            });
+        }
+
+        const setupClose = document.getElementById('setup-close');
+        if (setupClose) {
+            this.bindTap(setupClose, () => {
+                document.getElementById('setup-modal').classList.add('hidden');
+                if (this.pendingSlotIndex !== null) {
+                    this.pendingSlotIndex = null;
+                    this.openSaveSlotsModal();
+                } else if (this.gameState === 'START_SCREEN') {
+                    this.screens.currentScreen = 'START_SCREEN';
+                }
+                this.updateTouchControlsVisibility();
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
             });
         }
 
@@ -2392,8 +2487,8 @@ class GameApp {
             return;
         }
 
-        // Day/Night Cycle Progression (180s = 1 full day)
-        this.dayTimer = (this.dayTimer || 0.25) + dt / 180.0;
+        // Day/Night Cycle Progression (600s = 10 minutes per full in-game day)
+        this.dayTimer = (this.dayTimer || 0.25) + dt / 600.0;
         if (this.dayTimer >= 1.0) {
             this.dayTimer -= 1.0;
             this.currentDay = (this.currentDay || 1) + 1;

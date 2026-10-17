@@ -385,49 +385,161 @@ class ChiptuneSynth {
         this.currentTheme = theme;
         this.stepIndex = 0;
 
-        // 32-Step Nostalgic GBA Overworld Progression (D Major / B Minor Pentatonic)
-        // Authentic Route 101 / Minish Cap Hyrule Field feeling!
+        // =========================================================================
+        // 64-STEP NOSTALGIC GBA MULTI-MOVEMENT COMPOSITIONS
+        // Designed for immersive non-repetitive listening across distinct areas
+        // =========================================================================
+
+        // 1. CINDERWATCH HAMLET / OVERWORLD (D Major / B Minor pastoral adventure)
         const OVERWORLD_LEAD = [
-            293.66, 0, 329.63, 369.99,  440.00, 0, 493.88, 440.00, // D4, E4, F#4, A4, B4, A4
+            // Movement A: Pastoral GBA lilt (Steps 0-15)
+            293.66, 0, 329.63, 369.99,  440.00, 0, 493.88, 440.00,
             369.99, 0, 329.63, 293.66,  329.63, 369.99, 440.00, 0,
-            493.88, 0, 587.33, 493.88,  440.00, 369.99, 440.00, 0, // B4, D5, B4, A4, F#4, A4
-            329.63, 0, 293.66, 246.94,  293.66, 0, 0, 0
+            // Movement A2: Echoing phrase (Steps 16-31)
+            493.88, 0, 587.33, 493.88,  440.00, 369.99, 440.00, 0,
+            329.63, 0, 293.66, 246.94,  293.66, 0, 0, 0,
+            // Movement B: Soaring thematic ascension (Steps 32-47)
+            587.33, 0, 659.25, 739.99,  659.25, 0, 587.33, 493.88,
+            440.00, 0, 493.88, 587.33,  493.88, 440.00, 369.99, 0,
+            // Movement C: Reflective golden-hour cadence (Steps 48-63)
+            392.00, 0, 440.00, 493.88,  440.00, 0, 369.99, 293.66,
+            329.63, 0, 369.99, 329.63,  293.66, 0, 0, 0
         ];
 
         const OVERWORLD_BASS = [
             146.83, 0, 146.83, 0,  123.47, 0, 123.47, 0, // D3 -> B2
             98.00,  0, 98.00,  0,  110.00, 0, 110.00, 0, // G2 -> A2
             146.83, 0, 146.83, 0,  123.47, 0, 123.47, 0,
-            98.00,  0, 110.00, 0,  146.83, 0, 146.83, 0
+            98.00,  0, 110.00, 0,  146.83, 0, 146.83, 0,
+            98.00,  0, 98.00,  0,  110.00, 0, 110.00, 0, // G2 -> A2
+            123.47, 0, 123.47, 0,  98.00,  0, 98.00,  0, // B2 -> G2
+            82.41,  0, 92.50,  0,  110.00, 0, 110.00, 0, // E2 -> F#2 -> A2
+            146.83, 0, 146.83, 0,  146.83, 0, 0, 0
         ];
 
         const OVERWORLD_CHORDS = [
             440.00, 0, 587.33, 0,  369.99, 0, 493.88, 0,
             392.00, 0, 493.88, 0,  440.00, 0, 554.37, 0,
             440.00, 0, 587.33, 0,  369.99, 0, 493.88, 0,
-            392.00, 0, 440.00, 0,  587.33, 0, 0, 0
+            392.00, 0, 440.00, 0,  587.33, 0, 0, 0,
+            587.33, 0, 739.99, 0,  554.37, 0, 659.25, 0,
+            493.88, 0, 587.33, 0,  392.00, 0, 493.88, 0,
+            329.63, 0, 369.99, 0,  440.00, 0, 554.37, 0,
+            587.33, 0, 440.00, 0,  293.66, 0, 0, 0
         ];
 
-        // Atmospheric Sub-Bedrock Dungeon Theme (D Dorian with deep resonant bass)
-        const DUNGEON_LEAD = [
-            146.83, 0, 174.61, 0,  220.00, 0, 261.63, 220.00,
-            196.00, 0, 174.61, 0,  164.81, 0, 146.83, 0,
-            130.81, 0, 146.83, 0,  174.61, 0, 196.00, 0,
-            220.00, 0, 174.61, 0,  146.83, 0, 0, 0
+        // 2. WHISPERING WOODS (E Dorian ethereal forest mystery)
+        const WOODS_LEAD = [
+            329.63, 0, 392.00, 0,      440.00, 493.88, 587.33, 0,
+            493.88, 0, 440.00, 392.00, 329.63, 0, 293.66, 0,
+            329.63, 0, 392.00, 440.00, 493.88, 0, 554.37, 0,
+            587.33, 0, 493.88, 0,      440.00, 0, 0, 0,
+            659.25, 0, 587.33, 0,      493.88, 554.37, 587.33, 0,
+            493.88, 0, 440.00, 0,      392.00, 440.00, 493.88, 0,
+            440.00, 0, 392.00, 329.63, 293.66, 0, 246.94, 0,
+            329.63, 0, 392.00, 0,      329.63, 0, 0, 0
         ];
 
-        const DUNGEON_BASS = [
+        const WOODS_BASS = [
+            82.41, 0, 82.41, 0,   98.00,  0, 98.00,  0,
+            110.00, 0, 110.00, 0, 123.47, 0, 123.47, 0,
+            82.41, 0, 82.41, 0,   98.00,  0, 98.00,  0,
+            110.00, 0, 123.47, 0, 82.41,  0, 0, 0,
+            123.47, 0, 123.47, 0, 110.00, 0, 110.00, 0,
+            98.00,  0, 98.00,  0, 82.41,  0, 82.41,  0,
+            73.42,  0, 73.42,  0, 61.74,  0, 61.74,  0,
+            82.41,  0, 82.41,  0, 82.41,  0, 0, 0
+        ];
+
+        const WOODS_CHORDS = [
+            329.63, 0, 493.88, 0, 392.00, 0, 587.33, 0,
+            440.00, 0, 554.37, 0, 493.88, 0, 587.33, 0,
+            329.63, 0, 493.88, 0, 392.00, 0, 587.33, 0,
+            440.00, 0, 493.88, 0, 329.63, 0, 0, 0,
+            493.88, 0, 659.25, 0, 440.00, 0, 587.33, 0,
+            392.00, 0, 493.88, 0, 329.63, 0, 440.00, 0,
+            293.66, 0, 369.99, 0, 246.94, 0, 329.63, 0,
+            329.63, 0, 493.88, 0, 329.63, 0, 0, 0
+        ];
+
+        // 3. SUNKEN GROTTO (A Minor / D Dorian subterranean crystalline echoes)
+        const GROTTO_LEAD = [
+            220.00, 0, 261.63, 0,      329.63, 0, 392.00, 329.63,
+            293.66, 0, 261.63, 0,      246.94, 0, 220.00, 0,
+            174.61, 0, 220.00, 0,      261.63, 0, 293.66, 0,
+            329.63, 0, 293.66, 0,      220.00, 0, 0, 0,
+            440.00, 0, 392.00, 0,      329.63, 0, 293.66, 261.63,
+            220.00, 0, 261.63, 0,      293.66, 0, 329.63, 0,
+            261.63, 0, 220.00, 0,      196.00, 0, 174.61, 0,
+            220.00, 0, 246.94, 0,      220.00, 0, 0, 0
+        ];
+
+        const GROTTO_BASS = [
+            55.00, 0, 55.00, 0,   65.41, 0, 65.41, 0,  // A1 -> C2
+            73.42, 0, 73.42, 0,   55.00, 0, 55.00, 0,  // D2 -> A1
+            43.65, 0, 43.65, 0,   55.00, 0, 55.00, 0,  // F1 -> A1
+            65.41, 0, 73.42, 0,   55.00, 0, 0, 0,
+            55.00, 0, 55.00, 0,   65.41, 0, 65.41, 0,
+            73.42, 0, 73.42, 0,   87.31, 0, 87.31, 0,  // F2
+            65.41, 0, 55.00, 0,   49.00, 0, 43.65, 0,  // G1 -> F1
+            55.00, 0, 55.00, 0,   55.00, 0, 0, 0
+        ];
+
+        const GROTTO_CHORDS = [
+            220.00, 0, 329.63, 0, 261.63, 0, 392.00, 0,
+            293.66, 0, 440.00, 0, 220.00, 0, 329.63, 0,
+            174.61, 0, 261.63, 0, 220.00, 0, 329.63, 0,
+            261.63, 0, 293.66, 0, 220.00, 0, 0, 0,
+            440.00, 0, 523.25, 0, 392.00, 0, 493.88, 0,
+            329.63, 0, 392.00, 0, 293.66, 0, 349.23, 0,
+            261.63, 0, 329.63, 0, 220.00, 0, 261.63, 0,
+            220.00, 0, 261.63, 0, 220.00, 0, 0, 0
+        ];
+
+        // 4. SUB-BEDROCK QUANTUM CORE (D Minor industrial cyber-pulse)
+        const CORE_LEAD = [
+            146.83, 0, 174.61, 0,      220.00, 0, 261.63, 220.00,
+            196.00, 0, 174.61, 0,      164.81, 0, 146.83, 0,
+            130.81, 0, 146.83, 0,      174.61, 0, 196.00, 0,
+            220.00, 0, 174.61, 0,      146.83, 0, 0, 0,
+            293.66, 0, 261.63, 0,      220.00, 0, 207.65, 0, // Ab4
+            196.00, 0, 174.61, 0,      164.81, 0, 146.83, 0,
+            130.81, 0, 146.83, 0,      174.61, 0, 207.65, 0,
+            220.00, 0, 174.61, 0,      146.83, 0, 0, 0
+        ];
+
+        const CORE_BASS = [
             73.42, 0, 73.42, 0,   65.41, 0, 65.41, 0,  // D2 -> C2
             55.00, 0, 55.00, 0,   73.42, 0, 73.42, 0,  // A1 -> D2
+            73.42, 0, 73.42, 0,   65.41, 0, 65.41, 0,
+            55.00, 0, 65.41, 0,   73.42, 0, 0, 0,
+            73.42, 0, 73.42, 0,   65.41, 0, 65.41, 0,
+            51.91, 0, 51.91, 0,   55.00, 0, 55.00, 0,  // Ab1 -> A1
             73.42, 0, 73.42, 0,   65.41, 0, 65.41, 0,
             55.00, 0, 65.41, 0,   73.42, 0, 0, 0
         ];
 
-        const isDungeon = (theme === 'SUB_CORE');
-        const leadTrack = isDungeon ? DUNGEON_LEAD : OVERWORLD_LEAD;
-        const bassTrack = isDungeon ? DUNGEON_BASS : OVERWORLD_BASS;
-        const chordTrack = isDungeon ? DUNGEON_LEAD : OVERWORLD_CHORDS;
-        const stepTimeMs = 175; // Upbeat, energetic GBA tempo (~170 BPM 16th-notes)
+        let leadTrack = OVERWORLD_LEAD;
+        let bassTrack = OVERWORLD_BASS;
+        let chordTrack = OVERWORLD_CHORDS;
+        let stepTimeMs = 185; // Warm, steady nostalgic tempo
+
+        if (theme === 'SUB_CORE' || theme === 'SUB_BEDROCK_CORE') {
+            leadTrack = CORE_LEAD;
+            bassTrack = CORE_BASS;
+            chordTrack = CORE_LEAD;
+            stepTimeMs = 170;
+        } else if (theme === 'WHISPERING_WOODS') {
+            leadTrack = WOODS_LEAD;
+            bassTrack = WOODS_BASS;
+            chordTrack = WOODS_CHORDS;
+            stepTimeMs = 190;
+        } else if (theme === 'SUNKEN_GROTTO') {
+            leadTrack = GROTTO_LEAD;
+            bassTrack = GROTTO_BASS;
+            chordTrack = GROTTO_CHORDS;
+            stepTimeMs = 205; // Placid, cavernous pacing
+        }
 
         this.bgmTimer = setInterval(() => {
             if (!this.isPlayingBgm) return;
@@ -436,29 +548,50 @@ class ChiptuneSynth {
             // 1. Lead Melody (Voice 1: Warm filtered pulse)
             const leadFreq = leadTrack[step];
             if (leadFreq > 0) {
-                this.playWarmNote(leadFreq, 'square', 0.14, 0.045, 2400);
+                const leadDuration = (theme === 'SUNKEN_GROTTO') ? 0.20 : 0.14;
+                const leadCutoff = (theme === 'WHISPERING_WOODS') ? 2800 : 2400;
+                this.playWarmNote(leadFreq, 'square', leadDuration, 0.045, leadCutoff);
             }
 
-            // 2. Chords & Arp (Voice 2: Soft triangle)
+            // 2. Chords & Arpeggio (Voice 2: Soft triangle)
             const chordFreq = chordTrack[step];
-            if (chordFreq > 0 && !isDungeon) {
-                this.playWarmNote(chordFreq, 'triangle', 0.12, 0.025, 1800);
+            if (chordFreq > 0 && theme !== 'SUB_CORE' && theme !== 'SUB_BEDROCK_CORE') {
+                this.playWarmNote(chordFreq, 'triangle', 0.12, 0.022, 1750);
             }
 
-            // 3. Beefy Sub-Bass (Voice 3: Resonant bass)
+            // 3. Beefy Sub-Bass (Voice 3: Resonant punchy low-end)
             const bassFreq = bassTrack[step];
             if (bassFreq > 0) {
-                this.playSubBass(bassFreq, 0.18, 0.09);
+                const bassDuration = (theme === 'SUNKEN_GROTTO') ? 0.24 : 0.18;
+                this.playSubBass(bassFreq, bassDuration, 0.09);
             }
 
-            // 4. Drums / Percussion (Voice 4: Punchy kick & hi-hat)
-            if (step % 8 === 0) {
-                this.playRetroKick(); // Downbeat punch
-            } else if (step % 4 === 2) {
-                this.playRetroKick(); // Backbeat punch
-            }
-            if (step % 2 === 0) {
-                this.playSoftHiHat(); // Soft rhythm sizzle
+            // 4. Soft Tactical Percussion (Voice 4)
+            if (theme === 'SUNKEN_GROTTO') {
+                // Placid subterranean water drops instead of aggressive drums
+                if (step % 16 === 0) {
+                    this.playWarmNote(1200, 'sine', 0.04, 0.015, 3000); // Water drip
+                } else if (step % 8 === 4) {
+                    this.playSoftHiHat();
+                }
+            } else if (theme === 'WHISPERING_WOODS') {
+                // Gentle brush rhythm
+                if (step % 8 === 0) {
+                    this.playRetroKick();
+                }
+                if (step % 4 === 2) {
+                    this.playSoftHiHat();
+                }
+            } else {
+                // Overworld & Sub-Core: Classic punchy kick & hi-hat cadence
+                if (step % 8 === 0) {
+                    this.playRetroKick(); // Downbeat
+                } else if (step % 4 === 2) {
+                    this.playRetroKick(); // Backbeat
+                }
+                if (step % 2 === 0) {
+                    this.playSoftHiHat(); // Soft rhythm
+                }
             }
 
             this.stepIndex++;

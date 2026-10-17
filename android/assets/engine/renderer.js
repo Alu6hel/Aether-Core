@@ -1725,42 +1725,242 @@ class RetroRenderer {
         const w = this.width;
         const h = this.height;
 
-        // 1. Deep Midnight Cosmic Sky
+        // 1. Unified Dyson Luminary Celestial Engine (Sun & Moon as One)
+        // 25-second continuous celestial revolution through Dyson sphere aperture states
+        const cycle = ((this.titleAnimTimer || 0) * 0.04) % 1.0;
+        
+        let skyTop, skyMid, skyBottom, starAlpha, phaseLabel, mountainTint;
+        let lumX = w - 55;
+        let lumY = 48;
+        let lumRadius = 20;
+
+        if (cycle < 0.25) {
+            // Stage 1: Eclipse / Waxing Crescent (Lunar Mode)
+            const t = cycle / 0.25;
+            skyTop = '#02050e';
+            skyMid = '#091122';
+            skyBottom = '#142036';
+            starAlpha = 0.95 - t * 0.15;
+            phaseLabel = t < 0.5 ? 'ECLIPSE // SHUTTERS ENGAGED' : 'WAXING CRESCENT // LUNAR APERTURE';
+            mountainTint = '#0a101d';
+        } else if (cycle < 0.50) {
+            // Stage 2: Solar Dawn & Corona Awakening (Transition Mode)
+            const t = (cycle - 0.25) / 0.25;
+            skyTop = '#120d20';
+            skyMid = '#26162a';
+            skyBottom = '#3c202a';
+            starAlpha = 0.8 * (1.0 - t);
+            phaseLabel = 'SOLAR DAWN // APERTURE VENTING';
+            mountainTint = '#141424';
+        } else if (cycle < 0.75) {
+            // Stage 3: Radiant Solar Zenith (Sun Mode)
+            const t = (cycle - 0.50) / 0.25;
+            skyTop = '#0f233a';
+            skyMid = '#1c3652';
+            skyBottom = '#2d4b68';
+            starAlpha = 0.15;
+            phaseLabel = 'SOLAR ZENITH // THERMAL MAXIMUM';
+            mountainTint = '#1a2230';
+        } else {
+            // Stage 4: Red Giant / Magnetic Prominence Flare (Cooling Mode)
+            const t = (cycle - 0.75) / 0.25;
+            skyTop = '#220b18';
+            skyMid = '#1c0a22';
+            skyBottom = '#0e0b1c';
+            starAlpha = 0.2 + t * 0.75;
+            phaseLabel = 'RED GIANT // CORONAL SHIELDING';
+            mountainTint = '#170f1a';
+        }
+
+        // Render dynamic sky gradient
         const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
-        skyGrad.addColorStop(0, '#040711');
-        skyGrad.addColorStop(0.6, '#0d1527');
-        skyGrad.addColorStop(1, '#18233c');
+        skyGrad.addColorStop(0, skyTop);
+        skyGrad.addColorStop(0.55, skyMid);
+        skyGrad.addColorStop(1, skyBottom);
         ctx.fillStyle = skyGrad;
         ctx.fillRect(0, 0, w, h);
 
-        // 2. Starfield
+        // Render Starfield with dynamic phase-dependent alpha
         ctx.fillStyle = '#ffffff';
         for (let i = 0; i < 45; i++) {
             const sx = (i * 59 + 17) % w;
             const sy = (i * 37 + 11) % Math.floor(h * 0.65);
             const twinkle = Math.sin(this.titleAnimTimer * 3 + i) > 0.3;
-            ctx.globalAlpha = twinkle ? 0.9 : 0.35;
+            ctx.globalAlpha = (twinkle ? 0.9 : 0.35) * starAlpha;
             ctx.fillRect(sx, sy, 1, 1);
             if (i % 7 === 0) ctx.fillRect(sx - 1, sy, 3, 1);
         }
         ctx.globalAlpha = 1.0;
 
-        // Glowing Moon
-        ctx.fillStyle = 'rgba(200, 230, 255, 0.15)';
-        ctx.beginPath();
-        ctx.arc(w - 50, 45, 28, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#e1f5fe';
-        ctx.beginPath();
-        ctx.arc(w - 50, 45, 18, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#040711';
-        ctx.beginPath();
-        ctx.arc(w - 44, 42, 16, 0, Math.PI * 2);
-        ctx.fill();
+        // 2. Render Dyson Sphere Megastructure Orbital Lattice Rings
+        ctx.save();
+        ctx.translate(lumX, lumY);
+        const rotAngle = this.titleAnimTimer * 0.3;
 
-        // 3. Mountain Ridge
-        ctx.fillStyle = '#0a101d';
+        // Concentric outer containment ring
+        ctx.strokeStyle = (cycle >= 0.25 && cycle < 0.75) ? 'rgba(255, 213, 79, 0.25)' : 'rgba(0, 229, 255, 0.22)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, lumRadius + 14, lumRadius + 5, rotAngle * 0.5, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = (cycle >= 0.75) ? 'rgba(255, 82, 82, 0.28)' : 'rgba(128, 222, 234, 0.18)';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, lumRadius + 9, lumRadius + 15, -rotAngle * 0.7, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 3. Render Solar Rays / Corona Flares during Sun Stages
+        if (cycle >= 0.20 && cycle < 0.85) {
+            const isZenith = (cycle >= 0.50 && cycle < 0.75);
+            const isRedGiant = (cycle >= 0.75);
+            const rayCount = 8;
+            const rayLength = isZenith ? 36 : (isRedGiant ? 28 : 22);
+            const rayPulse = 1.0 + 0.15 * Math.sin(this.titleAnimTimer * 4);
+
+            for (let r = 0; r < rayCount; r++) {
+                const angle = rotAngle + (r * Math.PI * 2) / rayCount;
+                const innerX = Math.cos(angle) * (lumRadius + 2);
+                const innerY = Math.sin(angle) * (lumRadius + 2);
+                const outerX = Math.cos(angle) * (lumRadius + rayLength * rayPulse);
+                const outerY = Math.sin(angle) * (lumRadius + rayLength * rayPulse);
+
+                ctx.strokeStyle = isRedGiant 
+                    ? `rgba(255, 87, 34, ${0.35 + 0.2 * Math.sin(angle * 2 + this.titleAnimTimer)})` 
+                    : `rgba(255, 215, 64, ${0.45 + 0.25 * Math.sin(angle * 2 + this.titleAnimTimer)})`;
+                ctx.lineWidth = (r % 2 === 0) ? 2 : 1;
+                ctx.beginPath();
+                ctx.moveTo(innerX, innerY);
+                ctx.lineTo(outerX, outerY);
+                ctx.stroke();
+            }
+
+            // Broad outer atmospheric corona glow
+            const coronaGlow = ctx.createRadialGradient(0, 0, lumRadius * 0.8, 0, 0, lumRadius * 2.8);
+            if (isRedGiant) {
+                coronaGlow.addColorStop(0, 'rgba(255, 61, 0, 0.45)');
+                coronaGlow.addColorStop(0.6, 'rgba(213, 0, 0, 0.18)');
+                coronaGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            } else {
+                coronaGlow.addColorStop(0, 'rgba(255, 235, 59, 0.55)');
+                coronaGlow.addColorStop(0.5, 'rgba(255, 152, 0, 0.22)');
+                coronaGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            }
+            ctx.fillStyle = coronaGlow;
+            ctx.beginPath();
+            ctx.arc(0, 0, lumRadius * 2.8, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // Lunar cool glow
+            const moonGlow = ctx.createRadialGradient(0, 0, lumRadius * 0.5, 0, 0, lumRadius * 2.2);
+            moonGlow.addColorStop(0, 'rgba(128, 222, 234, 0.35)');
+            moonGlow.addColorStop(0.7, 'rgba(2, 136, 209, 0.10)');
+            moonGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = moonGlow;
+            ctx.beginPath();
+            ctx.arc(0, 0, lumRadius * 2.2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // 4. Render the Core Dyson Luminary Orb Body
+        if (cycle >= 0.50 && cycle < 0.75) {
+            // High Solar Zenith: Radiant White/Gold Stellar Core
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(0, 0, lumRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Inner intense plasma core
+            ctx.fillStyle = '#fff9c4';
+            ctx.beginPath();
+            ctx.arc(0, 0, lumRadius - 3, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (cycle >= 0.75) {
+            // Red Giant Phase: Amber-Crimson Stellar Flare Core
+            ctx.fillStyle = '#ff3d00';
+            ctx.beginPath();
+            ctx.arc(0, 0, lumRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ff9100';
+            ctx.beginPath();
+            ctx.arc(0, 0, lumRadius - 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Advancing dark shutter shadow (waning back to lunar/eclipse)
+            const t = (cycle - 0.75) / 0.25;
+            ctx.fillStyle = skyTop;
+            ctx.beginPath();
+            ctx.arc(-lumRadius * (1.6 - t * 1.8), 0, lumRadius, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (cycle >= 0.25 && cycle < 0.50) {
+            // Solar Dawn Phase: Warm Amber Core waking up
+            ctx.fillStyle = '#ffa726';
+            ctx.beginPath();
+            ctx.arc(0, 0, lumRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffe082';
+            ctx.beginPath();
+            ctx.arc(0, 0, lumRadius - 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Retracting dark shutter shadow
+            const t = (cycle - 0.25) / 0.25;
+            ctx.fillStyle = skyTop;
+            ctx.beginPath();
+            ctx.arc(lumRadius * (0.2 + t * 1.6), 0, lumRadius + 1, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // Lunar Phase: Obsidian sphere with silver-cyan waxing crescent
+            ctx.fillStyle = '#0a101a';
+            ctx.beginPath();
+            ctx.arc(0, 0, lumRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Internal reactor grid lines visible in the dark core
+            ctx.strokeStyle = 'rgba(0, 229, 255, 0.35)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(-lumRadius * 0.6, 0);
+            ctx.lineTo(lumRadius * 0.6, 0);
+            ctx.moveTo(0, -lumRadius * 0.6);
+            ctx.lineTo(0, lumRadius * 0.6);
+            ctx.stroke();
+
+            // Radiant silver crescent rim
+            ctx.fillStyle = '#e1f5fe';
+            ctx.beginPath();
+            ctx.arc(0, 0, lumRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Occluding sphere shadow defining moon phase
+            const t = cycle / 0.25;
+            const shadowShift = lumRadius * (0.2 + t * 1.2);
+            ctx.fillStyle = '#050a12';
+            ctx.beginPath();
+            ctx.arc(shadowShift, -2, lumRadius * 0.95, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+
+        // Compact indicator pill for Dyson Luminary Status (centered directly under the orb)
+        const shortLabels = ['ECLIPSE', 'SOLAR DAWN', 'SOLAR ZENITH', 'RED GIANT'];
+        const stageIdx = Math.floor(cycle * 4);
+        const stageName = `DYSON: ${shortLabels[stageIdx] || 'LUMINARY'}`;
+        
+        const badgeW = 90;
+        const badgeX = lumX - Math.floor(badgeW / 2);
+        const badgeY = lumY + lumRadius + 14;
+        ctx.fillStyle = 'rgba(4, 8, 18, 0.85)';
+        ctx.fillRect(badgeX, badgeY, badgeW, 11);
+        ctx.strokeStyle = (cycle >= 0.50 && cycle < 0.75) ? '#ffd54f' : ((cycle >= 0.75) ? '#ff5252' : '#00e5ff');
+        ctx.strokeRect(badgeX, badgeY, badgeW, 11);
+        ctx.fillStyle = (cycle >= 0.50 && cycle < 0.75) ? '#fff9c4' : ((cycle >= 0.75) ? '#ffab91' : '#e0f7fa');
+        ctx.font = '5px "Press Start 2P", monospace';
+        ctx.fillText(stageName, badgeX + 4, badgeY + 8);
+
+        // 3. Mountain Ridge with Dynamic Illumination
+        ctx.fillStyle = mountainTint;
         ctx.beginPath();
         ctx.moveTo(0, h * 0.65);
         ctx.lineTo(w * 0.25, h * 0.52);
@@ -1771,6 +1971,19 @@ class RetroRenderer {
         ctx.lineTo(0, h);
         ctx.closePath();
         ctx.fill();
+
+        // Mountain edge dynamic rim light
+        ctx.strokeStyle = (cycle >= 0.50 && cycle < 0.75) 
+            ? 'rgba(255, 213, 79, 0.45)' 
+            : ((cycle >= 0.75) ? 'rgba(255, 82, 82, 0.35)' : 'rgba(0, 229, 255, 0.25)');
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.65);
+        ctx.lineTo(w * 0.25, h * 0.52);
+        ctx.lineTo(w * 0.55, h * 0.60);
+        ctx.lineTo(w * 0.8, h * 0.48);
+        ctx.lineTo(w, h * 0.58);
+        ctx.stroke();
 
         // Silhouette Conifer Pines
         ctx.fillStyle = '#070b14';
