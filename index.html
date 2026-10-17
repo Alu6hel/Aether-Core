@@ -41,6 +41,79 @@
             <!-- Authentic CRT Retro Scanline & Phosphor Overlay -->
             <div id="crt-overlay" class="crt-overlay"></div>
 
+            <!-- Rustic In-Game HUD Elements (Inspired by Emberfall / Octopath, User Image 1) -->
+            <div id="rustic-hud-overlay" class="rustic-hud hidden">
+                <!-- Top-Left Vitals Card (HP/MP/SP + Area banner + Level Crest) -->
+                <div id="rustic-vitals-card" class="rustic-plate">
+                    <div class="vitals-header">
+                        <div class="level-crest" title="Pioneer Rank">
+                            <span class="crest-label">LV</span>
+                            <span id="rustic-player-level" class="crest-val">1</span>
+                        </div>
+                        <div class="area-banner">
+                            <span id="rustic-area-title">CINDERWATCH HAMLET</span>
+                        </div>
+                    </div>
+                    <div class="vitals-bars">
+                        <div class="vital-row hp-row">
+                            <span class="vital-tag">HP</span>
+                            <div class="vital-track"><div id="rustic-hp-fill" class="vital-fill" style="width: 100%;"></div></div>
+                            <span id="rustic-hp-text" class="vital-num">140/140</span>
+                        </div>
+                        <div class="vital-row mp-row">
+                            <span class="vital-tag">NRG</span>
+                            <div class="vital-track"><div id="rustic-mp-fill" class="vital-fill" style="width: 100%;"></div></div>
+                            <span id="rustic-mp-text" class="vital-num">90/90</span>
+                        </div>
+                        <div class="vital-row sp-row">
+                            <span class="vital-tag">SP</span>
+                            <div class="vital-track"><div id="rustic-sp-fill" class="vital-fill" style="width: 100%;"></div></div>
+                            <span id="rustic-sp-text" class="vital-num">100/100</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top-Center Quest & Story Tracker Banner -->
+                <div id="quest-tracker-banner" class="quest-banner">
+                    <span class="quest-icon">📜</span>
+                    <span id="quest-title-text" class="quest-title">CHAPTER 1: A Gathering of Relics</span>
+                    <span class="quest-sep">•</span>
+                    <span id="quest-obj-text" class="quest-obj">Speak with Elder Oakhaven at the village square</span>
+                </div>
+
+                <!-- Top-Right Compass Radar Mini-Map & Atmospheric Clock -->
+                <div id="rustic-radar-card" class="rustic-plate radar-card">
+                    <div class="radar-bezel">
+                        <span class="cardinal n">N</span>
+                        <span class="cardinal s">S</span>
+                        <span class="cardinal w">W</span>
+                        <span class="cardinal e">E</span>
+                        <canvas id="mini-map-canvas" width="58" height="58" class="mini-map-canvas"></canvas>
+                    </div>
+                    <div class="rustic-time-badge">
+                        <canvas id="clock-gauge-canvas" width="18" height="18" class="clock-gauge"></canvas>
+                        <span id="rustic-time-text">16:47 • Golden Hour</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Rustic Dialogue Box Modal (GBA RPG Style) -->
+            <div id="dialogue-box-modal" class="dialogue-modal hidden">
+                <div class="dialogue-parchment">
+                    <div class="dialogue-portrait-frame">
+                        <canvas id="dialogue-portrait-canvas" width="48" height="48" class="dialogue-portrait-canvas"></canvas>
+                    </div>
+                    <div class="dialogue-body">
+                        <div class="dialogue-header">
+                            <span id="dialogue-speaker-name" class="speaker-name">ELDER OAKHAVEN</span>
+                            <span id="dialogue-speaker-title" class="speaker-title">Hamlet Patriarch</span>
+                        </div>
+                        <div id="dialogue-text-content" class="dialogue-text">"Welcome, Pioneer..."</div>
+                        <div class="dialogue-prompt">PRESS A TO CONTINUE ▼</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Start Screen / Main Title Hub ("The Wild Darkness" styled) -->
             <div id="start-screen-container" class="start-screen">
                 <!-- Top Currencies & Keys status bar (Image 3) -->
@@ -533,6 +606,8 @@
     <script src="engine/sprites.js"></script>
     <script src="engine/audio.js"></script>
     <script src="engine/inventory.js"></script>
+    <script src="engine/critters.js"></script>
+    <script src="engine/npcs.js"></script>
     <script src="engine/storage.js"></script>
     <script src="engine/edge_client.js"></script>
     <script src="engine/world_generator.js"></script>

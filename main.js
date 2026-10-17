@@ -41,6 +41,14 @@ class GameApp {
         this.bossSlainCount = 0;
         this.coresExtractedCount = 0;
 
+        // Living world & NPCs
+        this.critters = new CritterManager();
+        this.npcs = new NpcManager();
+        this.currentAreaId = 'CINDERWATCH_HAMLET';
+        this.areaMaps = {};
+        this.activeDialogue = null;
+        this.dialogueStep = 0;
+
         // Input state
         this.keys = {};
         this.touchDirs = { up: false, down: false, left: false, right: false };
@@ -226,6 +234,10 @@ class GameApp {
             document.querySelectorAll('.game-modal').forEach(m => m.classList.add('hidden'));
             const gbaMenu = document.getElementById('gba-start-menu');
             if (gbaMenu) gbaMenu.classList.add('hidden');
+            const rusticHud = document.getElementById('rustic-hud-overlay');
+            if (rusticHud) rusticHud.classList.add('hidden');
+            const dlgModal = document.getElementById('dialogue-box-modal');
+            if (dlgModal) dlgModal.classList.add('hidden');
 
             const keysVal = document.getElementById('start-keys-val');
             const coresVal = document.getElementById('start-cores-val');
@@ -242,6 +254,8 @@ class GameApp {
             if (header) header.classList.remove('hidden');
             if (footer) footer.classList.remove('hidden');
             if (touchControls) touchControls.classList.remove('controls-hidden');
+            const rusticHud = document.getElementById('rustic-hud-overlay');
+            if (rusticHud) rusticHud.classList.remove('hidden');
             document.querySelectorAll('.game-modal').forEach(m => m.classList.add('hidden'));
             if (this.soundEnabled && this.bgmEnabled) {
                 this.renderer.audio.startBgm(this.currentLayer === 'SUB_CORE' ? 'SUB_CORE' : 'OVERWORLD');
@@ -568,14 +582,30 @@ class GameApp {
 
     loadNewWorld(seed) {
         this.currentSeed = seed;
-        this.surfaceMap = new WorldMap(seed, 64, 64, 'SURFACE');
-        this.subCoreMap = new WorldMap(seed, 48, 48, 'SUB_CORE');
+        this.areaMaps = {
+            CINDERWATCH_HAMLET: new WorldMap(seed, 64, 64, 'CINDERWATCH_HAMLET'),
+            WHISPERING_WOODS: new WorldMap(seed, 80, 80, 'WHISPERING_WOODS'),
+            SUNKEN_GROTTO: new WorldMap(seed, 64, 64, 'SUNKEN_GROTTO'),
+            SUB_BEDROCK_CORE: new WorldMap(seed, 64, 64, 'SUB_BEDROCK_CORE')
+        };
+        this.surfaceMap = this.areaMaps.CINDERWATCH_HAMLET;
+        this.subCoreMap = this.areaMaps.SUB_BEDROCK_CORE;
         
+        this.currentAreaId = 'CINDERWATCH_HAMLET';
         this.currentLayer = 'SURFACE';
-        this.currentMap = this.surfaceMap;
+        this.currentMap = this.areaMaps.CINDERWATCH_HAMLET;
+
+        // Init critters & NPCs for starting area
+        this.critters.initForArea(this.currentAreaId, this.currentMap.width, this.currentMap.height);
+        this.critters.clearChimneys();
+        if (this.currentMap.chimneys) {
+            for (const ch of this.currentMap.chimneys) this.critters.addChimneyEmitter(ch.x, ch.y);
+        }
+        this.npcs.initForArea(this.currentAreaId);
 
         // Create player at map spawn
         this.player = new Character(this.selectedClass, this.currentMap.spawnPoint.x, this.currentMap.spawnPoint.y);
+        this.player.callsign = this.pioneerName || 'ALU-01';
         
         // Update header ticker info
         const hubTickerInfo = document.getElementById('hub-ticker-info');
@@ -588,33 +618,47 @@ class GameApp {
         this.saveState();
     }
 
-    switchLayer(newLayer) {
-        this.currentLayer = newLayer;
-        const layerBadge = document.getElementById('layer-badge');
-        if (newLayer === 'SUB_CORE') {
-            this.currentMap = this.subCoreMap;
-            this.player.pos.set(this.currentMap.spawnPoint.x, this.currentMap.spawnPoint.y);
-            this.player.vel.set(0, 0);
-            if (layerBadge) {
-                layerBadge.innerText = "SUB-BEDROCK CORE";
-                layerBadge.style.background = "#4a148c";
-                layerBadge.style.color = "#ea80fc";
-            }
-            if (this.soundEnabled && this.bgmEnabled) this.renderer.audio.startBgm('SUB_CORE');
-        } else {
-            this.currentMap = this.surfaceMap;
-            const caveExit = this.surfaceMap.caveEntrance;
-            this.player.pos.set(caveExit.x * 16 + 8, (caveExit.y + 2) * 16 + 8);
-            this.player.vel.set(0, 0);
-            if (layerBadge) {
-                layerBadge.innerText = "SURFACE OVERWORLD";
-                layerBadge.style.background = "#2a3b4c";
-                layerBadge.style.color = "#64b5f6";
-            }
-            if (this.soundEnabled && this.bgmEnabled) this.renderer.audio.startBgm('OVERWORLD');
+    changeArea(newAreaId, targetSpawn = null) {
+        if (!this.areaMaps[newAreaId]) {
+            this.areaMaps[newAreaId] = new WorldMap(this.currentSeed, 64, 64, newAreaId);
         }
-        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(330, 'sine', 0.2, 0.1);
+        this.currentAreaId = newAreaId;
+        this.currentMap = this.areaMaps[newAreaId];
+        this.currentLayer = (newAreaId === 'SUB_BEDROCK_CORE' || newAreaId === 'SUNKEN_GROTTO') ? 'SUB_CORE' : 'SURFACE';
+
+        // Spawn critters and NPCs
+        this.critters.initForArea(newAreaId, this.currentMap.width, this.currentMap.height);
+        this.critters.clearChimneys();
+        if (this.currentMap.chimneys) {
+            for (const ch of this.currentMap.chimneys) this.critters.addChimneyEmitter(ch.x, ch.y);
+        }
+        this.npcs.initForArea(newAreaId);
+
+        // Position player
+        if (targetSpawn) {
+            this.player.pos.set(targetSpawn.x, targetSpawn.y);
+        } else {
+            this.player.pos.set(this.currentMap.spawnPoint.x, this.currentMap.spawnPoint.y);
+        }
+        this.player.vel.set(0, 0);
+
+        // Play ambient chime & update BGM
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(440, 'triangle', 0.25, 0.12);
+        if (this.soundEnabled && this.bgmEnabled) {
+            const track = (newAreaId === 'SUB_BEDROCK_CORE') ? 'SUB_CORE' : 'OVERWORLD';
+            this.renderer.audio.startBgm(track);
+        }
+
+        this.renderer.addFloatingText(`ENTERED ${this.currentMap.areaName}!`, this.player.pos.x, this.player.pos.y - 20, '#00e5ff');
         this.updateHUD();
+    }
+
+    switchLayer(newLayer) {
+        if (newLayer === 'SUB_CORE') {
+            this.changeArea('SUB_BEDROCK_CORE');
+        } else {
+            this.changeArea('CINDERWATCH_HAMLET');
+        }
     }
 
     setupKeyboard() {
@@ -860,6 +904,14 @@ class GameApp {
     }
 
     setupModals() {
+        // Dialogue Box tap to advance
+        const dialogueBox = document.getElementById('dialogue-box-modal');
+        if (dialogueBox) {
+            this.bindTap(dialogueBox, () => {
+                this.advanceDialogue();
+            });
+        }
+
         // 1. Menu Hub Modal Controls
         const menuHubModal = document.getElementById('menu-hub-modal');
         const menuClose = document.getElementById('menu-close');
@@ -1555,6 +1607,28 @@ class GameApp {
         const px = this.player.pos.x;
         const py = this.player.pos.y;
 
+        // 0. Friendly NPCs (Dialogue & Story)
+        if (this.npcs) {
+            const npc = this.npcs.getNearbyNpc(px, py, 34);
+            if (npc) {
+                return { type: 'NPC', entity: npc, label: 'TALK' };
+            }
+        }
+
+        // 0.5. Area Portals
+        if (this.currentMap && this.currentMap.findNearbyPortal) {
+            const portal = this.currentMap.findNearbyPortal(px, py, 32);
+            if (portal) {
+                return { 
+                    type: 'PORTAL', 
+                    entity: portal, 
+                    label: portal.label.includes('WOODS') ? 'TO WOODS' : 
+                           portal.label.includes('HAMLET') ? 'TO HAMLET' : 
+                           portal.label.includes('GROTTO') ? 'TO GROTTO' : 'ENTER' 
+                };
+            }
+        }
+
         // 1. Survival Resource Nodes (The Wild Darkness survival interaction)
         if (this.currentMap.findNearbyNode) {
             const node = this.currentMap.findNearbyNode(px, py, 26);
@@ -1563,12 +1637,12 @@ class GameApp {
                 if (node.type === 'PINE_TREE') label = 'CHOP';
                 else if (node.type === 'FLINT_BOULDER') label = 'MINE';
                 else if (node.type === 'WILD_CABBAGE') label = 'GATHER';
-                else if (node.type === 'BERRY_BUSH') label = 'FORAGE';
+                else if (node.type === 'BERRY_BUSH' || node.type === 'WILD_BERRY_BUSH') label = 'FORAGE';
                 else if (node.type === 'MEDICINAL_HERB') label = 'HARVEST';
-                else if (node.type === 'CAMPFIRE_SITE') label = 'REST';
+                else if (node.type === 'CAMPFIRE' || node.type === 'CAMPFIRE_SITE') label = 'REST';
                 else if (node.type === 'RUNIC_TOTEM') label = 'COMMUNE';
-                else if (node.type === 'TITANIUM_CONDUIT') label = 'EXTRACT';
-                else if (node.type === 'RESONANT_CRYSTAL') label = 'MINE';
+                else if (node.type === 'TITANIUM_CONDUIT' || node.type === 'POWER_CONDUIT') label = 'EXTRACT';
+                else if (node.type === 'RESONANT_CRYSTAL' || node.type === 'GLOWING_CRYSTAL') label = 'MINE';
                 return { type: 'RESOURCE_NODE', entity: node, label: label };
             }
         }
@@ -1629,11 +1703,144 @@ class GameApp {
     }
 
     handleAction() {
+        if (this.activeDialogue) {
+            this.advanceDialogue();
+            return;
+        }
         const interactable = this.getNearestInteractable();
         if (interactable) {
             this.handleInteract();
         } else {
             this.handleAttack();
+        }
+    }
+
+    startNpcDialogue(npc) {
+        if (!this.npcs) return;
+        this.activeDialogue = this.npcs.getDialogueFor(npc, this.player.charClass, this.player.callsign);
+        this.activeDialogue.npcId = npc.id;
+        this.dialogueStep = 0;
+
+        const modal = document.getElementById('dialogue-box-modal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+
+        // Update speaker details
+        const nameElem = document.getElementById('dialogue-speaker-name');
+        const titleElem = document.getElementById('dialogue-speaker-title');
+        if (nameElem) nameElem.textContent = this.activeDialogue.speaker;
+        if (titleElem) titleElem.textContent = this.activeDialogue.title || "";
+
+        // Render portrait
+        this.renderDialoguePortrait(npc.portrait);
+
+        // Show first line
+        this.showCurrentDialogueLine();
+
+        // Check quest updates
+        if (this.activeDialogue.questUpdate) {
+            this.npcs.questStage = this.activeDialogue.questUpdate.stage;
+            this.npcs.activeQuestTitle = this.activeDialogue.questUpdate.title;
+            this.npcs.activeQuestObjective = this.activeDialogue.questUpdate.objective;
+            const qTitle = document.getElementById('quest-title-text');
+            const qObj = document.getElementById('quest-obj-text');
+            if (qTitle) qTitle.textContent = this.activeDialogue.questUpdate.title;
+            if (qObj) qObj.textContent = this.activeDialogue.questUpdate.objective;
+        }
+
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playBlip();
+    }
+
+    renderDialoguePortrait(portraitType) {
+        const pCanvas = document.getElementById('dialogue-portrait-canvas');
+        if (!pCanvas) return;
+        const ctx = pCanvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+        ctx.clearRect(0, 0, 48, 48);
+
+        ctx.fillStyle = '#080c12';
+        ctx.fillRect(0, 0, 48, 48);
+
+        if (portraitType === 'ELDER') {
+            ctx.fillStyle = '#6c5ce7';
+            ctx.fillRect(8, 6, 32, 34);
+            ctx.fillStyle = '#ffeaa7';
+            ctx.fillRect(14, 14, 20, 18);
+            ctx.fillStyle = '#dfe6e9';
+            ctx.fillRect(10, 8, 28, 8);
+            ctx.fillRect(12, 24, 24, 16);
+            ctx.fillStyle = '#2d3436';
+            ctx.fillRect(16, 18, 4, 3);
+            ctx.fillRect(26, 18, 4, 3);
+        } else if (portraitType === 'SMITH') {
+            ctx.fillStyle = '#d63031';
+            ctx.fillRect(8, 8, 32, 10);
+            ctx.fillStyle = '#ffeaa7';
+            ctx.fillRect(12, 16, 24, 20);
+            ctx.fillStyle = '#2d3436';
+            ctx.fillRect(10, 6, 28, 6);
+            ctx.fillRect(14, 26, 20, 8);
+            ctx.fillRect(16, 20, 4, 3);
+            ctx.fillRect(26, 20, 4, 3);
+        } else if (portraitType === 'HERBALIST') {
+            ctx.fillStyle = '#00b894';
+            ctx.fillRect(8, 6, 32, 34);
+            ctx.fillStyle = '#ffeaa7';
+            ctx.fillRect(14, 14, 20, 20);
+            ctx.fillStyle = '#e17055';
+            ctx.fillRect(10, 8, 28, 10);
+            ctx.fillStyle = '#ff7675';
+            ctx.fillRect(32, 8, 6, 6);
+            ctx.fillStyle = '#2d3436';
+            ctx.fillRect(16, 20, 4, 3);
+            ctx.fillRect(26, 20, 4, 3);
+        } else if (portraitType === 'RANGER') {
+            ctx.fillStyle = '#0984e3';
+            ctx.fillRect(8, 6, 32, 34);
+            ctx.fillStyle = '#ffeaa7';
+            ctx.fillRect(14, 14, 20, 20);
+            ctx.fillStyle = '#ffeaa7';
+            ctx.fillRect(10, 8, 28, 8);
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(30, 4, 4, 8);
+            ctx.fillStyle = '#2d3436';
+            ctx.fillRect(16, 20, 4, 3);
+            ctx.fillRect(26, 20, 4, 3);
+        } else if (portraitType === 'AUTOMATON') {
+            ctx.fillStyle = '#1e272e';
+            ctx.fillRect(8, 8, 32, 32);
+            ctx.fillStyle = '#00cec9';
+            ctx.fillRect(12, 12, 24, 24);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(18, 18, 12, 12);
+            ctx.fillStyle = '#0984e3';
+            ctx.fillRect(22, 22, 4, 4);
+        } else {
+            ctx.fillStyle = '#636e72';
+            ctx.fillRect(12, 12, 24, 24);
+        }
+    }
+
+    showCurrentDialogueLine() {
+        if (!this.activeDialogue) return;
+        const line = this.activeDialogue.lines[this.dialogueStep];
+        const textElem = document.getElementById('dialogue-text-content');
+        if (textElem) {
+            textElem.textContent = line || "";
+        }
+    }
+
+    advanceDialogue() {
+        if (!this.activeDialogue) return;
+        this.dialogueStep++;
+        if (this.dialogueStep >= this.activeDialogue.lines.length) {
+            const modal = document.getElementById('dialogue-box-modal');
+            if (modal) modal.classList.add('hidden');
+            this.activeDialogue = null;
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+        } else {
+            this.showCurrentDialogueLine();
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playBlip();
         }
     }
 
@@ -1679,10 +1886,22 @@ class GameApp {
         const interactable = this.getNearestInteractable();
         if (!interactable) return;
 
-        // Survival Resource Node Interaction
+        // 1. NPC Interaction (Dialogue & Story)
+        if (interactable.type === 'NPC') {
+            this.startNpcDialogue(interactable.entity);
+            return;
+        }
+
+        // 2. Area Portal Interaction (Multi-area traversal)
+        if (interactable.type === 'PORTAL') {
+            this.changeArea(interactable.entity.targetArea, interactable.entity.targetSpawn);
+            return;
+        }
+
+        // 3. Survival Resource Node Interaction
         if (interactable.type === 'RESOURCE_NODE') {
             const node = interactable.entity;
-            if (node.type === 'CAMPFIRE_SITE') {
+            if (node.type === 'CAMPFIRE' || node.type === 'CAMPFIRE_SITE') {
                 this.player.hp = Math.min(this.player.maxHp, this.player.hp + 25);
                 this.player.energy = Math.min(this.player.maxEnergy, this.player.energy + 25);
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playItemObtained();
@@ -1973,7 +2192,131 @@ class GameApp {
             if (coinFloor) coinFloor.innerText = `Floor: ${curve.getGuaranteedFloor().toFixed(3)} ALU`;
         }
 
+        // 5. Rustic Vitals Plate & Quest Info (Image 1 reference)
+        const rusticArea = document.getElementById('rustic-area-title');
+        const rusticLevel = document.getElementById('rustic-player-level');
+        const rusticHpFill = document.getElementById('rustic-hp-fill');
+        const rusticHpText = document.getElementById('rustic-hp-text');
+        const rusticMpFill = document.getElementById('rustic-mp-fill');
+        const rusticMpText = document.getElementById('rustic-mp-text');
+        const rusticSpFill = document.getElementById('rustic-sp-fill');
+        const rusticSpText = document.getElementById('rustic-sp-text');
+        const rusticTimeText = document.getElementById('rustic-time-text');
+        const questTitle = document.getElementById('quest-title-text');
+        const questObj = document.getElementById('quest-obj-text');
+
+        if (rusticArea && this.currentMap) rusticArea.innerText = this.currentMap.areaName || "CINDERWATCH HAMLET";
+        if (rusticLevel && this.player) rusticLevel.innerText = `${Math.min(99, 1 + Math.floor((this.player.coinsCollected || 0) / 40))}`;
+
+        if (this.player) {
+            const hpPct = Math.max(0, Math.min(100, (this.player.hp / this.player.maxHp) * 100));
+            const mpPct = Math.max(0, Math.min(100, (this.player.energy / this.player.maxEnergy) * 100));
+            if (rusticHpFill) rusticHpFill.style.width = `${hpPct}%`;
+            if (rusticHpText) rusticHpText.innerText = `${Math.round(this.player.hp)}/${this.player.maxHp}`;
+            if (rusticMpFill) rusticMpFill.style.width = `${mpPct}%`;
+            if (rusticMpText) rusticMpText.innerText = `${Math.round(this.player.energy)}/${this.player.maxEnergy}`;
+            if (rusticSpFill) rusticSpFill.style.width = `100%`;
+            if (rusticSpText) rusticSpText.innerText = `100/100`;
+        }
+
+        if (this.npcs) {
+            if (questTitle) questTitle.innerText = this.npcs.activeQuestTitle;
+            if (questObj) questObj.innerText = this.npcs.activeQuestObjective;
+        }
+
+        // Calculate 24h clock string & atmospheric state
+        const dayProgress = this.dayTimer || 0.25;
+        const totalMinutes = Math.floor(dayProgress * 1440);
+        const hours = Math.floor(totalMinutes / 60);
+        const mins = totalMinutes % 60;
+        const hh = (hours < 10 ? '0' : '') + hours;
+        const mm = (mins < 10 ? '0' : '') + mins;
+        let periodName = "Day";
+        if (dayProgress >= 0.15 && dayProgress < 0.25) periodName = "Dawn Mist";
+        else if (dayProgress >= 0.25 && dayProgress < 0.40) periodName = "Morning";
+        else if (dayProgress >= 0.40 && dayProgress < 0.50) periodName = "High Noon";
+        else if (dayProgress >= 0.50 && dayProgress < 0.65) periodName = "Golden Hour";
+        else if (dayProgress >= 0.65 && dayProgress < 0.85) periodName = "Starry Night";
+        else periodName = "Midnight";
+
+        if (rusticTimeText) rusticTimeText.innerText = `${hh}:${mm} • ${periodName}`;
+
+        this.updateMiniMap();
         this.updateTouchControlsVisibility();
+    }
+
+    updateMiniMap() {
+        const miniCanvas = document.getElementById('mini-map-canvas');
+        if (!miniCanvas || !this.currentMap || !this.player) return;
+        const ctx = miniCanvas.getContext('2d');
+        const mw = this.currentMap.width;
+        const mh = this.currentMap.height;
+        const cw = miniCanvas.width;
+        const ch = miniCanvas.height;
+
+        ctx.fillStyle = '#080c14';
+        ctx.fillRect(0, 0, cw, ch);
+
+        const ptx = Math.floor(this.player.pos.x / 16);
+        const pty = Math.floor(this.player.pos.y / 16);
+        const viewTiles = 30;
+        const startX = Math.max(0, Math.min(mw - viewTiles, ptx - Math.floor(viewTiles / 2)));
+        const startY = Math.max(0, Math.min(mh - viewTiles, pty - Math.floor(viewTiles / 2)));
+        const step = cw / viewTiles;
+
+        for (let y = 0; y < viewTiles; y++) {
+            for (let x = 0; x < viewTiles; x++) {
+                const mx = startX + x;
+                const my = startY + y;
+                const tile = this.currentMap.get(mx, my);
+                if (tile === 1) ctx.fillStyle = '#1e88e5'; // River
+                else if (tile === 12) ctx.fillStyle = '#8d6e63'; // Bridge
+                else if (tile === 11) ctx.fillStyle = '#b0bec5'; // Cobblestone
+                else if (tile === 5 || tile === 6) ctx.fillStyle = '#455a64'; // Cliff
+                else if (tile === 14 || tile === 15) ctx.fillStyle = '#c62828'; // Cottage
+                else if (tile === 4) ctx.fillStyle = '#2e7d32'; // Tall grass
+                else if (tile === 20) ctx.fillStyle = '#00e5ff'; // Cavern mushroom
+                else if (tile === 0) ctx.fillStyle = '#05070a'; // Void
+                else ctx.fillStyle = '#388e3c'; // Ground
+
+                ctx.fillRect(Math.floor(x * step), Math.floor(y * step), Math.ceil(step), Math.ceil(step));
+            }
+        }
+
+        // Draw Portals
+        if (this.currentMap.portals) {
+            ctx.fillStyle = '#e040fb';
+            for (const p of this.currentMap.portals) {
+                const px = Math.floor(p.x / 16);
+                const py = Math.floor(p.y / 16);
+                if (px >= startX && px < startX + viewTiles && py >= startY && py < startY + viewTiles) {
+                    ctx.fillRect(Math.floor((px - startX) * step), Math.floor((py - startY) * step), 3, 3);
+                }
+            }
+        }
+
+        // Draw NPCs
+        if (this.npcs && this.npcs.npcs) {
+            ctx.fillStyle = '#ffd54f';
+            for (const n of this.npcs.npcs) {
+                const nx = Math.floor(n.x / 16);
+                const ny = Math.floor(n.y / 16);
+                if (nx >= startX && nx < startX + viewTiles && ny >= startY && ny < startY + viewTiles) {
+                    ctx.fillRect(Math.floor((nx - startX) * step), Math.floor((ny - startY) * step), 3, 3);
+                }
+            }
+        }
+
+        // Draw Player blip
+        const pScreenX = Math.floor((ptx - startX) * step);
+        const pScreenY = Math.floor((pty - startY) * step);
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(pScreenX, pScreenY, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#d50000';
+        ctx.lineWidth = 1;
+        ctx.stroke();
     }
 
     updateInput() {
@@ -2083,6 +2426,16 @@ class GameApp {
             }
         }
 
+        const isNight = (this.dayTimer >= 0.50 && this.dayTimer < 0.85);
+
+        // Update Wildlife Critters & Friendly NPCs
+        if (this.critters && this.currentMap) {
+            this.critters.update(dt, this.player.pos, this.currentMap, isNight);
+        }
+        if (this.npcs) {
+            this.npcs.update(dt, this.player.pos.x, this.player.pos.y);
+        }
+
         // 2. Camera Update (Follow player smoothly)
         this.renderer.updateCamera(this.player.pos, this.currentMap.width, this.currentMap.height, dt);
 
@@ -2090,6 +2443,12 @@ class GameApp {
         this.renderer.clear();
         this.renderer.renderMap(this.currentMap, dt);
         this.renderer.renderEnemies(this.currentMap.enemies, this.currentMap.palette.colors);
+        if (this.npcs) {
+            this.renderer.renderNpcs(this.npcs.npcs, Math.round(this.renderer.camera.x), Math.round(this.renderer.camera.y), this.player.pos);
+        }
+        if (this.critters) {
+            this.critters.render(this.renderer.ctx, Math.round(this.renderer.camera.x), Math.round(this.renderer.camera.y), isNight);
+        }
         this.renderer.renderCharacter(this.player, this.currentMap.palette.colors);
 
         // 4. Render Day/Night Lighting Mask (Darkness + Torchlight radial aperture)

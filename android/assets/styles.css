@@ -1541,4 +1541,328 @@ body, html {
     color: #ffd54f;
 }
 
+/* ==========================================================================
+   RUSTIC HD-2D / GBA HUD OVERLAY (Octopath / Emberfall Inspired)
+   ========================================================================== */
+
+.rustic-hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 95;
+}
+
+.rustic-hud.hidden {
+    display: none !important;
+}
+
+.rustic-plate {
+    pointer-events: auto;
+    background: linear-gradient(145deg, rgba(22, 28, 38, 0.94), rgba(10, 14, 20, 0.96));
+    border: 2px solid #c59b27;
+    outline: 1px solid #574015;
+    border-radius: 4px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.8), inset 0 1px 1px rgba(255, 235, 150, 0.3);
+    padding: 6px 8px;
+    position: absolute;
+}
+
+/* Top-Left Vitals Card */
+#rustic-vitals-card {
+    top: 8px;
+    left: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 135px;
+}
+
+.vitals-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-bottom: 1px solid rgba(197, 155, 39, 0.35);
+    padding-bottom: 3px;
+    margin-bottom: 2px;
+}
+
+.level-crest {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(180deg, #d4af37, #855b14);
+    border: 1px solid #ffd700;
+    border-radius: 2px;
+    padding: 1px 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.crest-label {
+    font-size: 5px;
+    color: #2b1d03;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.crest-val {
+    font-size: 7px;
+    color: #ffffff;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.area-banner {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    color: #f5cd79;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.vitals-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.vital-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 5.5px;
+}
+
+.vital-tag {
+    width: 18px;
+    font-weight: bold;
+}
+
+.hp-row .vital-tag { color: #ff6b6b; }
+.mp-row .vital-tag { color: #4dabf7; }
+.sp-row .vital-tag { color: #fcc419; }
+
+.vital-track {
+    width: 68px;
+    height: 6px;
+    background: #080c12;
+    border: 1px solid #37474f;
+    border-radius: 2px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.vital-fill {
+    height: 100%;
+    transition: width 0.15s ease-out;
+}
+
+.hp-row .vital-fill {
+    background: linear-gradient(90deg, #c92a2a, #ff6b6b);
+    box-shadow: 0 0 4px rgba(255, 107, 107, 0.6);
+}
+
+.mp-row .vital-fill {
+    background: linear-gradient(90deg, #1864ab, #4dabf7);
+    box-shadow: 0 0 4px rgba(77, 171, 247, 0.6);
+}
+
+.sp-row .vital-fill {
+    background: linear-gradient(90deg, #e67700, #fcc419);
+    box-shadow: 0 0 4px rgba(252, 196, 25, 0.6);
+}
+
+.vital-num {
+    font-size: 5px;
+    color: #adb5bd;
+}
+
+/* Top-Center Quest & Story Tracker Banner */
+.quest-banner {
+    pointer-events: auto;
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, rgba(20, 26, 36, 0.92), rgba(12, 16, 22, 0.94));
+    border: 1px solid #c59b27;
+    border-radius: 3px;
+    padding: 3px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 6px;
+    color: #e9ecef;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    max-width: 48%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.quest-icon {
+    font-size: 8px;
+}
+
+.quest-title {
+    color: #ffd54f;
+    font-weight: bold;
+}
+
+.quest-sep {
+    color: #868e96;
+}
+
+.quest-obj {
+    color: #cfd8dc;
+}
+
+/* Top-Right Compass Radar Card */
+.radar-card {
+    top: 8px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 6px;
+}
+
+.radar-bezel {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    background: #080c14;
+    border: 2px solid #c59b27;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.9), 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.mini-map-canvas {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    display: block;
+}
+
+.cardinal {
+    position: absolute;
+    font-size: 5px;
+    font-weight: bold;
+    color: #ffd54f;
+    text-shadow: 0 1px 1px #000;
+}
+
+.cardinal.n { top: 1px; left: 50%; transform: translateX(-50%); color: #ff6b6b; }
+.cardinal.s { bottom: 1px; left: 50%; transform: translateX(-50%); }
+.cardinal.w { left: 1px; top: 50%; transform: translateY(-50%); }
+.cardinal.e { right: 1px; top: 50%; transform: translateY(-50%); }
+
+.rustic-time-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 5.5px;
+    color: #f5cd79;
+    font-family: 'Press Start 2P', monospace;
+}
+
+/* Interactive Rustic Dialogue Box Modal */
+.dialogue-modal {
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 92%;
+    max-width: 440px;
+    z-index: 130;
+    pointer-events: auto;
+}
+
+.dialogue-modal.hidden {
+    display: none !important;
+}
+
+.dialogue-parchment {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: linear-gradient(180deg, #161e2b, #0c121a);
+    border: 2px solid #d4af37;
+    outline: 1px solid #4a3811;
+    border-radius: 4px;
+    padding: 8px 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.9), inset 0 0 0 1px rgba(255, 215, 0, 0.2);
+}
+
+.dialogue-portrait-frame {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    background: #080c12;
+    border: 2px solid #855b14;
+    border-radius: 3px;
+    overflow: hidden;
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.8);
+}
+
+.dialogue-portrait-canvas {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    display: block;
+}
+
+.dialogue-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.dialogue-header {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.4);
+    padding-bottom: 2px;
+}
+
+.speaker-name {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: #ffd54f;
+    letter-spacing: 0.5px;
+}
+
+.speaker-title {
+    font-size: 6px;
+    color: #90a4ae;
+}
+
+.dialogue-text {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6.5px;
+    color: #f8f9fa;
+    line-height: 1.5;
+    min-height: 24px;
+}
+
+.dialogue-prompt {
+    align-self: flex-end;
+    font-size: 5px;
+    color: #ffc107;
+    animation: blink 0.8s infinite alternate;
+}
+
+@keyframes blink {
+    from { opacity: 0.4; }
+    to { opacity: 1.0; }
+}
+
 
