@@ -10,7 +10,7 @@
 <body>
     <div id="app-container">
         <!-- Top Game Dashboard Bar (With Company Logo Placeholder/Emblem) -->
-        <header id="game-header">
+        <header id="game-header" class="hidden">
             <div class="header-left">
                 <!-- Alumungandr Company Logo as Brand Placeholder / Emblem -->
                 <img src="assets/logo.svg" alt="Company Logo" id="company-logo" class="brand-logo" />
@@ -18,12 +18,17 @@
                 <span id="layer-badge" class="badge">SURFACE OVERWORLD</span>
             </div>
             <div class="header-center">
+                <!-- Day / Night Cycle Dial (Image 5 reference) -->
+                <div class="day-night-widget" title="Planetary Daylight & Torchlight Gauge">
+                    <canvas id="clock-gauge-canvas" width="22" height="22" class="clock-gauge"></canvas>
+                    <span id="day-counter-badge" class="badge">DAY 1</span>
+                </div>
                 <span class="coin-ticker" id="coin-ticker">$ALU-7F3A</span>
                 <span class="coin-price" id="coin-price">1.250 ALU</span>
-                <span class="coin-floor" id="coin-floor" title="Genesis Floor: Guaranteed minimum redemption value">Floor: 0.125 ALU</span>
             </div>
             <div class="header-right">
-                <button id="btn-menu-top" class="gba-btn-sm" title="Open Main System Menu">☰ MENU</button>
+                <button id="btn-menu-top" class="gba-btn-sm" title="Open In-Game GBA Menu">☰ MENU</button>
+                <button id="btn-crafting-top" class="gba-btn-sm" title="Survival Crafting (Tools, Torches, Salves)">🔨 CRAFT</button>
                 <button id="btn-inventory" class="gba-btn-sm" title="View Equipment & Keycards">🎒 BAG</button>
                 <button id="btn-dev-top" class="gba-btn-sm dev-btn" title="Developer & Debug Tools">⚡ DEV</button>
             </div>
@@ -35,6 +40,65 @@
 
             <!-- Authentic CRT Retro Scanline & Phosphor Overlay -->
             <div id="crt-overlay" class="crt-overlay"></div>
+
+            <!-- Start Screen / Main Title Hub ("The Wild Darkness" styled) -->
+            <div id="start-screen-container" class="start-screen">
+                <!-- Top Currencies & Keys status bar (Image 3) -->
+                <header class="start-header-bar">
+                    <div class="start-stat-chip">
+                        <span class="stat-icon">🗝️</span>
+                        <span class="stat-val" id="start-keys-val">15/15</span>
+                    </div>
+                    <div class="start-header-right">
+                        <div class="start-stat-chip" title="Ancient Dyson Cores">
+                            <span class="stat-icon">☥</span>
+                            <span class="stat-val" id="start-cores-val">0</span>
+                        </div>
+                        <div class="start-stat-chip" title="ALU Star Matrix Tokens">
+                            <span class="stat-icon">✡</span>
+                            <span class="stat-val" id="start-tokens-val">0</span>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Centerpiece: GAME START with Runic Brackets -->
+                <div class="start-center-hub">
+                    <div class="title-branding">
+                        <h1 class="start-game-title">AETHER-CORE</h1>
+                        <div class="start-game-subtitle">THE LIVING RUNIC MATRIX</div>
+                    </div>
+
+                    <button id="btn-game-start" class="runic-start-btn">
+                        <span class="runic-bracket left">⟦</span>
+                        <span class="runic-btn-text">GAME START</span>
+                        <span class="runic-bracket right">⟧</span>
+                    </button>
+                </div>
+
+                <!-- Bottom Navigation Icons Bar (Image 3) -->
+                <nav class="start-bottom-nav">
+                    <button class="start-nav-btn" id="start-tab-roster">
+                        <div class="nav-icon-frame">👤</div>
+                        <span class="nav-label">CHARACTER</span>
+                    </button>
+                    <button class="start-nav-btn" id="start-tab-worldgen">
+                        <div class="nav-icon-frame">🌍</div>
+                        <span class="nav-label">WORLD GEN</span>
+                    </button>
+                    <button class="start-nav-btn" id="start-tab-market">
+                        <div class="nav-icon-frame">🪙</div>
+                        <span class="nav-label">TOKEN VAULT</span>
+                    </button>
+                    <button class="start-nav-btn" id="start-tab-records">
+                        <div class="nav-icon-frame">📜</div>
+                        <span class="nav-label">RECORDS</span>
+                    </button>
+                    <button class="start-nav-btn" id="start-tab-settings">
+                        <div class="nav-icon-frame">⚙️</div>
+                        <span class="nav-label">SETTINGS</span>
+                    </button>
+                </nav>
+            </div>
 
             <!-- On-Screen Virtual Controller Overlay -->
             <div id="touch-controls" class="controls-hidden">
@@ -59,17 +123,17 @@
                         <span class="btn-label">B</span>
                         <span class="btn-sub">PARRY</span>
                     </button>
-                    <button class="action-btn" id="btn-a" data-action="action" title="Context: Attack or Examine">
+                    <button class="action-btn" id="btn-a" data-action="action" title="Context: Attack, Harvest or Examine">
                         <span class="btn-label">A</span>
-                        <span class="btn-sub" id="btn-a-sub">ATTACK</span>
+                        <span class="btn-sub" id="btn-a-sub">ACTION</span>
                     </button>
                 </div>
 
                 <!-- Center Controls (Restart, Dev Skip, Menu) -->
                 <div id="center-buttons">
-                    <button class="meta-btn" id="btn-restart" title="Instant Pioneer Reboot">🔄 RESTART</button>
-                    <button class="meta-btn" id="btn-skip" title="Dev Fast-Forward / Skip">⏭️ SKIP</button>
-                    <button class="meta-btn" id="btn-start" title="Open Menu Hub">☰ MENU</button>
+                    <button class="meta-btn" id="btn-restart" title="Instant Pioneer Reboot">🔄 REBOOT</button>
+                    <button class="meta-btn" id="btn-crafting-quick" title="Quick Survival Crafting">🔨 CRAFT</button>
+                    <button class="meta-btn" id="btn-start" title="Open In-Game Menu">☰ MENU</button>
                 </div>
             </div>
 
@@ -136,44 +200,132 @@
                 </div>
             </div>
 
-            <!-- Authentic GBA Right-Hand Start / Pause Menu (Image 5) -->
+            <!-- Authentic GBA Right-Hand In-Game Menu (Strictly Game-Focused, Image 2) -->
             <div id="gba-start-menu" class="gba-side-menu hidden">
                 <div class="gba-menu-frame" id="gba-menu-items-container">
-                    <div class="gba-menu-item active" data-action="expedition">
+                    <div class="gba-menu-item active" data-action="status">
                         <span class="gba-cursor">▶</span>
-                        <span class="gba-label">EXPEDITION</span>
+                        <span class="gba-label">STATUS</span>
                     </div>
                     <div class="gba-menu-item" data-action="inventory">
                         <span class="gba-cursor"> </span>
                         <span class="gba-label">BAG</span>
                     </div>
-                    <div class="gba-menu-item" data-action="market">
+                    <div class="gba-menu-item" data-action="crafting">
                         <span class="gba-cursor"> </span>
-                        <span class="gba-label">ALU COIN</span>
+                        <span class="gba-label">CRAFT</span>
                     </div>
-                    <div class="gba-menu-item" data-action="new-seed">
+                    <div class="gba-menu-item" data-action="map">
                         <span class="gba-cursor"> </span>
-                        <span class="gba-label">NEW SEED</span>
+                        <span class="gba-label">RADAR MAP</span>
                     </div>
-                    <div class="gba-menu-item" data-action="sound">
+                    <div class="gba-menu-item" data-action="save">
                         <span class="gba-cursor"> </span>
-                        <span class="gba-label">OPTION</span>
-                    </div>
-                    <div class="gba-menu-item" data-action="pioneer">
-                        <span class="gba-cursor"> </span>
-                        <span class="gba-label">ROSTER</span>
+                        <span class="gba-label">SAVE</span>
                     </div>
                     <div class="gba-menu-item dev-item" data-action="dev">
                         <span class="gba-cursor"> </span>
                         <span class="gba-label">DEV TOOLS</span>
                     </div>
-                    <div class="gba-menu-item" data-action="reboot">
-                        <span class="gba-cursor"> </span>
-                        <span class="gba-label">REBOOT</span>
-                    </div>
                     <div class="gba-menu-item" data-action="exit">
                         <span class="gba-cursor"> </span>
-                        <span class="gba-label">EXIT</span>
+                        <span class="gba-label">QUIT TO TITLE</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10-Slot Expedition Run Cards Selector Modal (The Wild Darkness Image 4) -->
+            <div id="save-slots-modal" class="game-modal hidden">
+                <div class="modal-content slots-content">
+                    <div class="modal-header">
+                        <h3>SELECT EXPEDITION RUN</h3>
+                        <button class="modal-close" id="slots-close">✕</button>
+                    </div>
+                    <div class="save-slots-grid" id="save-slots-grid">
+                        <!-- Populated dynamically: 10 run cards (Slot 1 - 10) -->
+                    </div>
+                    <div class="slots-footer">
+                        <span>SELECT A RUN CARD TO EMBARK OR RESUME EXPEDITION</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Survival Crafting Modal (The Wild Darkness Image 5) -->
+            <div id="crafting-modal" class="game-modal hidden">
+                <div class="modal-content crafting-content">
+                    <div class="modal-header">
+                        <h3>🔨 SURVIVAL FIELD CRAFTING</h3>
+                        <button class="modal-close" id="crafting-close">✕</button>
+                    </div>
+                    <div class="crafting-body">
+                        <div class="crafting-recipes-list" id="crafting-recipes-list">
+                            <!-- Populated dynamically with recipes -->
+                        </div>
+                        <div class="crafting-info-panel" id="crafting-info-panel">
+                            Select a blueprint to inspect materials and craft.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- World Generation & Seed Matrix Modal (Start Screen) -->
+            <div id="worldgen-modal" class="game-modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>🌍 WORLD GENERATION & SEED MATRIX</h3>
+                        <button class="modal-close" id="worldgen-close">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="setup-form-row">
+                            <label for="worldgen-seed-input">32-BIT WORLD SEED (HEX):</label>
+                            <div class="input-with-random">
+                                <input type="text" id="worldgen-seed-input" value="0x7F3A59DF" spellcheck="false" />
+                                <button id="btn-worldgen-random" class="gba-btn-sm" type="button">🎲 ROLL</button>
+                            </div>
+                        </div>
+                        <div class="setup-form-row">
+                            <label>MAP SCALE & DENSITY:</label>
+                            <div class="select-row">
+                                <button id="btn-density-rich" class="gba-btn-sm active">RICH DENSITY</button>
+                                <button id="btn-density-survival" class="gba-btn-sm">HARDCORE</button>
+                            </div>
+                        </div>
+                        <div class="worldgen-actions">
+                            <button id="btn-apply-worldgen" class="market-action-btn buy">SYNTHESIZE NEW MATRIX</button>
+                        </div>
+                        <div id="worldgen-log" class="market-log">Seed ready. Current bonding curve: $ALU-7F3A.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Survival Records & Achievements Modal (Start Screen) -->
+            <div id="records-modal" class="game-modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>📜 SURVIVAL RECORDS & MILESTONES</h3>
+                        <button class="modal-close" id="records-close">✕</button>
+                    </div>
+                    <div class="modal-body records-body">
+                        <div class="record-stat-box">
+                            <span class="rec-label">DAYS SURVIVED:</span>
+                            <span class="rec-val" id="rec-days-val">Day 1</span>
+                        </div>
+                        <div class="record-stat-box">
+                            <span class="rec-label">EXPEDITIONS EMBARKED:</span>
+                            <span class="rec-val" id="rec-runs-val">1</span>
+                        </div>
+                        <div class="record-stat-box">
+                            <span class="rec-label">RESOURCES HARVESTED:</span>
+                            <span class="rec-val" id="rec-harvest-val">0</span>
+                        </div>
+                        <div class="record-stat-box">
+                            <span class="rec-label">AEGIS BOSS SLAIN:</span>
+                            <span class="rec-val" id="rec-boss-val">0</span>
+                        </div>
+                        <div class="record-stat-box">
+                            <span class="rec-label">GENESIS CORES EXTRACTED:</span>
+                            <span class="rec-val" id="rec-cores-val">0</span>
+                        </div>
                     </div>
                 </div>
             </div>

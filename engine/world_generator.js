@@ -47,6 +47,7 @@ class WorldMap {
         this.interactiveGrass = [];
         this.chests = [];
         this.sparkles = [];
+        this.resourceNodes = [];
 
         this.generate();
     }
@@ -64,13 +65,28 @@ class WorldMap {
 
     isSolid(tx, ty) {
         const t = this.get(tx, ty);
-        return (
+        if (
             t === TILE.CLIFF_LOW ||
             t === TILE.CLIFF_HIGH ||
             t === TILE.DEEP_WATER ||
             t === TILE.VOID ||
             t === TILE.ANCIENT_TERMINAL
-        );
+        ) {
+            return true;
+        }
+
+        // Check if unharvested solid resource node blocks this tile
+        if (this.resourceNodes && this.resourceNodes.length > 0) {
+            for (const node of this.resourceNodes) {
+                if (node.hp > 0 && (node.type === 'PINE_TREE' || node.type === 'FLINT_BOULDER' || node.type === 'RUNIC_TOTEM')) {
+                    const ntx = Math.floor(node.x / 16);
+                    const nty = Math.floor(node.y / 16);
+                    if (ntx === tx && nty === ty) return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     generate() {
@@ -209,6 +225,150 @@ class WorldMap {
                 }
             }
         }
+
+        // 9. Spawn "The Wild Darkness" Rich Survival Resource Nodes
+        // Pine Trees (Woodcutting -> Branches)
+        for (let i = 0; i < 18; i++) {
+            for (let attempt = 0; attempt < 30; attempt++) {
+                const tx = prng.range(5, this.width - 5);
+                const ty = prng.range(5, this.height - 5);
+                const tile = this.get(tx, ty);
+                if ((tile === TILE.GROUND || tile === TILE.FOIL_GRASS) && Math.hypot(tx * 16 - this.spawnPoint.x, ty * 16 - this.spawnPoint.y) > 40) {
+                    this.resourceNodes.push({
+                        id: `pine_${i}`,
+                        type: 'PINE_TREE',
+                        x: tx * 16 + 8,
+                        y: ty * 16 + 8,
+                        hp: 3,
+                        maxHp: 3,
+                        drops: 'BRANCH',
+                        dropCount: 2,
+                        dropCoins: 1,
+                        name: 'Ancient Conifer Pine'
+                    });
+                    break;
+                }
+            }
+        }
+
+        // Flint Rock Boulders (Mining -> Flint stones)
+        for (let i = 0; i < 14; i++) {
+            for (let attempt = 0; attempt < 30; attempt++) {
+                const tx = prng.range(5, this.width - 5);
+                const ty = prng.range(5, this.height - 5);
+                const tile = this.get(tx, ty);
+                if (tile === TILE.GROUND || tile === TILE.CLIFF_LOW) {
+                    this.resourceNodes.push({
+                        id: `flint_${i}`,
+                        type: 'FLINT_BOULDER',
+                        x: tx * 16 + 8,
+                        y: ty * 16 + 8,
+                        hp: 4,
+                        maxHp: 4,
+                        drops: 'FLINT',
+                        dropCount: 2,
+                        dropCoins: 2,
+                        name: 'Flint Boulder Outcrop'
+                    });
+                    break;
+                }
+            }
+        }
+
+        // Wild Cabbage Patches (Foraging -> Food & Energy)
+        for (let i = 0; i < 8; i++) {
+            for (let attempt = 0; attempt < 25; attempt++) {
+                const tx = prng.range(6, this.width - 6);
+                const ty = prng.range(6, this.height - 6);
+                const tile = this.get(tx, ty);
+                if (tile === TILE.GROUND || tile === TILE.FOIL_GRASS) {
+                    this.resourceNodes.push({
+                        id: `cabbage_${i}`,
+                        type: 'WILD_CABBAGE',
+                        x: tx * 16 + 8,
+                        y: ty * 16 + 8,
+                        hp: 1,
+                        maxHp: 1,
+                        drops: 'WILD_CABBAGE',
+                        dropCount: 1,
+                        dropCoins: 1,
+                        name: 'Wild Cabbage'
+                    });
+                    break;
+                }
+            }
+        }
+
+        // Wild Berry Bushes
+        for (let i = 0; i < 10; i++) {
+            for (let attempt = 0; attempt < 25; attempt++) {
+                const tx = prng.range(6, this.width - 6);
+                const ty = prng.range(6, this.height - 6);
+                const tile = this.get(tx, ty);
+                if (tile === TILE.FOIL_GRASS || tile === TILE.GROUND) {
+                    this.resourceNodes.push({
+                        id: `berry_${i}`,
+                        type: 'BERRY_BUSH',
+                        x: tx * 16 + 8,
+                        y: ty * 16 + 8,
+                        hp: 1,
+                        maxHp: 1,
+                        drops: 'WILD_BERRY',
+                        dropCount: 2,
+                        dropCoins: 1,
+                        name: 'Wild Berry Bush'
+                    });
+                    break;
+                }
+            }
+        }
+
+        // Medicinal Ley-Herbs
+        for (let i = 0; i < 8; i++) {
+            for (let attempt = 0; attempt < 25; attempt++) {
+                const tx = prng.range(6, this.width - 6);
+                const ty = prng.range(6, this.height - 6);
+                const tile = this.get(tx, ty);
+                if (tile === TILE.GROUND || tile === TILE.FOIL_GRASS) {
+                    this.resourceNodes.push({
+                        id: `herb_${i}`,
+                        type: 'MEDICINAL_HERB',
+                        x: tx * 16 + 8,
+                        y: ty * 16 + 8,
+                        hp: 1,
+                        maxHp: 1,
+                        drops: 'MEDICINAL_HERB',
+                        dropCount: 1,
+                        dropCoins: 1,
+                        name: 'Wild Ley-Herb'
+                    });
+                    break;
+                }
+            }
+        }
+
+        // Ancient Runic Totem Monolith (Image 3 reference)
+        this.resourceNodes.push({
+            id: 'totem_prime',
+            type: 'RUNIC_TOTEM',
+            x: (this.caveEntrance ? (this.caveEntrance.x - 4) * 16 + 8 : this.spawnPoint.x + 48),
+            y: (this.caveEntrance ? (this.caveEntrance.y + 4) * 16 + 8 : this.spawnPoint.y + 48),
+            hp: 999,
+            maxHp: 999,
+            name: 'Ancient Runic Monolith'
+        });
+
+        // Warm Resting Campfire Site
+        this.resourceNodes.push({
+            id: 'campfire_spawn',
+            type: 'CAMPFIRE_SITE',
+            x: this.spawnPoint.x + 32,
+            y: this.spawnPoint.y - 16,
+            hp: 999,
+            maxHp: 999,
+            lit: true,
+            name: 'Pioneer Campfire'
+        });
     }
 
     generateSubCore(prng = new AluPrng(this.seed + 0x9999)) {
@@ -317,7 +477,68 @@ class WorldMap {
                 coins: 15 + prng.range(5, 15),
                 itemId: (i === 1 ? 'OVERCLOCK_CELL' : null)
             });
+
+            // Sub-Core Mineable Titanium Conduits & Resonant Crystals
+            this.resourceNodes.push({
+                id: `sub_conduit_${i}`,
+                type: 'POWER_CONDUIT',
+                x: (rm.x + 2) * 16 + 8,
+                y: (rm.y + rm.h - 2) * 16 + 8,
+                hp: 3,
+                maxHp: 3,
+                drops: 'FLINT',
+                dropCount: 2,
+                dropCoins: 4,
+                name: 'Titanium High-Energy Conduit'
+            });
+
+            this.resourceNodes.push({
+                id: `sub_crystal_${i}`,
+                type: 'GLOWING_CRYSTAL',
+                x: (rm.x + rm.w - 3) * 16 + 8,
+                y: (rm.y + 2) * 16 + 8,
+                hp: 2,
+                maxHp: 2,
+                drops: 'NANITE_REPAIR_KIT',
+                dropCount: 1,
+                dropCoins: 6,
+                name: 'Arcane Core Crystal'
+            });
         }
+    }
+
+    findNearbyNode(x, y, radius = 26) {
+        if (!this.resourceNodes) return null;
+        let closest = null;
+        let minDist = radius;
+        for (const node of this.resourceNodes) {
+            if (node.hp <= 0) continue;
+            const dist = Math.hypot(x - node.x, y - node.y);
+            if (dist < minDist) {
+                minDist = dist;
+                closest = node;
+            }
+        }
+        return closest;
+    }
+
+    damageNode(node, amount = 1) {
+        if (!node || node.hp <= 0) return null;
+        node.hp -= amount;
+        node.shakeTimer = 0.25;
+        if (node.hp <= 0) {
+            node.harvested = true;
+            return {
+                harvested: true,
+                drops: node.drops,
+                dropCount: node.dropCount || 1,
+                dropCoins: node.dropCoins || 0
+            };
+        }
+        return {
+            harvested: false,
+            remainingHp: node.hp
+        };
     }
 
     /**

@@ -20,6 +20,8 @@ class RetroRenderer {
         this.height = canvas.height;
         this.camera = { x: 0, y: 0 };
         this.waterAnimTimer = 0;
+        this.titleAnimTimer = 0;
+        this.floatingTexts = [];
         this.audio = new ChiptuneSynth();
         this.sprites = new SpriteSheet();
     }
@@ -60,7 +62,8 @@ class RetroRenderer {
             }
         }
 
-        // Render interactive chests and foragable sparkles
+        // Render interactive chests, resource nodes and foragable sparkles
+        if (map.resourceNodes) this.renderResourceNodes(map.resourceNodes, camX, camY, dt);
         if (map.chests) this.renderChests(map.chests, camX, camY);
         if (map.sparkles) this.renderSparkles(map.sparkles, camX, camY);
     }
@@ -936,6 +939,486 @@ class RetroRenderer {
                 ctx.fillStyle = '#00e5ff';
                 ctx.fillRect(sx - 1, sy - 1, 2, 2);
             }
+        }
+    }
+
+    addFloatingText(text, x, y, color = '#ffd54f') {
+        this.floatingTexts.push({
+            text,
+            x,
+            y,
+            color,
+            vy: -24,
+            life: 1.2,
+            maxLife: 1.2
+        });
+    }
+
+    renderFloatingTexts(camX, camY, dt) {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'center';
+
+        for (let i = this.floatingTexts.length - 1; i >= 0; i--) {
+            const ft = this.floatingTexts[i];
+            ft.life -= dt;
+            ft.y += ft.vy * dt;
+            if (ft.life <= 0) {
+                this.floatingTexts.splice(i, 1);
+                continue;
+            }
+
+            const alpha = Math.min(1.0, ft.life / (ft.maxLife * 0.4));
+            const sx = Math.round(ft.x - camX);
+            const sy = Math.round(ft.y - camY);
+
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = '#000000';
+            ctx.fillText(ft.text, sx + 1, sy + 1);
+            ctx.fillText(ft.text, sx - 1, sy + 1);
+            ctx.fillStyle = ft.color;
+            ctx.fillText(ft.text, sx, sy);
+        }
+
+        ctx.restore();
+    }
+
+    renderResourceNodes(nodes, camX, camY, dt) {
+        const ctx = this.ctx;
+        for (const node of nodes) {
+            let sx = Math.round(node.x) - camX;
+            let sy = Math.round(node.y) - camY;
+
+            if (sx < -40 || sx > this.width + 40 || sy < -40 || sy > this.height + 40) continue;
+
+            if (node.shakeTimer > 0) {
+                node.shakeTimer -= dt;
+                sx += Math.floor(Math.sin(node.shakeTimer * 50) * 3);
+            }
+
+            // If harvested/depleted:
+            if (node.hp <= 0) {
+                if (node.type === 'PINE_TREE') {
+                    ctx.fillStyle = '#3e2723';
+                    ctx.fillRect(sx - 4, sy + 2, 8, 5);
+                    ctx.fillStyle = '#8d6e63';
+                    ctx.fillRect(sx - 3, sy + 2, 6, 2);
+                } else if (node.type === 'FLINT_BOULDER') {
+                    ctx.fillStyle = '#455a64';
+                    ctx.fillRect(sx - 5, sy + 4, 10, 3);
+                    ctx.fillStyle = '#80deea';
+                    ctx.fillRect(sx - 2, sy + 3, 2, 2);
+                }
+                continue;
+            }
+
+            // Render live nodes
+            switch (node.type) {
+                case 'PINE_TREE': {
+                    // Ground shadow
+                    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                    ctx.beginPath();
+                    ctx.ellipse(sx, sy + 7, 8, 4, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Trunk
+                    ctx.fillStyle = '#4e342e';
+                    ctx.fillRect(sx - 3, sy - 2, 6, 9);
+                    ctx.fillStyle = '#2e1c14';
+                    ctx.fillRect(sx - 3, sy - 2, 2, 9);
+
+                    // Multi-tiered layered conifer canopy
+                    ctx.fillStyle = '#1b4332';
+                    ctx.beginPath();
+                    ctx.moveTo(sx, sy - 18);
+                    ctx.lineTo(sx + 13, sy - 3);
+                    ctx.lineTo(sx - 13, sy - 3);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.fillStyle = '#2d6a4f';
+                    ctx.beginPath();
+                    ctx.moveTo(sx, sy - 25);
+                    ctx.lineTo(sx + 10, sy - 11);
+                    ctx.lineTo(sx - 10, sy - 11);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.fillStyle = '#40916c';
+                    ctx.beginPath();
+                    ctx.moveTo(sx, sy - 32);
+                    ctx.lineTo(sx + 7, sy - 19);
+                    ctx.lineTo(sx - 7, sy - 19);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    ctx.fillStyle = '#74c69d';
+                    ctx.fillRect(sx - 1, sy - 32, 2, 3);
+                    ctx.fillRect(sx + 2, sy - 22, 3, 2);
+                    ctx.fillRect(sx - 4, sy - 14, 3, 2);
+                    break;
+                }
+
+                case 'FLINT_BOULDER': {
+                    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                    ctx.beginPath();
+                    ctx.ellipse(sx, sy + 5, 9, 4, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#263238';
+                    ctx.fillRect(sx - 7, sy - 6, 14, 11);
+                    ctx.fillStyle = '#455a64';
+                    ctx.fillRect(sx - 6, sy - 5, 12, 9);
+                    ctx.fillStyle = '#607d8b';
+                    ctx.fillRect(sx - 4, sy - 5, 7, 5);
+
+                    ctx.fillStyle = '#00e5ff';
+                    ctx.fillRect(sx - 2, sy - 3, 3, 3);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(sx - 1, sy - 2, 2, 2);
+                    break;
+                }
+
+                case 'WILD_CABBAGE': {
+                    ctx.fillStyle = '#2e7d32';
+                    ctx.fillRect(sx - 6, sy - 2, 12, 6);
+                    ctx.fillRect(sx - 4, sy - 4, 8, 2);
+                    ctx.fillStyle = '#66bb6a';
+                    ctx.fillRect(sx - 3, sy - 3, 6, 5);
+                    ctx.fillStyle = '#c8e6c9';
+                    ctx.fillRect(sx - 1, sy - 2, 3, 3);
+                    break;
+                }
+
+                case 'BERRY_BUSH': {
+                    ctx.fillStyle = '#1b5e20';
+                    ctx.fillRect(sx - 6, sy - 5, 12, 10);
+                    ctx.fillStyle = '#2e7d32';
+                    ctx.fillRect(sx - 5, sy - 4, 10, 8);
+                    ctx.fillStyle = '#d50000';
+                    ctx.fillRect(sx - 4, sy - 3, 2, 2);
+                    ctx.fillRect(sx + 2, sy - 2, 2, 2);
+                    ctx.fillRect(sx - 1, sy + 1, 2, 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(sx - 4, sy - 3, 1, 1);
+                    break;
+                }
+
+                case 'MEDICINAL_HERB': {
+                    ctx.fillStyle = '#388e3c';
+                    ctx.fillRect(sx - 1, sy - 3, 2, 7);
+                    ctx.fillRect(sx - 3, sy - 1, 3, 2);
+                    ctx.fillRect(sx + 1, sy, 3, 2);
+                    ctx.fillStyle = '#00e5ff';
+                    ctx.fillRect(sx - 2, sy - 6, 4, 3);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(sx - 1, sy - 5, 2, 1);
+                    break;
+                }
+
+                case 'RUNIC_TOTEM': {
+                    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                    ctx.beginPath();
+                    ctx.ellipse(sx, sy + 10, 12, 5, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#1a222e';
+                    ctx.fillRect(sx - 8, sy - 34, 16, 42);
+                    ctx.fillStyle = '#2c3a4e';
+                    ctx.fillRect(sx - 7, sy - 33, 14, 40);
+
+                    ctx.fillStyle = '#131b26';
+                    ctx.fillRect(sx - 7, sy - 20, 14, 2);
+                    ctx.fillRect(sx - 7, sy - 7, 14, 2);
+
+                    const runeAlpha = 0.5 + 0.45 * Math.sin(Date.now() / 250);
+                    ctx.fillStyle = `rgba(0, 229, 255, ${runeAlpha})`;
+                    ctx.fillRect(sx - 3, sy - 28, 6, 2);
+                    ctx.fillRect(sx - 1, sy - 26, 2, 4);
+                    ctx.fillRect(sx - 3, sy - 15, 6, 2);
+                    ctx.fillRect(sx, sy - 13, 2, 3);
+                    ctx.fillRect(sx - 2, sy - 2, 4, 3);
+                    break;
+                }
+
+                case 'CAMPFIRE_SITE': {
+                    ctx.fillStyle = '#37474f';
+                    ctx.beginPath();
+                    ctx.ellipse(sx, sy + 3, 10, 5, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#212121';
+                    ctx.fillRect(sx - 5, sy, 10, 3);
+                    ctx.fillStyle = '#4e342e';
+                    ctx.fillRect(sx - 4, sy - 1, 8, 2);
+
+                    const fTick = Math.floor(Date.now() / 100) % 3;
+                    const fHeight = (fTick === 0 ? 8 : (fTick === 1 ? 11 : 9));
+                    ctx.fillStyle = '#d50000';
+                    ctx.fillRect(sx - 3, sy - fHeight, 6, fHeight);
+                    ctx.fillStyle = '#ff9800';
+                    ctx.fillRect(sx - 2, sy - fHeight + 2, 4, fHeight - 2);
+                    ctx.fillStyle = '#ffd54f';
+                    ctx.fillRect(sx - 1, sy - fHeight + 4, 2, fHeight - 4);
+                    break;
+                }
+
+                case 'POWER_CONDUIT': {
+                    ctx.fillStyle = '#263238';
+                    ctx.fillRect(sx - 6, sy - 4, 12, 8);
+                    ctx.fillStyle = '#ff9800';
+                    ctx.fillRect(sx - 5, sy - 2, 10, 4);
+                    ctx.fillStyle = '#00e5ff';
+                    ctx.fillRect(sx - 5, sy - 1, 10, 2);
+                    break;
+                }
+
+                case 'GLOWING_CRYSTAL': {
+                    ctx.fillStyle = '#4a148c';
+                    ctx.fillRect(sx - 5, sy - 8, 10, 12);
+                    ctx.fillStyle = '#ea80fc';
+                    ctx.fillRect(sx - 3, sy - 7, 6, 8);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(sx - 1, sy - 6, 2, 4);
+                    break;
+                }
+            }
+        }
+    }
+
+    renderLighting(dayProgress, player, camX, camY, map) {
+        const ctx = this.ctx;
+        const isSubCore = map && map.layer === 'SUB_CORE';
+
+        let darkness = 0.0;
+        let ambientColor = 'rgba(4, 7, 18, 0.88)';
+
+        if (isSubCore) {
+            darkness = 0.80;
+            ambientColor = 'rgba(7, 5, 16, 0.82)';
+        } else {
+            if (dayProgress >= 0.40 && dayProgress < 0.50) {
+                const factor = (dayProgress - 0.40) / 0.10;
+                darkness = factor * 0.88;
+                ambientColor = `rgba(16, 12, 26, ${darkness})`;
+            } else if (dayProgress >= 0.50 && dayProgress < 0.85) {
+                darkness = 0.88;
+                ambientColor = 'rgba(4, 7, 18, 0.88)';
+            } else if (dayProgress >= 0.85 && dayProgress < 1.00) {
+                const factor = 1.0 - (dayProgress - 0.85) / 0.15;
+                darkness = factor * 0.88;
+                ambientColor = `rgba(10, 15, 28, ${darkness})`;
+            }
+        }
+
+        if (darkness <= 0.05) return;
+
+        // Use offscreen light canvas so destination-out doesn't clear the game world canvas
+        if (!this.lightCanvas && typeof document !== 'undefined') {
+            this.lightCanvas = document.createElement('canvas');
+            this.lightCtx = this.lightCanvas.getContext('2d');
+        }
+        if (!this.lightCanvas) return;
+
+        if (this.lightCanvas.width !== this.width || this.lightCanvas.height !== this.height) {
+            this.lightCanvas.width = this.width;
+            this.lightCanvas.height = this.height;
+        }
+
+        const lCtx = this.lightCtx;
+        lCtx.clearRect(0, 0, this.width, this.height);
+        lCtx.globalCompositeOperation = 'source-over';
+        lCtx.fillStyle = ambientColor;
+        lCtx.fillRect(0, 0, this.width, this.height);
+
+        lCtx.globalCompositeOperation = 'destination-out';
+
+        const px = Math.round(player.pos.x) - camX;
+        const py = Math.round(player.pos.y) - camY;
+
+        const hasTorch = player.hasTorchActive;
+        const baseRadius = hasTorch ? 135 : 55;
+        const flicker = Math.sin(Date.now() / 80) * 3;
+        const pRadius = baseRadius + flicker;
+
+        const grad = lCtx.createRadialGradient(px, py, 10, px, py, pRadius);
+        grad.addColorStop(0, 'rgba(0, 0, 0, 1.0)');
+        grad.addColorStop(0.65, 'rgba(0, 0, 0, 0.75)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0.0)');
+        lCtx.fillStyle = grad;
+        lCtx.beginPath();
+        lCtx.arc(px, py, pRadius, 0, Math.PI * 2);
+        lCtx.fill();
+
+        if (map && map.resourceNodes) {
+            for (const node of map.resourceNodes) {
+                if (node.type === 'CAMPFIRE_SITE' || node.type === 'RUNIC_TOTEM') {
+                    const nx = Math.round(node.x) - camX;
+                    const ny = Math.round(node.y) - camY;
+                    if (nx < -80 || nx > this.width + 80 || ny < -80 || ny > this.height + 80) continue;
+
+                    const rad = (node.type === 'CAMPFIRE_SITE' ? 75 : 55) + Math.sin(Date.now() / 110 + nx) * 3;
+                    const cGrad = lCtx.createRadialGradient(nx, ny, 8, nx, ny, rad);
+                    cGrad.addColorStop(0, 'rgba(0, 0, 0, 1.0)');
+                    cGrad.addColorStop(0.7, 'rgba(0, 0, 0, 0.7)');
+                    cGrad.addColorStop(1, 'rgba(0, 0, 0, 0.0)');
+                    lCtx.fillStyle = cGrad;
+                    lCtx.beginPath();
+                    lCtx.arc(nx, ny, rad, 0, Math.PI * 2);
+                    lCtx.fill();
+                }
+            }
+        }
+
+        lCtx.globalCompositeOperation = 'source-over';
+
+        // Stamp darkness mask onto main game canvas
+        ctx.drawImage(this.lightCanvas, 0, 0);
+
+        if (hasTorch && darkness > 0.4) {
+            ctx.save();
+            const glowGrad = ctx.createRadialGradient(px, py, 5, px, py, pRadius * 0.85);
+            glowGrad.addColorStop(0, 'rgba(255, 160, 40, 0.18)');
+            glowGrad.addColorStop(0.7, 'rgba(255, 120, 20, 0.08)');
+            glowGrad.addColorStop(1, 'rgba(255, 100, 0, 0.0)');
+            ctx.fillStyle = glowGrad;
+            ctx.beginPath();
+            ctx.arc(px, py, pRadius * 0.85, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    renderTitleBackdrop(dt) {
+        this.titleAnimTimer = (this.titleAnimTimer || 0) + (dt || 0.016);
+        const ctx = this.ctx;
+        const w = this.width;
+        const h = this.height;
+
+        // 1. Deep Midnight Cosmic Sky
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
+        skyGrad.addColorStop(0, '#040711');
+        skyGrad.addColorStop(0.6, '#0d1527');
+        skyGrad.addColorStop(1, '#18233c');
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, w, h);
+
+        // 2. Starfield
+        ctx.fillStyle = '#ffffff';
+        for (let i = 0; i < 45; i++) {
+            const sx = (i * 59 + 17) % w;
+            const sy = (i * 37 + 11) % Math.floor(h * 0.65);
+            const twinkle = Math.sin(this.titleAnimTimer * 3 + i) > 0.3;
+            ctx.globalAlpha = twinkle ? 0.9 : 0.35;
+            ctx.fillRect(sx, sy, 1, 1);
+            if (i % 7 === 0) ctx.fillRect(sx - 1, sy, 3, 1);
+        }
+        ctx.globalAlpha = 1.0;
+
+        // Glowing Moon
+        ctx.fillStyle = 'rgba(200, 230, 255, 0.15)';
+        ctx.beginPath();
+        ctx.arc(w - 50, 45, 28, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#e1f5fe';
+        ctx.beginPath();
+        ctx.arc(w - 50, 45, 18, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#040711';
+        ctx.beginPath();
+        ctx.arc(w - 44, 42, 16, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 3. Mountain Ridge
+        ctx.fillStyle = '#0a101d';
+        ctx.beginPath();
+        ctx.moveTo(0, h * 0.65);
+        ctx.lineTo(w * 0.25, h * 0.52);
+        ctx.lineTo(w * 0.55, h * 0.60);
+        ctx.lineTo(w * 0.8, h * 0.48);
+        ctx.lineTo(w, h * 0.58);
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fill();
+
+        // Silhouette Conifer Pines
+        ctx.fillStyle = '#070b14';
+        const treeSpacing = 28;
+        for (let x = 0; x <= w + treeSpacing; x += treeSpacing) {
+            const th = 38 + ((x * 13) % 24);
+            const ty = Math.floor(h * 0.72);
+            ctx.beginPath();
+            ctx.moveTo(x, ty - th);
+            ctx.lineTo(x + 14, ty);
+            ctx.lineTo(x - 14, ty);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // 4. Grassy Clearing
+        ctx.fillStyle = '#101926';
+        ctx.fillRect(0, Math.floor(h * 0.70), w, Math.floor(h * 0.30));
+        ctx.fillStyle = '#1c293d';
+        ctx.fillRect(0, Math.floor(h * 0.70), w, 4);
+
+        // 5. Central Ancient Runic Monolith / Totem
+        const mx = Math.floor(w / 2);
+        const my = Math.floor(h * 0.68);
+
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.beginPath();
+        ctx.ellipse(mx, my + 6, 26, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#151e2b';
+        ctx.fillRect(mx - 14, my - 85, 28, 90);
+        ctx.fillStyle = '#223044';
+        ctx.fillRect(mx - 12, my - 83, 24, 86);
+
+        ctx.fillStyle = '#111722';
+        ctx.fillRect(mx - 12, my - 60, 24, 3);
+        ctx.fillRect(mx - 12, my - 32, 24, 3);
+
+        const glowPulse = 0.5 + 0.45 * Math.sin(this.titleAnimTimer * 2.5);
+        ctx.fillStyle = `rgba(0, 229, 255, ${glowPulse})`;
+        ctx.fillRect(mx - 6, my - 75, 12, 3);
+        ctx.fillRect(mx - 6, my - 72, 3, 6);
+        ctx.fillRect(mx - 6, my - 66, 12, 3);
+        ctx.fillRect(mx + 3, my - 63, 3, 5);
+        ctx.fillRect(mx - 5, my - 48, 10, 3);
+        ctx.fillRect(mx - 1, my - 45, 3, 10);
+        ctx.fillRect(mx - 7, my - 40, 14, 2);
+        ctx.fillRect(mx - 4, my - 22, 8, 3);
+        ctx.fillRect(mx - 2, my - 19, 4, 8);
+
+        // 6. Braziers with Fire
+        const braziers = [mx - 52, mx + 52];
+        for (const bx of braziers) {
+            ctx.fillStyle = '#1c2636';
+            ctx.fillRect(bx - 6, my - 12, 12, 14);
+            ctx.fillStyle = '#2e3d54';
+            ctx.fillRect(bx - 5, my - 11, 10, 4);
+
+            const fTick = Math.floor(this.titleAnimTimer * 12 + bx) % 3;
+            const fH = (fTick === 0 ? 10 : (fTick === 1 ? 14 : 12));
+            ctx.fillStyle = '#d50000';
+            ctx.fillRect(bx - 4, my - 12 - fH, 8, fH);
+            ctx.fillStyle = '#ff9800';
+            ctx.fillRect(bx - 3, my - 10 - fH, 6, fH - 2);
+            ctx.fillStyle = '#ffd54f';
+            ctx.fillRect(bx - 1, my - 8 - fH, 2, fH - 4);
+        }
+
+        // 7. Rising Fireflies
+        for (let i = 0; i < 16; i++) {
+            const seed = (i * 73) % 997;
+            const fx = (mx - 90 + ((seed + Math.floor(this.titleAnimTimer * 15)) % 180));
+            const fy = my + 10 - ((seed * 11 + Math.floor(this.titleAnimTimer * 28)) % 140);
+            const fAlpha = 0.4 + 0.5 * Math.sin(this.titleAnimTimer * 4 + i);
+            ctx.fillStyle = (i % 2 === 0) ? `rgba(0, 229, 255, ${fAlpha})` : `rgba(255, 213, 79, ${fAlpha})`;
+            ctx.fillRect(fx, fy, 2, 2);
         }
     }
 

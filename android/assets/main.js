@@ -17,6 +17,7 @@ class GameApp {
         this.screens = new ScreenManager(this);
         
         // Game State
+        this.gameState = 'START_SCREEN'; // 'START_SCREEN' or 'GAMEPLAY'
         this.currentSeed = 0x7F3A59DF;
         this.currentLayer = 'SURFACE'; // 'SURFACE' or 'SUB_CORE'
         this.surfaceMap = null;
@@ -31,6 +32,14 @@ class GameApp {
         this.sfxEnabled = true;
         this.godMode = false;
         this.hasInitializedProfile = false;
+        this.activeSlotIndex = 0;
+        this.saveSlots = [];
+        this.dayTimer = 0.25; // 0.0 to 1.0 (0.25 = noon)
+        this.currentDay = 1;
+        this.harvestCount = 0;
+        this.runsCount = 1;
+        this.bossSlainCount = 0;
+        this.coresExtractedCount = 0;
 
         // Input state
         this.keys = {};
@@ -40,7 +49,8 @@ class GameApp {
     }
 
     init() {
-        // 1. Load persistent state if exists
+        // 1. Load persistent state and 10 save slots
+        this.loadSaveSlots();
         const saved = this.storage.load();
         if (saved) {
             if (saved.seed) this.currentSeed = saved.seed;
@@ -62,36 +72,26 @@ class GameApp {
         // 3. Generate Maps from Master Seed
         this.loadNewWorld(this.currentSeed);
 
-        // 4. Setup Input Handlers, GBA Menu & Modals
+        // 4. Setup Input Handlers, Start Screen, GBA Menu & Modals
         this.setupKeyboard();
         this.setupTouchControls();
+        this.setupStartScreen();
         this.setupGbaMenu();
         this.setupUI();
         this.setupModals();
 
-        // 4. Initial Screen Flow: Setup or Menu Hub
-        const setupModal = document.getElementById('setup-modal');
-        const menuHubModal = document.getElementById('menu-hub-modal');
+        // 5. Initial State: Always Boot Directly to Atmospheric Start Screen (No Gameplay Blur)
+        this.setGameState('START_SCREEN');
 
-        if (!this.hasInitializedProfile) {
-            this.screens.currentScreen = 'SETUP';
-            if (setupModal) setupModal.classList.remove('hidden');
-            if (menuHubModal) menuHubModal.classList.add('hidden');
-        } else {
-            this.screens.currentScreen = 'MENU';
-            if (setupModal) setupModal.classList.add('hidden');
-            if (menuHubModal) menuHubModal.classList.remove('hidden');
-        }
-
-        // 5. Render Pixel Art Canvases & Update UI Visibility
+        // 6. Render Pixel Art Canvases & Update UI Visibility
         this.renderUIPixelCanvases();
         this.updateTouchControlsVisibility();
 
-        // 6. Start 60 FPS Game Loop
+        // 7. Start 60 FPS Game Loop
         this.lastTime = performance.now();
         requestAnimationFrame(this.loop.bind(this));
 
-        // 7. Sync with edge gateway in background
+        // 8. Sync with edge gateway in background
         this.edgeClient.mintWorldCoin(this.currentSeed).then(res => {
             console.log("[EDGE SYNC]", res);
         });
@@ -119,13 +119,16 @@ class GameApp {
         let lastTrigger = 0;
         const trigger = (e) => {
             const now = Date.now();
-            if (now - lastTrigger < 250) return;
+            if (now - lastTrigger < 300) return;
             lastTrigger = now;
-            if (e && e.cancelable && e.type === 'pointerdown') e.preventDefault();
+            if (e) {
+                if (e.cancelable) e.preventDefault();
+                e.stopPropagation();
+            }
             if (this.renderer && this.renderer.audio) this.renderer.audio.init();
             cb(e);
         };
-        elem.addEventListener('pointerdown', trigger);
+        elem.addEventListener('pointerup', trigger);
         elem.addEventListener('click', trigger);
     }
 
@@ -197,15 +200,370 @@ class GameApp {
         const touchControls = document.getElementById('touch-controls');
         if (!touchControls) return;
 
-        // ONLY hide touch controls if the initial character setup modal is actively open
+        // Hide touch controls if on START_SCREEN or if character setup modal is actively open
         const setupModal = document.getElementById('setup-modal');
         const isSetupOpen = setupModal && !setupModal.classList.contains('hidden');
 
-        if (isSetupOpen) {
+        if (this.gameState === 'START_SCREEN' || isSetupOpen) {
             touchControls.classList.add('controls-hidden');
         } else {
             touchControls.classList.remove('controls-hidden');
         }
+    }
+
+    setGameState(state) {
+        this.gameState = state;
+        const startScreen = document.getElementById('start-screen-container');
+        const header = document.getElementById('game-header');
+        const footer = document.getElementById('game-footer');
+        const touchControls = document.getElementById('touch-controls');
+
+        if (state === 'START_SCREEN') {
+            if (startScreen) startScreen.classList.remove('hidden');
+            if (header) header.classList.add('hidden');
+            if (footer) footer.classList.add('hidden');
+            if (touchControls) touchControls.classList.add('controls-hidden');
+            document.querySelectorAll('.game-modal').forEach(m => m.classList.add('hidden'));
+            const gbaMenu = document.getElementById('gba-start-menu');
+            if (gbaMenu) gbaMenu.classList.add('hidden');
+
+            const keysVal = document.getElementById('start-keys-val');
+            const coresVal = document.getElementById('start-cores-val');
+            const tokensVal = document.getElementById('start-tokens-val');
+            if (keysVal) keysVal.innerText = '15/15';
+            if (coresVal) coresVal.innerText = `${this.coresExtractedCount || 0}`;
+            if (tokensVal) tokensVal.innerText = `${this.player ? this.player.coinsCollected : 0}`;
+
+            if (this.renderer && this.renderer.audio && this.bgmEnabled) {
+                this.renderer.audio.stopBgm();
+            }
+        } else if (state === 'GAMEPLAY') {
+            if (startScreen) startScreen.classList.add('hidden');
+            if (header) header.classList.remove('hidden');
+            if (footer) footer.classList.remove('hidden');
+            if (touchControls) touchControls.classList.remove('controls-hidden');
+            document.querySelectorAll('.game-modal').forEach(m => m.classList.add('hidden'));
+            if (this.soundEnabled && this.bgmEnabled) {
+                this.renderer.audio.startBgm(this.currentLayer === 'SUB_CORE' ? 'SUB_CORE' : 'OVERWORLD');
+            }
+        }
+    }
+
+    setupStartScreen() {
+        const btnStart = document.getElementById('btn-game-start');
+        if (btnStart) {
+            this.bindTap(btnStart, () => {
+                this.openSaveSlotsModal();
+            });
+        }
+
+        const tabRoster = document.getElementById('start-tab-roster');
+        if (tabRoster) {
+            this.bindTap(tabRoster, () => {
+                document.getElementById('setup-modal').classList.remove('hidden');
+                this.screens.currentScreen = 'SETUP';
+                this.updateTouchControlsVisibility();
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
+            });
+        }
+
+        const tabWorldGen = document.getElementById('start-tab-worldgen');
+        if (tabWorldGen) {
+            this.bindTap(tabWorldGen, () => {
+                const seedInput = document.getElementById('worldgen-seed-input');
+                if (seedInput) {
+                    seedInput.value = '0x' + (this.currentSeed >>> 0).toString(16).toUpperCase();
+                }
+                const modal = document.getElementById('worldgen-modal');
+                if (modal) modal.classList.remove('hidden');
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
+            });
+        }
+
+        const tabMarket = document.getElementById('start-tab-market');
+        if (tabMarket) {
+            this.bindTap(tabMarket, () => {
+                this.renderMarketModal();
+                const modal = document.getElementById('market-modal');
+                if (modal) modal.classList.remove('hidden');
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
+            });
+        }
+
+        const tabRecords = document.getElementById('start-tab-records');
+        if (tabRecords) {
+            this.bindTap(tabRecords, () => {
+                this.openRecordsModal();
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
+            });
+        }
+
+        const tabSettings = document.getElementById('start-tab-settings');
+        if (tabSettings) {
+            this.bindTap(tabSettings, () => {
+                this.toggleSoundModal();
+            });
+        }
+    }
+
+    loadSaveSlots() {
+        try {
+            const raw = localStorage.getItem('aether_save_slots');
+            if (raw) this.saveSlots = JSON.parse(raw);
+        } catch (e) {
+            console.warn("Could not load save slots", e);
+        }
+        if (!Array.isArray(this.saveSlots) || this.saveSlots.length < 10) {
+            this.saveSlots = [];
+            for (let i = 0; i < 10; i++) this.saveSlots.push(null);
+        }
+    }
+
+    writeSaveSlots() {
+        try {
+            localStorage.setItem('aether_save_slots', JSON.stringify(this.saveSlots));
+        } catch (e) {
+            console.warn("Could not save slots", e);
+        }
+    }
+
+    openSaveSlotsModal() {
+        const modal = document.getElementById('save-slots-modal');
+        if (!modal) return;
+        this.renderSaveSlots();
+        modal.classList.remove('hidden');
+    }
+
+    renderSaveSlots() {
+        const grid = document.getElementById('save-slots-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        for (let i = 0; i < 10; i++) {
+            const slot = this.saveSlots[i];
+            const card = document.createElement('div');
+            card.className = `save-slot-card ${slot ? 'occupied' : 'empty'}`;
+
+            if (slot) {
+                card.innerHTML = `
+                    <div class="slot-num">SLOT 0${i + 1}</div>
+                    <div class="slot-title">${slot.pioneerName || 'PIONEER'}</div>
+                    <div class="slot-desc">${(slot.selectedClass || 'WARRIOR').replace('_', ' ')} • Day ${slot.currentDay || 1}</div>
+                    <div class="slot-desc" style="color: #ffd54f;">🪙 ${slot.coins || 0} $ALU</div>
+                `;
+                setTimeout(() => {
+                    this.bindTap(card, () => this.loadSlot(i));
+                }, 150);
+            } else {
+                card.innerHTML = `
+                    <div class="slot-num">SLOT 0${i + 1}</div>
+                    <div class="slot-title" style="color: #00e5ff;">+ NEW RUN</div>
+                    <div class="slot-desc">START EXPEDITION</div>
+                `;
+                setTimeout(() => {
+                    this.bindTap(card, () => this.startNewExpeditionInSlot(i));
+                }, 150);
+            }
+
+            grid.appendChild(card);
+        }
+    }
+
+    startNewExpeditionInSlot(slotIndex) {
+        this.activeSlotIndex = slotIndex;
+        document.getElementById('save-slots-modal').classList.add('hidden');
+
+        this.currentDay = 1;
+        this.dayTimer = 0.25;
+        this.loadNewWorld(this.currentSeed);
+        this.saveCurrentSlot();
+
+        this.setGameState('GAMEPLAY');
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playItemObtained();
+    }
+
+    loadSlot(slotIndex) {
+        this.activeSlotIndex = slotIndex;
+        const slot = this.saveSlots[slotIndex];
+        document.getElementById('save-slots-modal').classList.add('hidden');
+
+        if (slot) {
+            if (slot.seed) this.currentSeed = slot.seed;
+            if (slot.pioneerName) this.pioneerName = slot.pioneerName;
+            if (slot.selectedClass) this.selectedClass = slot.selectedClass;
+            if (slot.currentDay) this.currentDay = slot.currentDay;
+            if (slot.dayTimer !== undefined) this.dayTimer = slot.dayTimer;
+            this.loadNewWorld(this.currentSeed);
+
+            if (slot.coins && this.player) this.player.coinsCollected = slot.coins;
+            if (slot.hp && this.player) this.player.hp = slot.hp;
+            if (slot.inventorySlots && this.player && this.player.inventory) {
+                this.player.inventory.slots = slot.inventorySlots;
+            }
+        }
+
+        this.setGameState('GAMEPLAY');
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playItemObtained();
+    }
+
+    saveCurrentSlot() {
+        if (!this.player) return;
+        this.saveSlots[this.activeSlotIndex] = {
+            seed: this.currentSeed,
+            pioneerName: this.pioneerName,
+            selectedClass: this.selectedClass,
+            currentDay: this.currentDay,
+            dayTimer: this.dayTimer,
+            currentLayer: this.currentLayer,
+            coins: this.player.coinsCollected,
+            hp: this.player.hp,
+            inventorySlots: this.player.inventory ? this.player.inventory.slots : []
+        };
+        this.writeSaveSlots();
+    }
+
+    openCraftingModal() {
+        const modal = document.getElementById('crafting-modal');
+        if (!modal) return;
+        this.renderCraftingRecipes();
+        modal.classList.remove('hidden');
+    }
+
+    renderCraftingRecipes() {
+        const list = document.getElementById('crafting-recipes-list');
+        const infoPanel = document.getElementById('crafting-info-panel');
+        if (!list || !this.player || !this.player.inventory) return;
+        list.innerHTML = '';
+
+        if (typeof CRAFTING_RECIPES === 'undefined') return;
+
+        for (const recipe of CRAFTING_RECIPES) {
+            const canCraft = this.player.inventory.canCraft(recipe);
+            const card = document.createElement('div');
+            card.className = 'craft-recipe-card';
+
+            const matsHtml = recipe.materials.map(mat => {
+                const have = this.player.inventory.getItemCount(mat.itemId);
+                const itemDef = (typeof BASE_ITEMS !== 'undefined' && BASE_ITEMS[mat.itemId]) ? BASE_ITEMS[mat.itemId] : { name: mat.itemId };
+                const isOk = have >= mat.count;
+                return `<span class="${isOk ? 'mat-ok' : 'mat-missing'}">${itemDef.name}: ${have}/${mat.count}</span>`;
+            }).join(' • ');
+
+            card.innerHTML = `
+                <div class="craft-recipe-info">
+                    <div class="craft-recipe-title">${recipe.name}</div>
+                    <div class="craft-recipe-mats">${matsHtml}</div>
+                </div>
+                <button class="craft-action-btn" ${canCraft ? '' : 'disabled'}>CRAFT</button>
+            `;
+
+            const btn = card.querySelector('.craft-action-btn');
+            this.bindTap(btn, () => {
+                const res = this.player.inventory.craftItem(recipe.id, this.player);
+                if (res.success) {
+                    if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playItemObtained();
+                    this.renderer.addFloatingText(`+${recipe.resultCount || 1} ${recipe.name}`, this.player.pos.x, this.player.pos.y - 14, '#81c784');
+                    if (infoPanel) infoPanel.innerText = `Crafted ${recipe.name}! ${recipe.desc}`;
+                    this.renderCraftingRecipes();
+                    this.updateHUD();
+                }
+            });
+
+            this.bindTap(card, (e) => {
+                if (e.target.tagName !== 'BUTTON') {
+                    if (infoPanel) infoPanel.innerText = `${recipe.name}: ${recipe.desc}`;
+                }
+            });
+
+            list.appendChild(card);
+        }
+    }
+
+    openRecordsModal() {
+        const modal = document.getElementById('records-modal');
+        if (!modal) return;
+        const dVal = document.getElementById('rec-days-val');
+        const rVal = document.getElementById('rec-runs-val');
+        const hVal = document.getElementById('rec-harvest-val');
+        const bVal = document.getElementById('rec-boss-val');
+        const cVal = document.getElementById('rec-cores-val');
+
+        if (dVal) dVal.innerText = `Day ${this.currentDay}`;
+        if (rVal) rVal.innerText = `${this.runsCount || 1}`;
+        if (hVal) hVal.innerText = `${this.harvestCount || 0} nodes`;
+        if (bVal) bVal.innerText = `${this.bossSlainCount || 0}`;
+        if (cVal) cVal.innerText = `${this.coresExtractedCount || 0}`;
+
+        modal.classList.remove('hidden');
+    }
+
+    updateClockGauge() {
+        const canvas = document.getElementById('clock-gauge-canvas');
+        const badge = document.getElementById('day-counter-badge');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        const cx = w / 2;
+        const cy = h / 2;
+        const r = 9;
+
+        let periodName = 'NOON';
+        if (this.dayTimer < 0.20) periodName = 'MORNING';
+        else if (this.dayTimer < 0.40) periodName = 'NOON';
+        else if (this.dayTimer < 0.50) periodName = 'DUSK';
+        else if (this.dayTimer < 0.85) periodName = 'NIGHT';
+        else periodName = 'DAWN';
+
+        if (badge) {
+            badge.innerText = `DAY ${this.currentDay} (${periodName})`;
+            if (periodName === 'NIGHT') {
+                badge.style.background = '#1a237e';
+                badge.style.color = '#82b1ff';
+            } else if (periodName === 'DUSK') {
+                badge.style.background = '#bf360c';
+                badge.style.color = '#ffab91';
+            } else {
+                badge.style.background = '#1c2734';
+                badge.style.color = '#64b5f6';
+            }
+        }
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        const angle = this.dayTimer * Math.PI * 2;
+        ctx.rotate(angle);
+
+        ctx.fillStyle = '#29b6f6';
+        ctx.beginPath();
+        ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#0a101f';
+        ctx.beginPath();
+        ctx.arc(0, 0, r, Math.PI / 2, -Math.PI / 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffd54f';
+        ctx.beginPath();
+        ctx.arc(5, 0, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#cfd8dc';
+        ctx.beginPath();
+        ctx.arc(-5, 0, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        ctx.strokeStyle = '#455a64';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.stroke();
     }
 
     loadNewWorld(seed) {
@@ -781,6 +1139,65 @@ class GameApp {
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
             });
         }
+
+        // 6. Slots, Crafting, Worldgen & Records Modals Controls
+        const slotsClose = document.getElementById('slots-close');
+        if (slotsClose) {
+            this.bindTap(slotsClose, () => {
+                document.getElementById('save-slots-modal').classList.add('hidden');
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+            });
+        }
+
+        const craftingClose = document.getElementById('crafting-close');
+        if (craftingClose) {
+            this.bindTap(craftingClose, () => {
+                document.getElementById('crafting-modal').classList.add('hidden');
+                this.updateTouchControlsVisibility();
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+            });
+        }
+
+        const worldgenClose = document.getElementById('worldgen-close');
+        if (worldgenClose) {
+            this.bindTap(worldgenClose, () => {
+                document.getElementById('worldgen-modal').classList.add('hidden');
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+            });
+        }
+
+        const recordsClose = document.getElementById('records-close');
+        if (recordsClose) {
+            this.bindTap(recordsClose, () => {
+                document.getElementById('records-modal').classList.add('hidden');
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+            });
+        }
+
+        // Worldgen modal button controls
+        const btnWorldgenRandom = document.getElementById('btn-worldgen-random');
+        const worldgenSeedInput = document.getElementById('worldgen-seed-input');
+        if (btnWorldgenRandom && worldgenSeedInput) {
+            this.bindTap(btnWorldgenRandom, () => {
+                const rnd = '0x' + Math.floor(Math.random() * 0xFFFFFFFF).toString(16).toUpperCase();
+                worldgenSeedInput.value = rnd;
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playRoll();
+            });
+        }
+
+        const btnApplyWorldgen = document.getElementById('btn-apply-worldgen');
+        if (btnApplyWorldgen && worldgenSeedInput) {
+            this.bindTap(btnApplyWorldgen, () => {
+                const val = worldgenSeedInput.value.trim();
+                const parsed = parseInt(val, val.startsWith('0x') ? 16 : 10);
+                if (!isNaN(parsed)) {
+                    this.loadNewWorld(parsed);
+                    const log = document.getElementById('worldgen-log');
+                    if (log) log.innerText = `Matrix regenerated! Ticker: ${this.currentMap.bondingCurve.ticker} (Seed: 0x${(parsed >>> 0).toString(16).toUpperCase()})`;
+                    if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCoin();
+                }
+            });
+        }
     }
 
     setupGbaMenu() {
@@ -935,33 +1352,65 @@ class GameApp {
         if (menu) menu.classList.add('hidden');
 
         switch (action) {
-            case 'expedition':
-                this.showGbaDialogue("EXPEDITION DISPATCH", `Current Layer: ${this.currentLayer}\nWorld Seed: 0x${(this.currentSeed >>> 0).toString(16).toUpperCase()}\nPioneer: ${this.pioneerName} (${this.selectedClass})\nHarvested: ${this.player ? this.player.coinsCollected : 0} $ALU`);
+            case 'status':
+                this.showGbaDialogue(
+                    "PIONEER TELEMETRY",
+                    `Pioneer: ${this.pioneerName || 'ALU-01'} (${(this.selectedClass || 'SUPER_SOLDIER').replace('_', ' ')})\n` +
+                    `Day: ${this.currentDay} | Layer: ${this.currentLayer}\n` +
+                    `HP: ${Math.round(this.player.hp)}/${this.player.maxHp} | Energy: ${Math.round(this.player.energy)}/${this.player.maxEnergy}\n` +
+                    `Coins: ${this.player.coinsCollected} $ALU | Harvests: ${this.harvestCount || 0}`
+                );
                 break;
             case 'inventory':
                 this.toggleInventory();
                 break;
+            case 'crafting':
+                this.openCraftingModal();
+                break;
+            case 'map':
+                const enemiesCount = this.currentMap.enemies.filter(e => e.hp > 0).length;
+                const nodesCount = this.currentMap.resourceNodes ? this.currentMap.resourceNodes.filter(n => n.hp > 0).length : 0;
+                this.showGbaDialogue(
+                    "RADAR MAP TELEMETRY",
+                    `Layer: ${this.currentLayer}\n` +
+                    `Coords: X:${Math.floor(this.player.pos.x / 16)}, Y:${Math.floor(this.player.pos.y / 16)}\n` +
+                    `Radar Scan: ${enemiesCount} Hostiles Detected\n` +
+                    `Resources: ${nodesCount} Harvestable Nodes\n` +
+                    `World Seed: 0x${(this.currentSeed >>> 0).toString(16).toUpperCase()}`
+                );
+                break;
+            case 'save':
+                this.saveCurrentSlot();
+                this.renderer.addFloatingText(`RUN SAVED TO SLOT 0${this.activeSlotIndex + 1}!`, this.player.pos.x, this.player.pos.y - 18, '#ffd54f');
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playItemObtained();
+                this.showGbaDialogue("MISSION PROGRESS SAVED", `Expedition telemetry saved to Slot 0${this.activeSlotIndex + 1}.\nDay: ${this.currentDay} | Coins: ${this.player.coinsCollected} $ALU`);
+                break;
+            case 'dev':
+                this.toggleDevModal();
+                break;
+            case 'exit':
+                this.saveCurrentSlot();
+                this.setGameState('START_SCREEN');
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+                break;
             case 'market':
                 this.toggleMarket();
                 break;
-            case 'new-seed':
-                this.showGbaSeedDialog();
-                break;
             case 'sound':
                 this.toggleSoundModal();
+                break;
+            case 'new-seed':
+                this.showGbaSeedDialog();
                 break;
             case 'pioneer':
                 document.getElementById('setup-modal').classList.remove('hidden');
                 this.screens.currentScreen = 'SETUP';
                 this.updateTouchControlsVisibility();
                 break;
-            case 'dev':
-                this.toggleDevModal();
-                break;
             case 'reboot':
                 this.restartPioneer();
                 break;
-            case 'exit':
+            default:
                 this.screens.currentScreen = 'GAMEPLAY';
                 this.updateTouchControlsVisibility();
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
@@ -1106,7 +1555,25 @@ class GameApp {
         const px = this.player.pos.x;
         const py = this.player.pos.y;
 
-        // 1. Quantum Supply Pods / Chests
+        // 1. Survival Resource Nodes (The Wild Darkness survival interaction)
+        if (this.currentMap.findNearbyNode) {
+            const node = this.currentMap.findNearbyNode(px, py, 26);
+            if (node) {
+                let label = 'EXAMINE';
+                if (node.type === 'PINE_TREE') label = 'CHOP';
+                else if (node.type === 'FLINT_BOULDER') label = 'MINE';
+                else if (node.type === 'WILD_CABBAGE') label = 'GATHER';
+                else if (node.type === 'BERRY_BUSH') label = 'FORAGE';
+                else if (node.type === 'MEDICINAL_HERB') label = 'HARVEST';
+                else if (node.type === 'CAMPFIRE_SITE') label = 'REST';
+                else if (node.type === 'RUNIC_TOTEM') label = 'COMMUNE';
+                else if (node.type === 'TITANIUM_CONDUIT') label = 'EXTRACT';
+                else if (node.type === 'RESONANT_CRYSTAL') label = 'MINE';
+                return { type: 'RESOURCE_NODE', entity: node, label: label };
+            }
+        }
+
+        // 2. Quantum Supply Pods / Chests
         if (this.currentMap.chests) {
             for (const chest of this.currentMap.chests) {
                 if (!chest.opened && Math.hypot(px - chest.x, py - chest.y) < 26) {
@@ -1115,7 +1582,7 @@ class GameApp {
             }
         }
 
-        // 2. Glittering Foraging Sparkles
+        // 3. Glittering Foraging Sparkles
         if (this.currentMap.sparkles) {
             for (const sp of this.currentMap.sparkles) {
                 if (!sp.collected && Math.hypot(px - sp.x, py - sp.y) < 22) {
@@ -1124,7 +1591,7 @@ class GameApp {
             }
         }
 
-        // 3. Terminals in Sub-Core
+        // 4. Terminals in Sub-Core
         if (this.currentLayer === 'SUB_CORE' && this.currentMap.terminals) {
             for (const term of this.currentMap.terminals) {
                 if (Math.hypot(px - term.x, py - term.y) < 32) {
@@ -1133,7 +1600,7 @@ class GameApp {
             }
         }
 
-        // 4. Cave Entrance on Surface
+        // 5. Cave Entrance on Surface
         if (this.currentLayer === 'SURFACE' && this.currentMap.caveEntrance) {
             const ce = this.currentMap.caveEntrance;
             if (Math.hypot(px - (ce.x * 16 + 8), py - (ce.y * 16 + 8)) < 28) {
@@ -1141,7 +1608,7 @@ class GameApp {
             }
         }
 
-        // 5. Return Ladder in Sub-Core
+        // 6. Return Ladder in Sub-Core
         if (this.currentLayer === 'SUB_CORE') {
             const sp = this.currentMap.spawnPoint;
             if (Math.hypot(px - sp.x, py - sp.y) < 28) {
@@ -1149,7 +1616,7 @@ class GameApp {
             }
         }
 
-        // 6. Secret 3x3 Arable Plot in Sub-Core
+        // 7. Secret 3x3 Arable Plot in Sub-Core
         if (this.currentLayer === 'SUB_CORE' && !this.isFarmerUnlocked) {
             const plotX = 36 * 16 + 24;
             const plotY = 25 * 16 + 24;
@@ -1211,6 +1678,70 @@ class GameApp {
         const py = this.player.pos.y;
         const interactable = this.getNearestInteractable();
         if (!interactable) return;
+
+        // Survival Resource Node Interaction
+        if (interactable.type === 'RESOURCE_NODE') {
+            const node = interactable.entity;
+            if (node.type === 'CAMPFIRE_SITE') {
+                this.player.hp = Math.min(this.player.maxHp, this.player.hp + 25);
+                this.player.energy = Math.min(this.player.maxEnergy, this.player.energy + 25);
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playItemObtained();
+                this.renderer.addFloatingText('+25 HP Rested', this.player.pos.x, this.player.pos.y - 14, '#ffd54f');
+                this.updateHUD();
+                return;
+            }
+
+            if (node.type === 'RUNIC_TOTEM') {
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCoin();
+                this.showGbaDialogue("ANCIENT RUNIC MONOLITH", `The World Seed 0x${(this.currentSeed >>> 0).toString(16).toUpperCase()} pulses with primordial Dyson resonance.\nSurvive the night and descend into the Sub-Bedrock Core.`);
+                return;
+            }
+
+            // Tools bonus
+            let dmg = 1;
+            const hasAxe = this.player.inventory && this.player.inventory.hasItem('STONE_AXE');
+            if (node.type === 'PINE_TREE' && hasAxe) dmg = 2;
+            if (node.type === 'FLINT_BOULDER' && hasAxe) dmg = 2;
+
+            const res = this.currentMap.damageNode(node, dmg);
+            if (!res) return;
+
+            if (res.harvested) {
+                this.harvestCount = (this.harvestCount || 0) + 1;
+                const dropId = res.drops;
+                const count = res.dropCount || 1;
+                const coins = res.dropCoins || 0;
+                const itemDef = (typeof BASE_ITEMS !== 'undefined' && BASE_ITEMS[dropId]) 
+                    ? BASE_ITEMS[dropId] 
+                    : { id: dropId, name: dropId };
+
+                if (this.player.inventory) this.player.inventory.addItem(itemDef, count);
+                if (coins) this.player.coinsCollected += coins;
+
+                if (this.soundEnabled && this.sfxEnabled) {
+                    if (node.type === 'PINE_TREE') this.renderer.audio.playSlash();
+                    else if (node.type === 'FLINT_BOULDER') this.renderer.audio.playParry();
+                    else this.renderer.audio.playHarvest();
+                }
+
+                this.renderer.addFloatingText(`+${count} ${itemDef.name}`, node.x, node.y - 12, '#81c784');
+                if (coins > 0) {
+                    setTimeout(() => {
+                        this.renderer.addFloatingText(`+${coins} ALU`, node.x, node.y - 20, '#ffd54f');
+                    }, 200);
+                }
+            } else {
+                if (this.soundEnabled && this.sfxEnabled) {
+                    if (node.type === 'PINE_TREE') this.renderer.audio.playSlash();
+                    else if (node.type === 'FLINT_BOULDER') this.renderer.audio.playParry();
+                }
+                const hitAction = node.type === 'PINE_TREE' ? 'Chop' : 'Hit';
+                this.renderer.addFloatingText(`${hitAction}! (${res.remainingHp}/${node.maxHp})`, node.x, node.y - 12, '#ffffff');
+            }
+
+            this.updateHUD();
+            return;
+        }
 
         // Open Chest
         if (interactable.type === 'CHEST') {
@@ -1398,7 +1929,7 @@ class GameApp {
         const btnA = document.getElementById('btn-a');
         if (btnASub && btnA) {
             if (interactable) {
-                btnASub.innerText = "EXAMINE";
+                btnASub.innerText = interactable.label || "EXAMINE";
                 btnA.style.borderColor = "#00e5ff";
                 btnA.style.boxShadow = "inset 2px 2px 0px rgba(255,255,255,0.4), 0 0 14px rgba(0, 229, 255, 0.7)";
             } else {
@@ -1418,19 +1949,28 @@ class GameApp {
         if (this.player) {
             const hpPercent = Math.max(0, (this.player.hp / this.player.maxHp) * 100);
             const energyPercent = Math.max(0, (this.player.energy / this.player.maxEnergy) * 100);
-            document.getElementById('hp-bar').style.width = `${hpPercent}%`;
-            document.getElementById('hp-text').innerText = `${Math.round(this.player.hp)}/${this.player.maxHp}`;
-            document.getElementById('energy-bar').style.width = `${energyPercent}%`;
-            document.getElementById('energy-text').innerText = `${Math.round(this.player.energy)}/${this.player.maxEnergy}`;
-            document.getElementById('wallet-coins').innerText = this.player.coinsCollected;
+            const hpBar = document.getElementById('hp-bar');
+            const hpText = document.getElementById('hp-text');
+            const energyBar = document.getElementById('energy-bar');
+            const energyText = document.getElementById('energy-text');
+            const walletCoins = document.getElementById('wallet-coins');
+
+            if (hpBar) hpBar.style.width = `${hpPercent}%`;
+            if (hpText) hpText.innerText = `${Math.round(this.player.hp)}/${this.player.maxHp}`;
+            if (energyBar) energyBar.style.width = `${energyPercent}%`;
+            if (energyText) energyText.innerText = `${Math.round(this.player.energy)}/${this.player.maxEnergy}`;
+            if (walletCoins) walletCoins.innerText = this.player.coinsCollected;
         }
 
         // 4. Coin & Bonding curve info
         if (this.currentMap && this.currentMap.bondingCurve) {
             const curve = this.currentMap.bondingCurve;
-            document.getElementById('coin-ticker').innerText = curve.ticker;
-            document.getElementById('coin-price').innerText = `${curve.getCurrentPrice().toFixed(3)} ALU`;
-            document.getElementById('coin-floor').innerText = `Floor: ${curve.getGuaranteedFloor().toFixed(3)} ALU`;
+            const coinTicker = document.getElementById('coin-ticker');
+            const coinPrice = document.getElementById('coin-price');
+            const coinFloor = document.getElementById('coin-floor');
+            if (coinTicker) coinTicker.innerText = curve.ticker;
+            if (coinPrice) coinPrice.innerText = `${curve.getCurrentPrice().toFixed(3)} ALU`;
+            if (coinFloor) coinFloor.innerText = `Floor: ${curve.getGuaranteedFloor().toFixed(3)} ALU`;
         }
 
         this.updateTouchControlsVisibility();
@@ -1489,6 +2029,14 @@ class GameApp {
         const dt = Math.min(0.05, (currentTime - this.lastTime) / 1000.0);
         this.lastTime = currentTime;
 
+        // 0. If in START_SCREEN state: Render atmospheric runic title scene with zero gameplay blur
+        if (this.gameState === 'START_SCREEN') {
+            this.renderer.clear();
+            this.renderer.renderTitleBackdrop(dt);
+            requestAnimationFrame(this.loop.bind(this));
+            return;
+        }
+
         // Check if player died
         if (this.player && this.player.hp <= 0 && this.screens.currentScreen === 'GAMEPLAY') {
             this.screens.currentScreen = 'GAMEOVER';
@@ -1500,6 +2048,15 @@ class GameApp {
             requestAnimationFrame(this.loop.bind(this));
             return;
         }
+
+        // Day/Night Cycle Progression (180s = 1 full day)
+        this.dayTimer = (this.dayTimer || 0.25) + dt / 180.0;
+        if (this.dayTimer >= 1.0) {
+            this.dayTimer -= 1.0;
+            this.currentDay = (this.currentDay || 1) + 1;
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(660, 'sine', 0.4, 0.1);
+        }
+        this.updateClockGauge();
 
         // 1. Update Cutscenes or Gameplay
         if (!this.cutscenes.isComplete) {
@@ -1529,21 +2086,27 @@ class GameApp {
         // 2. Camera Update (Follow player smoothly)
         this.renderer.updateCamera(this.player.pos, this.currentMap.width, this.currentMap.height, dt);
 
-        // 3. Render Pass (Canvas is ALWAYS rendering the living world map behind modals!)
+        // 3. Render Pass
         this.renderer.clear();
         this.renderer.renderMap(this.currentMap, dt);
         this.renderer.renderEnemies(this.currentMap.enemies, this.currentMap.palette.colors);
         this.renderer.renderCharacter(this.player, this.currentMap.palette.colors);
 
-        // 4. Render Cutscenes & Overlays
+        // 4. Render Day/Night Lighting Mask (Darkness + Torchlight radial aperture)
+        this.renderer.renderLighting(this.dayTimer, this.player, Math.round(this.renderer.camera.x), Math.round(this.renderer.camera.y), this.currentMap);
+
+        // 5. Render Floating Loot & Combat Texts
+        this.renderer.renderFloatingTexts(Math.round(this.renderer.camera.x), Math.round(this.renderer.camera.y), dt);
+
+        // 6. Render Cutscenes & Overlays
         this.renderer.renderDialogue(this.cutscenes);
 
-        // 5. Render Minimap Radar during Gameplay
+        // 7. Render Minimap Radar during Gameplay
         if (this.screens && this.screens.currentScreen === 'GAMEPLAY') {
             this.screens.renderMinimap(this.renderer.ctx, this.canvas.width, this.canvas.height);
         }
 
-        // 6. Update HUD metrics
+        // 8. Update HUD metrics
         this.updateHUD();
 
         requestAnimationFrame(this.loop.bind(this));

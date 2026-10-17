@@ -18,6 +18,12 @@ body, html {
     overflow: hidden;
 }
 
+.hidden,
+#game-header.hidden,
+#game-footer.hidden {
+    display: none !important;
+}
+
 /* App Main Container (True Fullscreen Display) */
 #app-container {
     display: flex;
@@ -174,16 +180,15 @@ body, html {
     z-index: 40;
 }
 
-/* Modals */
+/* Modals (No blur, crisp retro solid backdrop) */
 .game-modal {
     position: absolute;
     inset: 0;
-    background: rgba(10, 14, 22, 0.78);
+    background: rgba(8, 12, 18, 0.96);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 100;
-    backdrop-filter: blur(2px);
 }
 
 .game-modal.hidden {
@@ -1163,4 +1168,377 @@ body, html {
     flex: 1;
     outline: none;
 }
+
+/* ==========================================================================
+   START SCREEN / MAIN TITLE HUB ("THE WILD DARKNESS" STYLE)
+   ========================================================================== */
+
+.start-screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 90;
+    pointer-events: auto;
+    padding: 16px 20px;
+    font-family: 'Press Start 2P', monospace;
+}
+
+.start-screen.hidden {
+    display: none !important;
+}
+
+/* Top Currencies / Keys Status Bar (Image 3) */
+.start-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.start-header-right {
+    display: flex;
+    gap: 12px;
+}
+
+.start-stat-chip {
+    background: #172230;
+    border: 2px solid #2d3e52;
+    border-radius: 6px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 9px;
+    color: #e0e0e0;
+    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.15), inset -1px -1px 0px rgba(0,0,0,0.6), 0 3px 6px rgba(0,0,0,0.5);
+}
+
+.start-stat-chip .stat-icon {
+    font-size: 11px;
+    color: #ffd54f;
+}
+
+/* Centerpiece Hub */
+.start-center-hub {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    margin-top: 10px;
+}
+
+.title-branding {
+    text-align: center;
+}
+
+.start-game-title {
+    font-size: 18px;
+    color: #ffb300;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 0px #000, 0 0 12px rgba(255, 179, 0, 0.4);
+    margin-bottom: 6px;
+}
+
+.start-game-subtitle {
+    font-size: 8px;
+    color: #00e5ff;
+    letter-spacing: 1.5px;
+    text-shadow: 1px 1px 0px #000;
+}
+
+/* Runic GAME START Button (Image 3) */
+.runic-start-btn {
+    background: rgba(18, 25, 36, 0.9);
+    border: 3px solid #607d8b;
+    border-radius: 8px;
+    color: #ffffff;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 13px;
+    padding: 12px 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: inset 2px 2px 0px rgba(255,255,255,0.25), inset -2px -2px 0px rgba(0,0,0,0.7), 0 6px 16px rgba(0,0,0,0.8);
+    transition: transform 0.08s, border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.runic-start-btn:hover {
+    border-color: #ffd54f;
+    box-shadow: inset 2px 2px 0px #fff, 0 0 16px rgba(255, 213, 79, 0.6);
+    background: #253346;
+}
+
+.runic-start-btn:active {
+    transform: translateY(3px);
+    background: #ff9800;
+    color: #000;
+    box-shadow: inset 2px 2px 0px rgba(0,0,0,0.8);
+}
+
+.runic-bracket {
+    color: #00e5ff;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.runic-btn-text {
+    letter-spacing: 1px;
+}
+
+/* Bottom Nav Icons Bar (Image 3) */
+.start-bottom-nav {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    width: 100%;
+}
+
+.start-nav-btn {
+    background: #141c28;
+    border: 2px solid #37474f;
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-family: 'Press Start 2P', monospace;
+    color: #b0bec5;
+    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.1), inset -1px -1px 0px rgba(0,0,0,0.6), 0 4px 8px rgba(0,0,0,0.5);
+    transition: transform 0.06s, border-color 0.1s, color 0.1s;
+    min-width: 66px;
+}
+
+.start-nav-btn:hover {
+    border-color: #00e5ff;
+    color: #ffffff;
+    background: #1e293a;
+}
+
+.start-nav-btn:active {
+    transform: translateY(2px);
+    border-color: #ffd54f;
+    color: #ffd54f;
+}
+
+.nav-icon-frame {
+    font-size: 16px;
+}
+
+.nav-label {
+    font-size: 6px;
+    letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   SAVE SLOTS MODAL (10 RUN CARDS, IMAGE 4)
+   ========================================================================== */
+
+.slots-content {
+    max-width: 620px;
+    width: 95%;
+}
+
+.save-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin: 12px 0;
+    max-height: 52vh;
+    overflow-y: auto;
+    padding: 4px;
+}
+
+@media (max-width: 600px) {
+    .save-slots-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.save-slot-card {
+    background: #121924;
+    border: 2px dashed #455a64;
+    border-radius: 8px;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    min-height: 85px;
+    text-align: center;
+    font-family: 'Press Start 2P', monospace;
+    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.08), 0 2px 6px rgba(0,0,0,0.5);
+    transition: transform 0.06s, border-color 0.1s, background 0.1s;
+}
+
+.save-slot-card:hover {
+    border-color: #ffd54f;
+    background: #1a2434;
+}
+
+.save-slot-card.occupied {
+    border-style: solid;
+    border-color: #00e5ff;
+}
+
+.slot-num {
+    font-size: 7px;
+    color: #90a4ae;
+}
+
+.slot-title {
+    font-size: 8px;
+    color: #ffffff;
+}
+
+.slot-desc {
+    font-size: 6px;
+    color: #81c784;
+}
+
+.slots-footer {
+    text-align: center;
+    font-size: 7px;
+    color: #78909c;
+    margin-top: 6px;
+}
+
+/* ==========================================================================
+   SURVIVAL CRAFTING MODAL (IMAGE 5)
+   ========================================================================== */
+
+.crafting-content {
+    max-width: 540px;
+    width: 92%;
+}
+
+.crafting-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 55vh;
+    overflow-y: auto;
+}
+
+.crafting-recipes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.craft-recipe-card {
+    background: #101722;
+    border: 2px solid #28374a;
+    border-radius: 6px;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.06);
+}
+
+.craft-recipe-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.craft-recipe-title {
+    font-size: 8px;
+    color: #ffd54f;
+}
+
+.craft-recipe-mats {
+    font-size: 7px;
+    color: #90a4ae;
+}
+
+.craft-recipe-mats .mat-ok {
+    color: #81c784;
+}
+
+.craft-recipe-mats .mat-missing {
+    color: #e57373;
+}
+
+.craft-action-btn {
+    background: #2e7d32;
+    border: 2px solid #4caf50;
+    color: #ffffff;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.3), 0 2px 0px #000;
+}
+
+.craft-action-btn:disabled {
+    background: #263238;
+    border-color: #37474f;
+    color: #78909c;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.crafting-info-panel {
+    background: #0d131c;
+    border: 1px solid #202c3b;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 8px;
+    color: #cfd8dc;
+    line-height: 1.4;
+}
+
+/* ==========================================================================
+   DAY / NIGHT CLOCK WIDGET & SURVIVAL HUD
+   ========================================================================== */
+
+.day-night-widget {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.clock-gauge {
+    border-radius: 50%;
+    border: 1px solid #37474f;
+    box-shadow: 0 0 6px rgba(0, 229, 255, 0.4);
+    background: #0a0e16;
+}
+
+.records-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 6px 0;
+}
+
+.record-stat-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #101722;
+    border: 1px solid #273648;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 8px;
+}
+
+.record-stat-box .rec-label {
+    color: #90a4ae;
+}
+
+.record-stat-box .rec-val {
+    color: #ffd54f;
+}
+
 
