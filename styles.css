@@ -429,6 +429,18 @@ body, html {
     transition: transform 0.04s, filter 0.04s, box-shadow 0.04s;
 }
 
+#btn-sp {
+    background: #4a148c;
+    border: 3px solid #ab47bc;
+    margin-bottom: 42px;
+}
+
+#btn-sp:active, #btn-sp.pressed {
+    background: #7b1fa2;
+    transform: translateY(3px) scale(0.96);
+    box-shadow: inset 2px 2px 0px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6);
+}
+
 #btn-c {
     background: #bf360c;
     border: 3px solid #ff7043;
@@ -1920,6 +1932,195 @@ body, html {
 @keyframes blink {
     from { opacity: 0.4; }
     to { opacity: 1.0; }
+}
+
+/* Header Coins Pill */
+.hud-coins-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #101824;
+    border: 2px solid #b8860b;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: #ffd700;
+    box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.2), 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.hud-coins-pill .coin-icon {
+    font-size: 10px;
+}
+
+.hud-coins-pill .coin-val {
+    font-weight: bold;
+    color: #fff;
+}
+
+.hud-coins-pill .coin-label {
+    font-size: 7px;
+    color: #fdd835;
+}
+
+/* GBA Skill Tree & Class Mastery Styles */
+.skill-tree-frame {
+    max-width: 440px;
+    background: #0f1622;
+    border: 3px solid #2e3c4e;
+    box-shadow: inset 2px 2px 0px rgba(255,255,255,0.15), inset -2px -2px 0px rgba(0,0,0,0.7), 0 8px 24px rgba(0,0,0,0.8);
+}
+
+.skill-tree-header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #16202e;
+    border: 1px solid #2e3c4e;
+    border-radius: 4px;
+    padding: 6px 12px;
+    margin-bottom: 10px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+}
+
+.sp-badge {
+    color: #ffd54f;
+}
+
+.sp-badge strong {
+    color: #00e5ff;
+    font-size: 11px;
+}
+
+.skill-tree-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 230px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.skill-node-card {
+    background: #141d29;
+    border: 2px solid #253342;
+    border-radius: 4px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: all 0.15s ease;
+}
+
+.skill-node-card.unlocked {
+    border-color: #2e7d32;
+    background: #0e2417;
+}
+
+.skill-node-card.available {
+    border-color: #00e5ff;
+    background: #0d2331;
+}
+
+.skill-node-card.locked {
+    opacity: 0.65;
+}
+
+.skill-node-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.skill-node-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.skill-node-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.skill-node-name {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: #ffffff;
+}
+
+.skill-node-tier {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    color: #90a4ae;
+}
+
+.skill-node-desc {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5px;
+    line-height: 1.3;
+    color: #cfd8dc;
+    margin: 2px 0;
+}
+
+.skill-node-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2px;
+}
+
+.skill-cost-badge {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: #ffd54f;
+    background: #263238;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.skill-status-tag {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.skill-status-tag.mastered {
+    color: #a5d6a7;
+    background: #1b5e20;
+}
+
+.skill-status-tag.locked {
+    color: #b0bec5;
+    background: #37474f;
+}
+
+.skill-unlock-btn {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7.5px;
+    padding: 4px 10px;
+    background: #00b0ff;
+    color: #000;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.skill-unlock-btn:active {
+    transform: translateY(1px);
+    background: #40c4ff;
+}
+
+.skill-footer-tip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7.5px;
+    color: #78909c;
+    text-align: center;
+    margin-top: 6px;
 }
 
 

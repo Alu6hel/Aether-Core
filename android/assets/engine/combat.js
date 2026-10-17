@@ -22,6 +22,165 @@ const CHARACTER_CLASS = {
     FARMER_GOD: 'FARMER_GOD'
 };
 
+const CLASS_SKILL_TREES = {
+    SUPER_SOLDIER: [
+        {
+            id: 'warrior_titan_edge',
+            name: 'Titan Edge',
+            desc: 'Heavy cleave deals +35% damage with a wider swing arc.',
+            tier: 1,
+            cost: 1,
+            icon: '⚔️',
+            passive: true,
+            req: null
+        },
+        {
+            id: 'warrior_tungsten_bastion',
+            name: 'Tungsten Bastion',
+            desc: 'Max HP +40. Parries reflect 50% damage back to attackers.',
+            tier: 1,
+            cost: 1,
+            icon: '🛡️',
+            passive: true,
+            req: null
+        },
+        {
+            id: 'warrior_kinetic_overdrive',
+            name: 'Kinetic Overdrive',
+            desc: 'Dash speed +30% leaving a scorching trail that burns foes.',
+            tier: 2,
+            cost: 1,
+            icon: '⚡',
+            passive: true,
+            req: 'warrior_titan_edge'
+        },
+        {
+            id: 'warrior_whirlwind_strike',
+            name: 'Whirlwind Strike',
+            desc: 'Active Ability: 360° hurricane blade tempest dealing 85 AoE damage.',
+            tier: 2,
+            cost: 2,
+            icon: '🌪️',
+            passive: false,
+            req: 'warrior_tungsten_bastion'
+        },
+        {
+            id: 'warrior_juggernaut_stance',
+            name: 'Juggernaut Stance',
+            desc: 'Active Ultimate: Harden cyber-armor for 7s (+50% defense & poise).',
+            tier: 3,
+            cost: 2,
+            icon: '🦾',
+            passive: false,
+            req: 'warrior_whirlwind_strike'
+        }
+    ],
+    TECHNO_MAGE: [
+        {
+            id: 'mage_nanite_infusion',
+            name: 'Nanite Infusion',
+            desc: 'Twin-bolts gain +40% velocity and +30% detonation radius.',
+            tier: 1,
+            cost: 1,
+            icon: '✨',
+            passive: true,
+            req: null
+        },
+        {
+            id: 'mage_quantum_flux',
+            name: 'Quantum Flux',
+            desc: 'Energy regen increased by +60% and Max Energy +50.',
+            tier: 1,
+            cost: 1,
+            icon: '🔮',
+            passive: true,
+            req: null
+        },
+        {
+            id: 'mage_chrono_step',
+            name: 'Chrono Step',
+            desc: 'Dash becomes instant quantum blink teleportation through space.',
+            tier: 2,
+            cost: 1,
+            icon: '⏳',
+            passive: true,
+            req: 'mage_nanite_infusion'
+        },
+        {
+            id: 'mage_graviton_singularity',
+            name: 'Graviton Singularity',
+            desc: 'Active Ability: Dark-matter vortex pulls foes and implodes for 120 damage.',
+            tier: 2,
+            cost: 2,
+            icon: '🌀',
+            passive: false,
+            req: 'mage_quantum_flux'
+        },
+        {
+            id: 'mage_aegis_null_barrier',
+            name: 'Aegis Null-Barrier',
+            desc: 'Active Ultimate: Hexagonal photon shield absorbing 100 incoming damage.',
+            tier: 3,
+            cost: 2,
+            icon: '🛡️',
+            passive: false,
+            req: 'mage_graviton_singularity'
+        }
+    ],
+    FARMER_GOD: [
+        {
+            id: 'farmer_bountiful_earth',
+            name: 'Bountiful Earth',
+            desc: 'Slaying foes and harvesting quadruples all coin and resource drops.',
+            tier: 1,
+            cost: 1,
+            icon: '🌾',
+            passive: true,
+            req: null
+        },
+        {
+            id: 'farmer_spacetime_tillage',
+            name: 'Spacetime Tillage',
+            desc: 'Tilled earth emits cosmic healing pollen (+15 HP/sec).',
+            tier: 1,
+            cost: 1,
+            icon: '🌱',
+            passive: true,
+            req: null
+        },
+        {
+            id: 'farmer_solar_prominence',
+            name: 'Solar Prominence',
+            desc: 'Cosmic Scythe launches 16 seeking celestial star-seeds.',
+            tier: 2,
+            cost: 1,
+            icon: '☀️',
+            passive: true,
+            req: 'farmer_bountiful_earth'
+        },
+        {
+            id: 'farmer_gaia_cataclysm',
+            name: 'Gaia Cataclysm',
+            desc: 'Active Ability: Erupt Dyson World Tree roots, crushing foes for 150 damage.',
+            tier: 2,
+            cost: 2,
+            icon: '🌳',
+            passive: false,
+            req: 'farmer_spacetime_tillage'
+        },
+        {
+            id: 'farmer_eternal_harvest',
+            name: 'Eternal Harvest',
+            desc: 'Active Ultimate: Fully restores HP & Energy with golden deific invincibility.',
+            tier: 3,
+            cost: 2,
+            icon: '👑',
+            passive: false,
+            req: 'farmer_gaia_cataclysm'
+        }
+    ]
+};
+
 class Character extends KinematicBody {
     constructor(charClass = CHARACTER_CLASS.SUPER_SOLDIER, x = 0, y = 0) {
         super(x, y, 12, 12);
@@ -31,6 +190,13 @@ class Character extends KinematicBody {
         this.energy = 100;
         this.maxEnergy = 100;
         this.coinsCollected = 0; // In-world ALU coins
+
+        // Level & EXP Progression System
+        this.level = 1;
+        this.exp = 0;
+        this.expToNext = 100;
+        this.skillPoints = 0;
+        this.unlockedSkills = {};
         
         // Combat & Animation States
         this.state = 'IDLE';     // IDLE, MOVING, ATTACKING, PARRYING, DASHING, HURT
@@ -254,45 +420,54 @@ class Character extends KinematicBody {
             const perpX = -dir.y * 5;
             const perpY = dir.x * 5;
 
+            const splashRad = this.hasSkill('mage_nanite_infusion') ? 42 : 28;
+            const boltSpeed = this.hasSkill('mage_nanite_infusion') ? 440 : 320;
+            const boltDmg = this.hasSkill('mage_nanite_infusion') ? 34 : 24;
+
             // Bolt 1
             this.projectiles.push({
                 x: this.pos.x + dir.x * 10 + perpX,
                 y: this.pos.y + dir.y * 10 + perpY,
-                vx: dir.x * 320,
-                vy: dir.y * 320,
-                damage: 24,
+                vx: dir.x * boltSpeed,
+                vy: dir.y * boltSpeed,
+                damage: boltDmg,
                 life: 1.1,
                 color: '#00ffff',
                 radius: 12,
-                splashRadius: 28
+                splashRadius: splashRad
             });
             // Bolt 2
             this.projectiles.push({
                 x: this.pos.x + dir.x * 10 - perpX,
                 y: this.pos.y + dir.y * 10 - perpY,
-                vx: dir.x * 310,
-                vy: dir.y * 310,
-                damage: 24,
+                vx: dir.x * (boltSpeed - 10),
+                vy: dir.y * (boltSpeed - 10),
+                damage: boltDmg,
                 life: 1.1,
                 color: '#e040fb',
                 radius: 12,
-                splashRadius: 28
+                splashRadius: splashRad
             });
             this.addSpark(this.pos.x + dir.x * 12, this.pos.y + dir.y * 12, '#00e5ff', 8);
 
         } else if (this.charClass === CHARACTER_CLASS.SUPER_SOLDIER) {
-            // Ultrasonic Broadsword Heavy Cleave: Wide 140° frontal arc slash
+            // Ultrasonic Broadsword Heavy Cleave: Wide frontal arc slash
             const currentSpeed = this.vel.length();
             const momentumBonus = Math.floor(currentSpeed * 0.18);
-            const totalDamage = 34 + momentumBonus;
+            let totalDamage = 34 + momentumBonus;
+            if (this.hasSkill('warrior_titan_edge')) {
+                totalDamage = Math.floor(totalDamage * 1.35);
+            }
+            const slashRange = this.hasSkill('warrior_titan_edge') ? 44 : 36;
+            const slashArc = this.hasSkill('warrior_titan_edge') ? Math.PI * 1.1 : Math.PI * 0.8;
 
             this.attackSwing = {
                 type: 'WARRIOR_SLASH',
                 x: this.pos.x,
                 y: this.pos.y,
                 angle: baseAngle,
-                range: 36,
-                arc: Math.PI * 0.8,
+                range: slashRange,
+                arc: slashArc,
                 timer: 0.24,
                 maxTimer: 0.24
             };
@@ -303,11 +478,11 @@ class Character extends KinematicBody {
                 const ex = enemy.x - this.pos.x;
                 const ey = enemy.y - this.pos.y;
                 const dist = Math.hypot(ex, ey);
-                if (dist <= 38) {
+                if (dist <= (slashRange + 2)) {
                     const enemyAngle = Math.atan2(ey, ex);
                     let angleDiff = Math.abs(enemyAngle - baseAngle);
                     while (angleDiff > Math.PI) angleDiff = Math.abs(angleDiff - Math.PI * 2);
-                    if (angleDiff <= Math.PI * 0.45) {
+                    if (angleDiff <= (slashArc * 0.55)) {
                         enemy.hp -= totalDamage;
                         // Heavy kinetic pushback
                         enemy.x += dir.x * 32;
@@ -320,13 +495,13 @@ class Character extends KinematicBody {
             this.addSpark(this.pos.x + dir.x * 18, this.pos.y + dir.y * 18, '#ff5722', 12);
 
         } else if (this.charClass === CHARACTER_CLASS.FARMER_GOD) {
-            // Cosmic Scythe Reap & Celestial Seeds: Massive 270° reality sweep
+            // Cosmic Scythe Reap & Celestial Seeds: Massive reality sweep
             this.attackSwing = {
                 type: 'FARMER_REAP',
                 x: this.pos.x,
                 y: this.pos.y,
                 angle: baseAngle,
-                range: 46,
+                range: 48,
                 arc: Math.PI * 1.5,
                 timer: 0.24,
                 maxTimer: 0.24
@@ -335,8 +510,8 @@ class Character extends KinematicBody {
             for (const enemy of enemies) {
                 if (enemy.hp <= 0) continue;
                 const dist = Math.hypot(enemy.x - this.pos.x, enemy.y - this.pos.y);
-                if (dist <= 48) {
-                    enemy.hp -= 85;
+                if (dist <= 50) {
+                    enemy.hp -= 90;
                     enemy.x += dir.x * 24;
                     enemy.y += dir.y * 24;
                     this.addSpark(enemy.x, enemy.y, '#76ff03', 18);
@@ -344,8 +519,10 @@ class Character extends KinematicBody {
                 }
             }
 
-            // 8 Celestial seeking star seeds tearing space-time in all directions
-            for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 4) {
+            // Seeking star seeds tearing space-time in all directions
+            const count = this.hasSkill('farmer_solar_prominence') ? 16 : 8;
+            const stepAngle = (Math.PI * 2) / count;
+            for (let angle = 0; angle < Math.PI * 2; angle += stepAngle) {
                 this.projectiles.push({
                     x: this.pos.x + Math.cos(angle) * 12,
                     y: this.pos.y + Math.sin(angle) * 12,
@@ -403,11 +580,21 @@ class Character extends KinematicBody {
 
         if (this.charClass === CHARACTER_CLASS.SUPER_SOLDIER) {
             dashSpeed = hasEnergy ? 440 : 360;
+            if (this.hasSkill('warrior_kinetic_overdrive')) {
+                dashSpeed = hasEnergy ? 560 : 450;
+            }
             sparkColor = '#ff6d00';
             this.addSpark(this.pos.x, this.pos.y, sparkColor, 16);
             this.addSpark(this.pos.x - dx * 10, this.pos.y - dy * 10, '#ffffff', 8);
         } else if (this.charClass === CHARACTER_CLASS.TECHNO_MAGE) {
             dashSpeed = hasEnergy ? 470 : 380;
+            if (this.hasSkill('mage_chrono_step')) {
+                // Instant Quantum Blink Teleport
+                this.pos.x += dx * 52;
+                this.pos.y += dy * 52;
+                this.invulnerableTimer = 0.40;
+                dashSpeed = 300;
+            }
             sparkColor = '#00e5ff';
             this.addSpark(this.pos.x, this.pos.y, sparkColor, 18);
             this.addSpark(this.pos.x - dx * 8, this.pos.y - dy * 8, '#e040fb', 10);
@@ -430,6 +617,169 @@ class Character extends KinematicBody {
         return true;
     }
 
+    // ACTIVE CLASS ABILITY / ULTIMATE (Key 'U' / Virtual Button 'SP')
+    performClassAbility(enemies = [], map = null) {
+        if (this.abilityCooldowns[0] > 0) return false;
+
+        const dir = (this.facing && typeof this.facing.clone === 'function') 
+            ? this.facing.clone().normalize() 
+            : new Vector2(this.facing ? this.facing.x : 0, this.facing ? this.facing.y : 1).normalize();
+
+        if (this.charClass === CHARACTER_CLASS.SUPER_SOLDIER) {
+            // Whirlwind Strike
+            const cost = 24;
+            if (this.energy < cost) return false;
+            this.energy -= cost;
+            this.abilityCooldowns[0] = 3.5;
+            this.state = 'ATTACKING';
+            this.stateTimer = 0.36;
+
+            const baseDmg = this.hasSkill('warrior_whirlwind_strike') ? 85 : 55;
+            const radius = this.hasSkill('warrior_whirlwind_strike') ? 54 : 40;
+
+            this.attackSwing = {
+                type: 'WARRIOR_WHIRLWIND',
+                x: this.pos.x,
+                y: this.pos.y,
+                angle: 0,
+                range: radius,
+                timer: 0.36,
+                maxTimer: 0.36
+            };
+
+            for (const enemy of enemies) {
+                if (enemy.hp <= 0) continue;
+                const d = Math.hypot(enemy.x - this.pos.x, enemy.y - this.pos.y);
+                if (d <= radius) {
+                    enemy.hp -= baseDmg;
+                    const knockAngle = Math.atan2(enemy.y - this.pos.y, enemy.x - this.pos.x);
+                    enemy.x += Math.cos(knockAngle) * 45;
+                    enemy.y += Math.sin(knockAngle) * 45;
+                    this.addSpark(enemy.x, enemy.y, '#ff3d00', 16);
+                    if (enemy.hp <= 0) this.onEnemyDefeated(enemy);
+                }
+            }
+            return { type: 'WHIRLWIND', damage: baseDmg };
+
+        } else if (this.charClass === CHARACTER_CLASS.TECHNO_MAGE) {
+            // Graviton Singularity Vortex
+            const cost = 30;
+            if (this.energy < cost) return false;
+            this.energy -= cost;
+            this.abilityCooldowns[0] = 4.5;
+            this.state = 'ATTACKING';
+            this.stateTimer = 0.28;
+
+            const targetX = this.pos.x + dir.x * 65;
+            const targetY = this.pos.y + dir.y * 65;
+
+            this.activeVortices.push({
+                x: targetX,
+                y: targetY,
+                life: 2.2,
+                maxLife: 2.2,
+                damage: this.hasSkill('mage_graviton_singularity') ? 120 : 75
+            });
+            this.addSpark(targetX, targetY, '#00e5ff', 20);
+            return { type: 'SINGULARITY', x: targetX, y: targetY };
+
+        } else if (this.charClass === CHARACTER_CLASS.FARMER_GOD) {
+            // Gaia Cataclysm Primordial Root Burst
+            const cost = 35;
+            if (this.energy < cost) return false;
+            this.energy -= cost;
+            this.abilityCooldowns[0] = 4.0;
+            this.state = 'ATTACKING';
+            this.stateTimer = 0.35;
+
+            this.attackSwing = {
+                type: 'GAIA_CATACLYSM',
+                x: this.pos.x,
+                y: this.pos.y,
+                angle: 0,
+                range: 75,
+                timer: 0.35,
+                maxTimer: 0.35
+            };
+
+            const rootDmg = this.hasSkill('farmer_gaia_cataclysm') ? 150 : 90;
+            for (const enemy of enemies) {
+                if (enemy.hp <= 0) continue;
+                const d = Math.hypot(enemy.x - this.pos.x, enemy.y - this.pos.y);
+                if (d <= 95) {
+                    enemy.hp -= rootDmg;
+                    this.addSpark(enemy.x, enemy.y, '#76ff03', 20);
+                    if (enemy.hp <= 0) this.onEnemyDefeated(enemy);
+                }
+            }
+            this.addSpark(this.pos.x, this.pos.y, '#ffd700', 30);
+            return { type: 'GAIA', damage: rootDmg };
+        }
+
+        return false;
+    }
+
+    // EXP & LEVEL PROGRESSION
+    gainExp(amount) {
+        this.exp += amount;
+        let leveledUp = false;
+        while (this.exp >= this.expToNext) {
+            this.exp -= this.expToNext;
+            this.level++;
+            this.skillPoints++;
+            this.expToNext = Math.floor(100 * Math.pow(1.35, this.level - 1));
+            leveledUp = true;
+
+            // Stat growth per class
+            if (this.charClass === CHARACTER_CLASS.SUPER_SOLDIER) {
+                this.maxHp += 20;
+                this.hp = this.maxHp;
+                this.maxEnergy += 10;
+                this.energy = this.maxEnergy;
+            } else if (this.charClass === CHARACTER_CLASS.TECHNO_MAGE) {
+                this.maxHp += 12;
+                this.hp = this.maxHp;
+                this.maxEnergy += 25;
+                this.energy = this.maxEnergy;
+            } else if (this.charClass === CHARACTER_CLASS.FARMER_GOD) {
+                this.maxHp += 100;
+                this.hp = this.maxHp;
+                this.maxEnergy += 100;
+                this.energy = this.maxEnergy;
+            }
+            this.addSpark(this.pos.x, this.pos.y, '#ffd700', 30);
+        }
+        return leveledUp;
+    }
+
+    unlockSkill(skillId) {
+        const tree = CLASS_SKILL_TREES[this.charClass] || [];
+        const skill = tree.find(s => s.id === skillId);
+        if (!skill) return false;
+        if (this.unlockedSkills[skillId]) return false;
+        if (skill.req && !this.unlockedSkills[skill.req]) return false;
+        if (this.skillPoints < skill.cost) return false;
+
+        this.skillPoints -= skill.cost;
+        this.unlockedSkills[skillId] = true;
+
+        // Apply immediate passives
+        if (skillId === 'warrior_tungsten_bastion') {
+            this.maxHp += 40;
+            this.hp = Math.min(this.maxHp, this.hp + 40);
+        } else if (skillId === 'mage_quantum_flux') {
+            this.maxEnergy += 50;
+            this.energy = Math.min(this.maxEnergy, this.energy + 50);
+        }
+
+        this.addSpark(this.pos.x, this.pos.y, '#00e5ff', 24);
+        return true;
+    }
+
+    hasSkill(skillId) {
+        return !!this.unlockedSkills[skillId];
+    }
+
     // DEFENSIVE / MOBILITY SKILL (Aliases & Secondary)
     specialSkill() {
         return this.performDash();
@@ -437,7 +787,7 @@ class Character extends KinematicBody {
 
     // Aliases for skills and dash (Virtual Button 'C')
     performSkill(enemies = []) {
-        return this.performDash();
+        return this.performClassAbility(enemies) || this.performDash();
     }
 
     takeDamage(amount, isParryable = true) {
@@ -449,7 +799,12 @@ class Character extends KinematicBody {
             this.invulnerableTimer = 0.4;
             this.energy = Math.min(this.maxEnergy, this.energy + 30);
             this.addSpark(this.pos.x, this.pos.y, '#00e5ff', 25);
-            return { parried: true, damageTaken: 0 };
+            let reflectDamage = 0;
+            if (this.hasSkill('warrior_tungsten_bastion')) {
+                reflectDamage = Math.floor(amount * 0.5);
+                this.addSpark(this.pos.x, this.pos.y, '#ffd54f', 20);
+            }
+            return { parried: true, damageTaken: 0, reflectDamage };
         }
 
         // Hit confirmed
@@ -462,10 +817,16 @@ class Character extends KinematicBody {
     }
 
     onEnemyDefeated(enemy) {
-        // Collect ALU world coin fragments
-        const loot = enemy.isBoss ? 50 : 8;
+        // Collect ALU world coin fragments & grant EXP
+        let loot = enemy.isBoss ? 50 : 8;
+        if (this.hasSkill('farmer_bountiful_earth')) loot *= 4;
         this.coinsCollected += loot;
+
+        const expGain = enemy.isBoss ? 500 : 35;
+        const leveledUp = this.gainExp(expGain);
+
         this.addSpark(enemy.x, enemy.y, '#ffd700', 18);
+        return { coins: loot, exp: expGain, leveledUp };
     }
 
     addSpark(x, y, color, count = 8) {
@@ -483,6 +844,12 @@ class Character extends KinematicBody {
     }
 }
 
+if (typeof window !== 'undefined') {
+    window.CHARACTER_CLASS = CHARACTER_CLASS;
+    window.Character = Character;
+    window.CLASS_SKILL_TREES = CLASS_SKILL_TREES;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { CHARACTER_CLASS, Character };
+    module.exports = { CHARACTER_CLASS, Character, CLASS_SKILL_TREES };
 }

@@ -1128,6 +1128,72 @@ class RetroRenderer {
                 ctx.arc(0, 0, sw.range - 3, -sw.arc / 2 + 0.2, sw.arc / 2);
                 ctx.stroke();
                 ctx.restore();
+            } else if (sw.type === 'WARRIOR_WHIRLWIND') {
+                ctx.save();
+                ctx.translate(sx, sy);
+                const rot = progress * Math.PI * 4;
+                ctx.rotate(rot);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(0, 0, sw.range, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.strokeStyle = '#ff3d00';
+                ctx.lineWidth = 6;
+                ctx.beginPath();
+                ctx.arc(0, 0, sw.range - 4, 0, Math.PI * 1.6);
+                ctx.stroke();
+
+                ctx.strokeStyle = '#ffd54f';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(0, 0, sw.range * 0.65, Math.PI * 0.5, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            } else if (sw.type === 'GAIA_CATACLYSM') {
+                ctx.save();
+                ctx.translate(sx, sy);
+                ctx.strokeStyle = '#76ff03';
+                ctx.lineWidth = 4;
+                for (let r = 0; r < 6; r++) {
+                    const ang = (r * Math.PI) / 3;
+                    const rLen = sw.range * (0.6 + 0.4 * progress);
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.cos(ang) * rLen, Math.sin(ang) * rLen);
+                    ctx.stroke();
+                }
+                ctx.fillStyle = '#ffd700';
+                ctx.beginPath();
+                ctx.arc(0, 0, 16 * progress, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // Active Singularity Vortices
+        if (char.activeVortices && char.activeVortices.length > 0) {
+            for (const v of char.activeVortices) {
+                const vx = Math.round(v.x) - camX;
+                const vy = Math.round(v.y) - camY;
+                const vPulse = 1.0 + 0.25 * Math.sin(Date.now() * 0.01);
+                // Outer gravity swirl
+                ctx.strokeStyle = 'rgba(0, 229, 255, 0.65)';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.arc(vx, vy, 24 * vPulse, 0, Math.PI * 2);
+                ctx.stroke();
+                // Inner dark hole
+                ctx.fillStyle = '#0a001a';
+                ctx.beginPath();
+                ctx.arc(vx, vy, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#e040fb';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(vx, vy, 8, 0, Math.PI * 2);
+                ctx.stroke();
             }
         }
 
@@ -1613,31 +1679,43 @@ class RetroRenderer {
         }
     }
 
+    computeLightingDarkness(dayProgress, map = null) {
+        const isSubCore = map && map.layer === 'SUB_CORE';
+        if (isSubCore) return 0.80;
+        if (map && map.areaId === 'SUNKEN_GROTTO') return 0.78;
+        if (dayProgress >= 0.32 && dayProgress <= 0.68) return 0.0;
+        if (dayProgress > 0.68 && dayProgress < 0.80) {
+            const factor = (dayProgress - 0.68) / 0.12;
+            return factor * 0.88;
+        }
+        if (dayProgress >= 0.80 || dayProgress < 0.20) return 0.88;
+        if (dayProgress >= 0.20 && dayProgress < 0.32) {
+            const factor = 1.0 - (dayProgress - 0.20) / 0.12;
+            return factor * 0.88;
+        }
+        return 0.0;
+    }
+
     renderLighting(dayProgress, player, camX, camY, map) {
         const ctx = this.ctx;
         const isSubCore = map && map.layer === 'SUB_CORE';
 
-        let darkness = 0.0;
+        let darkness = this.computeLightingDarkness(dayProgress, map);
         let ambientColor = 'rgba(4, 7, 18, 0.88)';
 
         if (isSubCore) {
-            darkness = 0.80;
             ambientColor = 'rgba(7, 5, 16, 0.82)';
         } else if (map && map.areaId === 'SUNKEN_GROTTO') {
-            darkness = 0.78;
             ambientColor = 'rgba(5, 10, 22, 0.78)';
         } else {
-            if (dayProgress >= 0.40 && dayProgress < 0.50) {
-                const factor = (dayProgress - 0.40) / 0.10;
-                darkness = factor * 0.88;
-                ambientColor = `rgba(16, 12, 26, ${darkness})`;
-            } else if (dayProgress >= 0.50 && dayProgress < 0.85) {
-                darkness = 0.88;
+            if (dayProgress >= 0.32 && dayProgress <= 0.68) {
+                ambientColor = 'rgba(0, 0, 0, 0)';
+            } else if (dayProgress > 0.68 && dayProgress < 0.80) {
+                ambientColor = `rgba(22, 14, 26, ${darkness})`;
+            } else if (dayProgress >= 0.80 || dayProgress < 0.20) {
                 ambientColor = 'rgba(4, 7, 18, 0.88)';
-            } else if (dayProgress >= 0.85 && dayProgress < 1.00) {
-                const factor = 1.0 - (dayProgress - 0.85) / 0.15;
-                darkness = factor * 0.88;
-                ambientColor = `rgba(10, 15, 28, ${darkness})`;
+            } else if (dayProgress >= 0.20 && dayProgress < 0.32) {
+                ambientColor = `rgba(18, 14, 30, ${darkness})`;
             }
         }
 
@@ -1726,8 +1804,8 @@ class RetroRenderer {
         const h = this.height;
 
         // 1. Unified Dyson Luminary Celestial Engine (Sun & Moon as One)
-        // 25-second continuous celestial revolution through Dyson sphere aperture states
-        const cycle = ((this.titleAnimTimer || 0) * 0.04) % 1.0;
+        // ~80-second continuous celestial revolution through Dyson sphere aperture states (~20s per phase)
+        const cycle = ((this.titleAnimTimer || 0) * 0.0125) % 1.0;
         
         let skyTop, skyMid, skyBottom, starAlpha, phaseLabel, mountainTint;
         let lumX = w - 55;
@@ -1795,7 +1873,7 @@ class RetroRenderer {
         // 2. Render Dyson Sphere Megastructure Orbital Lattice Rings
         ctx.save();
         ctx.translate(lumX, lumY);
-        const rotAngle = this.titleAnimTimer * 0.3;
+        const rotAngle = this.titleAnimTimer * 0.10;
 
         // Concentric outer containment ring
         ctx.strokeStyle = (cycle >= 0.25 && cycle < 0.75) ? 'rgba(255, 213, 79, 0.25)' : 'rgba(0, 229, 255, 0.22)';
@@ -2182,5 +2260,5 @@ class RetroRenderer {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { RetroRenderer };
+    module.exports = { RetroRenderer, Renderer: RetroRenderer };
 }

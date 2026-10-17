@@ -374,6 +374,72 @@ class ChiptuneSynth {
         });
     }
 
+    // Triumphant Level Up Fanfare (A4 -> C#5 -> E5 -> A5 -> C#6 -> E6)
+    playLevelUp() {
+        const arpeggio = [440.00, 554.37, 659.25, 880.00, 1108.73, 1318.51];
+        arpeggio.forEach((freq, idx) => {
+            setTimeout(() => {
+                this.playWarmNote(freq, 'triangle', idx === 5 ? 0.45 : 0.14, 0.14, 5200);
+            }, idx * 70);
+        });
+    }
+
+    // Skill Unlock Chime
+    playSkillUnlocked() {
+        this.playWarmNote(659.25, 'triangle', 0.12, 0.12, 4400);
+        setTimeout(() => this.playWarmNote(880.00, 'triangle', 0.12, 0.12, 4600), 75);
+        setTimeout(() => this.playWarmNote(1318.51, 'sine', 0.28, 0.15, 5200), 150);
+    }
+
+    // Super Soldier Whirlwind Strike Swoosh
+    playWhirlwind() {
+        if (!this.ctx) return;
+        try {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(180, now);
+            osc.frequency.linearRampToValueAtTime(540, now + 0.18);
+            osc.frequency.linearRampToValueAtTime(120, now + 0.36);
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+            osc.connect(gain);
+            gain.connect(this.masterGain);
+            osc.start(now);
+            osc.stop(now + 0.36);
+        } catch(e) {}
+    }
+
+    // Techno-Mage Graviton Singularity Vortex
+    playSingularity() {
+        if (!this.ctx) return;
+        try {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const flt = this.ctx.createBiquadFilter();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(65, now + 0.45);
+            flt.type = 'lowpass';
+            flt.frequency.setValueAtTime(2200, now);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+            osc.connect(flt);
+            flt.connect(gain);
+            gain.connect(this.masterGain);
+            osc.start(now);
+            osc.stop(now + 0.45);
+        } catch(e) {}
+    }
+
+    // Farmer God Gaia Cataclysm Primordial Root Eruption
+    playGaiaRoot() {
+        this.playSubBass(75, 0.35, 0.18);
+        this.playWarmNote(330, 'triangle', 0.25, 0.12, 1800);
+    }
+
     // ==========================================
     // NOSTALGIC 4-VOICE BGM SEQUENCER
     // ==========================================

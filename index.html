@@ -23,11 +23,15 @@
                     <canvas id="clock-gauge-canvas" width="22" height="22" class="clock-gauge"></canvas>
                     <span id="day-counter-badge" class="badge">DAY 1</span>
                 </div>
-                <span class="coin-ticker" id="coin-ticker">$ALU-7F3A</span>
-                <span class="coin-price" id="coin-price">1.250 ALU</span>
+                <div class="hud-coins-pill" id="hud-coins-pill" title="Pioneer Gold & Currency">
+                    <span class="coin-icon">🪙</span>
+                    <span id="wallet-coins" class="coin-val">0</span>
+                    <span class="coin-label">GOLD</span>
+                </div>
             </div>
             <div class="header-right">
                 <button id="btn-menu-top" class="gba-btn-sm" title="Open In-Game GBA Menu">☰ MENU</button>
+                <button id="btn-skills-top" class="gba-btn-sm" title="Pioneer Mastery & Skill Tree">⚡ SKILLS</button>
                 <button id="btn-crafting-top" class="gba-btn-sm" title="Survival Crafting (Tools, Torches, Salves)">🔨 CRAFT</button>
                 <button id="btn-inventory" class="gba-btn-sm" title="View Equipment & Keycards">🎒 BAG</button>
                 <button id="btn-dev-top" class="gba-btn-sm dev-btn" title="Developer & Debug Tools">⚡ DEV</button>
@@ -158,9 +162,9 @@
                         <div class="nav-icon-frame">🌍</div>
                         <span class="nav-label">WORLD GEN</span>
                     </button>
-                    <button class="start-nav-btn" id="start-tab-market">
-                        <div class="nav-icon-frame">🪙</div>
-                        <span class="nav-label">TOKEN VAULT</span>
+                    <button class="start-nav-btn" id="start-tab-skills">
+                        <div class="nav-icon-frame">⚡</div>
+                        <span class="nav-label">SKILLS</span>
                     </button>
                     <button class="start-nav-btn" id="start-tab-records">
                         <div class="nav-icon-frame">📜</div>
@@ -186,8 +190,12 @@
                     <button class="dpad-btn" id="dpad-down" data-dir="down">▼</button>
                 </div>
 
-                <!-- Right Action Buttons (C = Dash, B = Parry, A = Attack/Examine) -->
+                <!-- Right Action Buttons (SP = Class Ability, C = Dash, B = Parry, A = Attack/Examine) -->
                 <div id="action-buttons">
+                    <button class="action-btn" id="btn-sp" data-action="skill" title="Class Ability / Ultimate (Whirlwind, Singularity, Gaia)">
+                        <span class="btn-label">SP</span>
+                        <span class="btn-sub" id="btn-sp-sub">SKILL</span>
+                    </button>
                     <button class="action-btn" id="btn-c" data-action="dash" title="Kinetic Dash / Evasion">
                         <span class="btn-label">C</span>
                         <span class="btn-sub">DASH</span>
@@ -281,6 +289,10 @@
                         <span class="gba-cursor">▶</span>
                         <span class="gba-label">STATUS</span>
                     </div>
+                    <div class="gba-menu-item" data-action="skills">
+                        <span class="gba-cursor"> </span>
+                        <span class="gba-label">SKILLS</span>
+                    </div>
                     <div class="gba-menu-item" data-action="inventory">
                         <span class="gba-cursor"> </span>
                         <span class="gba-label">BAG</span>
@@ -367,7 +379,7 @@
                         <div class="worldgen-actions">
                             <button id="btn-apply-worldgen" class="market-action-btn buy">SYNTHESIZE NEW MATRIX</button>
                         </div>
-                        <div id="worldgen-log" class="market-log">Seed ready. Current bonding curve: $ALU-7F3A.</div>
+                        <div id="worldgen-log" class="market-log">Seed ready. Expedition sector generated.</div>
                     </div>
                 </div>
             </div>
@@ -428,7 +440,7 @@
                             <img src="assets/logo.svg" alt="Logo" class="hub-logo" />
                             <div>
                                 <h3>AETHER-CORE SYSTEM MENU</h3>
-                                <div class="hub-ticker-info" id="hub-ticker-info">$ALU-7F3A • CURRENT EXPEDITION HUB</div>
+                                <div class="hub-ticker-info" id="hub-ticker-info">EXPEDITION COMMAND HUB</div>
                             </div>
                         </div>
                         <button class="modal-close" id="menu-close">✕</button>
@@ -462,6 +474,13 @@
                                 <span>Configure Chiptune SFX and BGM audio channels</span>
                             </div>
                         </button>
+                        <button class="hub-btn" id="hub-skills">
+                            <span class="hub-icon">⚡</span>
+                            <div class="hub-text">
+                                <strong>SKILL TREE & MASTERY</strong>
+                                <span>Unlock class passives, whirlwind, singularity, & deific skills</span>
+                            </div>
+                        </button>
                         <button class="hub-btn" id="hub-change-pioneer">
                             <span class="hub-icon">👤</span>
                             <div class="hub-text">
@@ -480,27 +499,27 @@
                 </div>
             </div>
 
-            <!-- Bonding Curve Market Modal -->
-            <div id="market-modal" class="game-modal hidden">
-                <div class="modal-content">
+            <!-- Authentic GBA Skill Tree & Class Mastery Modal -->
+            <div id="skill-tree-modal" class="game-modal hidden">
+                <div class="modal-content skill-tree-frame">
                     <div class="modal-header">
-                        <h3>🪙 ALU WORLD-COIN BONDING CURVE</h3>
-                        <button class="modal-close" id="market-close">✕</button>
+                        <h3 id="skill-tree-title">⚔️ PIONEER MASTERY MATRIX</h3>
+                        <button class="modal-close" id="skill-tree-close">✕</button>
                     </div>
-                    <div class="modal-body">
-                        <div class="market-stats">
-                            <div><strong>Ticker:</strong> <span id="m-ticker">$ALU-7F3A</span></div>
-                            <div><strong>Current Price:</strong> <span id="m-price">1.250 ALU</span></div>
-                            <div><strong>Genesis Floor:</strong> <span id="m-floor" class="text-cyan">0.125 ALU</span></div>
-                            <div><strong>Circulating:</strong> <span id="m-supply">100.0</span></div>
+                    <div class="skill-tree-header-info">
+                        <div class="pioneer-tree-badge">
+                            <span id="skill-pioneer-name">ALU-01</span>
+                            <span id="skill-pioneer-class" class="pioneer-class-tag">WARRIOR</span>
                         </div>
-                        <p class="modal-desc">Every map is backed by an automated mathematical curve. 2.5% of all transactions go directly into the immutable Genesis Vault.</p>
-                        <div class="market-actions">
-                            <button id="btn-buy-coin" class="market-action-btn buy">BUY 10 ALU WORTH</button>
-                            <button id="btn-sell-coin" class="market-action-btn sell">SELL 5 TOKENS</button>
-                            <button id="btn-burn-floor" class="market-action-btn floor">EMERGENCY FLOOR BURN</button>
+                        <div class="sp-badge">
+                            AVAILABLE SP: <strong id="skill-points-val">0</strong>
                         </div>
-                        <div id="market-log" class="market-log">Market ready. Connect to trade on-chain.</div>
+                    </div>
+                    <div id="skill-tree-container" class="skill-tree-grid">
+                        <!-- Populated dynamically based on character class -->
+                    </div>
+                    <div class="skill-footer-tip">
+                        <span>Tap an unlocked skill node to review mastery details. Key [U] / [SP] button triggers active ability!</span>
                     </div>
                 </div>
             </div>
@@ -596,7 +615,7 @@
             <div class="wallet-display" id="hud-wallet" title="Your Harvested ALU Coins">
                 <canvas id="canvas-coin" width="16" height="16" class="wallet-coin-canvas"></canvas>
                 <span id="wallet-coins">0</span>
-                <span class="wallet-unit">$ALU</span>
+                <span class="wallet-unit">GOLD</span>
             </div>
         </footer>
     </div>

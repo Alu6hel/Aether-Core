@@ -222,6 +222,9 @@ class GameApp {
 
     setGameState(state) {
         this.gameState = state;
+        if (this.screens) {
+            this.screens.currentScreen = (state === 'START_SCREEN' ? 'TITLE' : 'GAMEPLAY');
+        }
         const startScreen = document.getElementById('start-screen-container');
         const header = document.getElementById('game-header');
         const footer = document.getElementById('game-footer');
@@ -305,12 +308,10 @@ class GameApp {
             });
         }
 
-        const tabMarket = document.getElementById('start-tab-market');
-        if (tabMarket) {
-            this.bindTap(tabMarket, () => {
-                this.renderMarketModal();
-                const modal = document.getElementById('market-modal');
-                if (modal) modal.classList.remove('hidden');
+        const tabSkills = document.getElementById('start-tab-skills') || document.getElementById('start-tab-market');
+        if (tabSkills) {
+            this.bindTap(tabSkills, () => {
+                this.openSkillTreeModal();
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
             });
         }
@@ -374,7 +375,7 @@ class GameApp {
                     <div class="slot-num">SLOT 0${i + 1}</div>
                     <div class="slot-title">${slot.pioneerName || 'PIONEER'}</div>
                     <div class="slot-desc">${(slot.selectedClass || 'WARRIOR').replace('_', ' ')} • Day ${slot.currentDay || 1}</div>
-                    <div class="slot-desc" style="color: #ffd54f;">🪙 ${slot.coins || 0} $ALU</div>
+                    <div class="slot-desc" style="color: #ffd54f;">🪙 ${slot.coins || 0} GOLD</div>
                     <div class="slot-card-actions">
                         <button class="slot-action-btn slot-resume-btn" type="button">RESUME ▶</button>
                         <button class="slot-action-btn slot-delete-btn" type="button" title="Wipe Slot">🗑️ WIPE</button>
@@ -445,6 +446,20 @@ class GameApp {
             if (confirmBtn) {
                 confirmBtn.innerText = `CONFIRM & EMBARK (SLOT 0${slotIndex + 1}) ▶`;
             }
+
+            // Sync Callsign input
+            const callsignInput = document.getElementById('callsign-input');
+            if (callsignInput) callsignInput.value = this.pioneerName || 'ALU-01';
+
+            // Sync visual cards with current selected class
+            const cards = document.querySelectorAll('.class-card');
+            cards.forEach(card => {
+                if (card.getAttribute('data-class') === this.selectedClass) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
         }
         this.screens.currentScreen = 'SETUP';
         this.updateTouchControlsVisibility();
@@ -456,7 +471,7 @@ class GameApp {
         document.getElementById('save-slots-modal').classList.add('hidden');
 
         this.currentDay = 1;
-        this.dayTimer = 0.25;
+        this.dayTimer = 0.35; // Start in bright morning daylight (08:24)
         this.loadNewWorld(this.currentSeed);
         this.saveCurrentSlot();
 
@@ -593,50 +608,60 @@ class GameApp {
         const cy = h / 2;
         const r = 9;
 
-        let periodName = 'NOON';
-        if (this.dayTimer < 0.20) periodName = 'MORNING';
-        else if (this.dayTimer < 0.40) periodName = 'NOON';
-        else if (this.dayTimer < 0.50) periodName = 'DUSK';
-        else if (this.dayTimer < 0.85) periodName = 'NIGHT';
-        else periodName = 'DAWN';
+        let periodName = 'HIGH NOON';
+        if (this.dayTimer < 0.20) periodName = 'MIDNIGHT';
+        else if (this.dayTimer < 0.32) periodName = 'DAWN';
+        else if (this.dayTimer < 0.45) periodName = 'MORNING';
+        else if (this.dayTimer < 0.55) periodName = 'HIGH NOON';
+        else if (this.dayTimer < 0.68) periodName = 'AFTERNOON';
+        else if (this.dayTimer < 0.80) periodName = 'DUSK';
+        else periodName = 'NIGHT';
 
         if (badge) {
             badge.innerText = `DAY ${this.currentDay} (${periodName})`;
-            if (periodName === 'NIGHT') {
+            if (periodName === 'NIGHT' || periodName === 'MIDNIGHT') {
                 badge.style.background = '#1a237e';
                 badge.style.color = '#82b1ff';
             } else if (periodName === 'DUSK') {
                 badge.style.background = '#bf360c';
                 badge.style.color = '#ffab91';
+            } else if (periodName === 'DAWN') {
+                badge.style.background = '#4a148c';
+                badge.style.color = '#e1bee7';
             } else {
-                badge.style.background = '#1c2734';
-                badge.style.color = '#64b5f6';
+                badge.style.background = '#0277bd';
+                badge.style.color = '#ffd54f';
             }
         }
 
         ctx.save();
         ctx.translate(cx, cy);
+        // At dayTimer = 0.50 (Noon), sun should be at top. At 0.00 (Midnight), moon is at top.
         const angle = this.dayTimer * Math.PI * 2;
         ctx.rotate(angle);
 
+        // Day half (light blue)
         ctx.fillStyle = '#29b6f6';
         ctx.beginPath();
-        ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2);
+        ctx.arc(0, 0, r, 0, Math.PI);
         ctx.fill();
 
+        // Night half (deep navy)
         ctx.fillStyle = '#0a101f';
         ctx.beginPath();
-        ctx.arc(0, 0, r, Math.PI / 2, -Math.PI / 2);
+        ctx.arc(0, 0, r, Math.PI, Math.PI * 2);
         ctx.fill();
 
+        // Sun (placed at bottom without rotation; when angle = PI at noon, it rotates to TOP!)
         ctx.fillStyle = '#ffd54f';
         ctx.beginPath();
-        ctx.arc(5, 0, 3, 0, Math.PI * 2);
+        ctx.arc(0, 5, 3, 0, Math.PI * 2);
         ctx.fill();
 
+        // Moon (placed at top without rotation; when angle = 0 at midnight, it is at TOP!)
         ctx.fillStyle = '#cfd8dc';
         ctx.beginPath();
-        ctx.arc(-5, 0, 2.5, 0, Math.PI * 2);
+        ctx.arc(0, -5, 2.5, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.restore();
@@ -801,14 +826,16 @@ class GameApp {
                 this.handleParry();
             } else if (key === 'l' || e.shiftKey) { // C = Dash
                 this.handleDash();
+            } else if (key === 'u') { // Active Class Ability / Ultimate
+                this.handleSpecialAbility();
+            } else if (key === 'p' || key === 'm') { // Skill Tree Matrix
+                this.toggleSkillTree();
             } else if (key === 'e') { // Examine
                 this.handleInteract();
             } else if (key === 'r') { // Restart
                 this.restartPioneer();
             } else if (key === 'b' || key === 'i') {
                 this.toggleInventory();
-            } else if (key === 'm') {
-                this.toggleMarket();
             }
         });
 
@@ -883,7 +910,12 @@ class GameApp {
         });
 
         // C Button: Dash Evasion
+        // C Button: Dash Evasion
         bindAction(btnC, () => this.handleDash());
+
+        // SP Button: Active Class Ability / Ultimate (Whirlwind, Singularity, Gaia Root)
+        const btnSp = document.getElementById('btn-sp');
+        if (btnSp) bindAction(btnSp, () => this.handleSpecialAbility());
 
         // Center Buttons: Restart, Dev Skip, Menu
         const btnRestart = document.getElementById('btn-restart');
@@ -896,6 +928,9 @@ class GameApp {
         bindAction(btnStart, () => this.toggleGbaMenu());
 
         // Top Header Buttons
+        const btnSkillsTop = document.getElementById('btn-skills-top');
+        if (btnSkillsTop) bindAction(btnSkillsTop, () => this.toggleSkillTree());
+
         const btnMenuTop = document.getElementById('btn-menu-top');
         bindAction(btnMenuTop, () => this.toggleGbaMenu());
 
@@ -1090,61 +1125,27 @@ class GameApp {
             });
         }
 
-        // 2. Market Modal Controls
-        const marketModal = document.getElementById('market-modal');
-        const marketClose = document.getElementById('market-close');
-        if (marketClose) {
-            marketClose.addEventListener('pointerdown', (e) => {
+        // Hub: Skills & Mastery Matrix
+        const hubSkills = document.getElementById('hub-skills');
+        if (hubSkills) {
+            hubSkills.addEventListener('pointerdown', (e) => {
                 e.preventDefault();
-                marketModal.classList.add('hidden');
+                menuHubModal.classList.add('hidden');
+                this.toggleSkillTree();
+            });
+        }
+
+        // 2. Skill Tree Modal Controls
+        const skillTreeModal = document.getElementById('skill-tree-modal');
+        const skillTreeClose = document.getElementById('skill-tree-close');
+        if (skillTreeClose) {
+            skillTreeClose.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                if (skillTreeModal) skillTreeModal.classList.add('hidden');
                 this.updateTouchControlsVisibility();
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
             });
         }
-
-        document.getElementById('btn-buy-coin').addEventListener('pointerdown', (e) => {
-            e.preventDefault();
-            const curve = this.currentMap.bondingCurve;
-            const res = curve.buy(10.0);
-            this.player.coinsCollected += Math.round(res.tokensReceived);
-            document.getElementById('market-log').innerText = `Bought ${res.tokensReceived.toFixed(2)} tokens for 10 ALU. Floor: ${res.floor.toFixed(3)} ALU`;
-            this.updateHUD();
-            this.renderMarketModal();
-            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCoin();
-        });
-
-        document.getElementById('btn-sell-coin').addEventListener('pointerdown', (e) => {
-            e.preventDefault();
-            const curve = this.currentMap.bondingCurve;
-            if (this.player.coinsCollected < 5) {
-                document.getElementById('market-log').innerText = "Insufficient ALU tokens to sell!";
-                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
-                return;
-            }
-            const res = curve.sell(5.0);
-            this.player.coinsCollected -= 5;
-            document.getElementById('market-log').innerText = `Sold 5 tokens for ${res.aluReturned.toFixed(2)} ALU. Price: ${res.newPrice.toFixed(3)} ALU`;
-            this.updateHUD();
-            this.renderMarketModal();
-            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(400, 'triangle', 0.1, 0.1);
-        });
-
-        document.getElementById('btn-burn-floor').addEventListener('pointerdown', (e) => {
-            e.preventDefault();
-            const curve = this.currentMap.bondingCurve;
-            if (this.player.coinsCollected <= 0) {
-                document.getElementById('market-log').innerText = "No tokens to burn for floor payout!";
-                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
-                return;
-            }
-            const tokens = Math.min(10, this.player.coinsCollected);
-            const res = curve.burnForFloor(tokens);
-            this.player.coinsCollected -= tokens;
-            document.getElementById('market-log').innerText = `Emergency Burn: Redeemed ${tokens} tokens for ${res.aluRedeemed.toFixed(3)} ALU floor.`;
-            this.updateHUD();
-            this.renderMarketModal();
-            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playParry();
-        });
 
         // 3. Sound Modal Controls
         const soundModal = document.getElementById('sound-modal');
@@ -1505,7 +1506,7 @@ class GameApp {
                     `Pioneer: ${this.pioneerName || 'ALU-01'} (${(this.selectedClass || 'SUPER_SOLDIER').replace('_', ' ')})\n` +
                     `Day: ${this.currentDay} | Layer: ${this.currentLayer}\n` +
                     `HP: ${Math.round(this.player.hp)}/${this.player.maxHp} | Energy: ${Math.round(this.player.energy)}/${this.player.maxEnergy}\n` +
-                    `Coins: ${this.player.coinsCollected} $ALU | Harvests: ${this.harvestCount || 0}`
+                    `Coins: ${this.player.coinsCollected} GOLD | Harvests: ${this.harvestCount || 0}`
                 );
                 break;
             case 'inventory':
@@ -1530,7 +1531,7 @@ class GameApp {
                 this.saveCurrentSlot();
                 this.renderer.addFloatingText(`RUN SAVED TO SLOT 0${this.activeSlotIndex + 1}!`, this.player.pos.x, this.player.pos.y - 18, '#ffd54f');
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playItemObtained();
-                this.showGbaDialogue("MISSION PROGRESS SAVED", `Expedition telemetry saved to Slot 0${this.activeSlotIndex + 1}.\nDay: ${this.currentDay} | Coins: ${this.player.coinsCollected} $ALU`);
+                this.showGbaDialogue("MISSION PROGRESS SAVED", `Expedition telemetry saved to Slot 0${this.activeSlotIndex + 1}.\nDay: ${this.currentDay} | Coins: ${this.player.coinsCollected} GOLD`);
                 break;
             case 'dev':
                 this.toggleDevModal();
@@ -1540,8 +1541,9 @@ class GameApp {
                 this.setGameState('START_SCREEN');
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
                 break;
+            case 'skills':
             case 'market':
-                this.toggleMarket();
+                this.toggleSkillTree();
                 break;
             case 'sound':
                 this.toggleSoundModal();
@@ -1629,13 +1631,34 @@ class GameApp {
         if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuMove();
     }
 
-    toggleMarket() {
-        const modal = document.getElementById('market-modal');
+    handleSpecialAbility() {
+        if (!this.player || !this.currentMap) return;
+        const res = this.player.performClassAbility(this.currentMap.enemies, this.currentMap);
+        if (res) {
+            if (this.soundEnabled && this.sfxEnabled) {
+                if (res.type === 'WHIRLWIND') this.renderer.audio.playWhirlwind();
+                else if (res.type === 'SINGULARITY') this.renderer.audio.playSingularity();
+                else if (res.type === 'GAIA') this.renderer.audio.playGaiaRoot();
+                else this.renderer.audio.playParry();
+            }
+            const label = res.type === 'WHIRLWIND' ? 'WHIRLWIND STRIKE!' : (res.type === 'SINGULARITY' ? 'GRAVITON VORTEX!' : 'GAIA CATACLYSM!');
+            this.renderer.addFloatingText(label, this.player.pos.x, this.player.pos.y - 20, '#00e5ff');
+            this.updateHUD();
+        } else {
+            if (this.player.abilityCooldowns && this.player.abilityCooldowns[0] > 0) {
+                this.renderer.addFloatingText(`RECHARGING (${this.player.abilityCooldowns[0].toFixed(1)}s)`, this.player.pos.x, this.player.pos.y - 14, '#ff9800');
+            } else if (this.player.energy < 20) {
+                this.renderer.addFloatingText('LOW ENERGY', this.player.pos.x, this.player.pos.y - 14, '#ff5252');
+            }
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+        }
+    }
+
+    toggleSkillTree() {
+        const modal = document.getElementById('skill-tree-modal');
         if (!modal) return;
         if (modal.classList.contains('hidden')) {
-            this.renderMarketModal();
-            modal.classList.remove('hidden');
-            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCoin();
+            this.openSkillTreeModal();
         } else {
             modal.classList.add('hidden');
             if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
@@ -1643,12 +1666,85 @@ class GameApp {
         this.updateTouchControlsVisibility();
     }
 
-    renderMarketModal() {
-        const curve = this.currentMap.bondingCurve;
-        document.getElementById('m-ticker').innerText = curve.ticker;
-        document.getElementById('m-price').innerText = `${curve.getCurrentPrice().toFixed(3)} ALU`;
-        document.getElementById('m-floor').innerText = `${curve.getGuaranteedFloor().toFixed(3)} ALU`;
-        document.getElementById('m-supply').innerText = curve.circulatingSupply.toFixed(1);
+    openSkillTreeModal() {
+        const modal = document.getElementById('skill-tree-modal');
+        if (!modal) return;
+        this.renderSkillTree();
+        modal.classList.remove('hidden');
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
+        this.updateTouchControlsVisibility();
+    }
+
+    renderSkillTree() {
+        const container = document.getElementById('skill-tree-container');
+        if (!container) return;
+
+        const charClass = this.player ? this.player.charClass : (this.selectedClass || 'SUPER_SOLDIER');
+        const trees = (typeof CLASS_SKILL_TREES !== 'undefined') ? CLASS_SKILL_TREES : {};
+        const skills = trees[charClass] || [];
+
+        const pioneerNameElem = document.getElementById('skill-pioneer-name');
+        const pioneerClassElem = document.getElementById('skill-pioneer-class');
+        const skillPointsVal = document.getElementById('skill-points-val');
+
+        if (pioneerNameElem) pioneerNameElem.innerText = this.pioneerName || 'ALU-01';
+        if (pioneerClassElem) pioneerClassElem.innerText = charClass.replace('_', ' ');
+        if (skillPointsVal) skillPointsVal.innerText = `${this.player ? (this.player.skillPoints || 0) : 0}`;
+
+        container.innerHTML = '';
+
+        skills.forEach(skill => {
+            const isUnlocked = this.player ? this.player.hasSkill(skill.id) : false;
+            const prereqMet = !skill.req || (this.player && this.player.hasSkill(skill.req));
+            const canAfford = this.player && (this.player.skillPoints >= skill.cost);
+            const canUnlock = !isUnlocked && prereqMet && canAfford;
+
+            const card = document.createElement('div');
+            card.className = `skill-node-card tier-${skill.tier} ${isUnlocked ? 'unlocked' : (canUnlock ? 'available' : 'locked')}`;
+
+            const prereqSkill = skill.req ? skills.find(s => s.id === skill.req) : null;
+            const reqLabel = prereqSkill ? `Req: ${prereqSkill.name}` : 'Tier 1 Initial';
+
+            card.innerHTML = `
+                <div class="skill-node-header">
+                    <span class="skill-node-icon">${skill.icon || '⚔️'}</span>
+                    <div class="skill-node-title-group">
+                        <span class="skill-node-name">${skill.name}</span>
+                        <span class="skill-node-tier">TIER ${skill.tier} ${skill.passive ? 'PASSIVE' : 'ACTIVE'} • ${reqLabel}</span>
+                    </div>
+                </div>
+                <div class="skill-node-desc">${skill.desc}</div>
+                <div class="skill-node-footer">
+                    <span class="skill-cost-badge">COST: ${skill.cost} SP</span>
+                    ${isUnlocked 
+                        ? '<span class="skill-status-tag mastered">MASTERED ✓</span>'
+                        : (!prereqMet 
+                            ? `<span class="skill-status-tag locked">LOCKED (${prereqSkill ? prereqSkill.name : 'Req'})</span>`
+                            : `<button class="skill-unlock-btn" data-skill-id="${skill.id}" ${canUnlock ? '' : 'disabled'}>${canUnlock ? `UNLOCK (${skill.cost} SP)` : `NEED ${skill.cost} SP`}</button>`
+                          )
+                    }
+                </div>
+            `;
+
+            const btn = card.querySelector('.skill-unlock-btn');
+            if (btn && canUnlock) {
+                btn.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();
+                    if (this.player && this.player.unlockSkill(skill.id)) {
+                        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playSkillUnlocked();
+                        this.renderer.addFloatingText(`MASTERY: ${skill.name}!`, this.player.pos.x, this.player.pos.y - 20, '#00e5ff');
+                        this.renderSkillTree();
+                        this.updateHUD();
+                    }
+                });
+            }
+
+            container.appendChild(card);
+        });
+    }
+
+    toggleMarket() {
+        this.toggleSkillTree();
     }
 
     toggleInventory() {
@@ -2044,6 +2140,19 @@ class GameApp {
                         this.renderer.addFloatingText(`+${coins} ALU`, node.x, node.y - 20, '#ffd54f');
                     }, 200);
                 }
+
+                // Award EXP for resource harvesting
+                let expGain = (node.type === 'FLINT_BOULDER') ? 20 : ((node.type === 'PINE_TREE') ? 15 : 12);
+                if (this.player && typeof this.player.gainExp === 'function') {
+                    const leveled = this.player.gainExp(expGain);
+                    setTimeout(() => {
+                        this.renderer.addFloatingText(`+${expGain} EXP`, node.x, node.y - 26, '#00e5ff');
+                    }, 350);
+                    if (leveled) {
+                        this.renderer.addFloatingText(`LEVEL UP! LVL ${this.player.level}`, this.player.pos.x, this.player.pos.y - 28, '#ffd700');
+                        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playLevelUp();
+                    }
+                }
             } else {
                 if (this.soundEnabled && this.sfxEnabled) {
                     if (node.type === 'PINE_TREE') this.renderer.audio.playSlash();
@@ -2067,7 +2176,15 @@ class GameApp {
                 : { id: chest.itemId, name: chest.itemId, desc: 'Valuable equipment' };
             if (this.player.inventory) this.player.inventory.addItem(itemDef, chest.count || 1);
             if (chest.coins) this.player.coinsCollected += chest.coins;
-            this.showGbaDialogue(`SUPPLY POD UNLOCKED!\n\nObtained: ${chest.count || 1}x ${itemDef.name}\n+${chest.coins || 0} ALU Coins!`, 'ITEM DISCOVERED');
+            if (this.player && typeof this.player.gainExp === 'function') {
+                const leveled = this.player.gainExp(45);
+                this.renderer.addFloatingText('+45 EXP', chest.x, chest.y - 24, '#00e5ff');
+                if (leveled) {
+                    this.renderer.addFloatingText(`LEVEL UP! LVL ${this.player.level}`, this.player.pos.x, this.player.pos.y - 28, '#ffd700');
+                    if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playLevelUp();
+                }
+            }
+            this.showGbaDialogue(`SUPPLY POD UNLOCKED!\n\nObtained: ${chest.count || 1}x ${itemDef.name}\n+${chest.coins || 0} ALU Coins!\n+45 EXP`, 'ITEM DISCOVERED');
             this.updateHUD();
             return;
         }
@@ -2084,7 +2201,15 @@ class GameApp {
                 if (this.player.inventory) this.player.inventory.addItem(itemDef, 1);
                 extraMsg = ` & ${itemDef.name}`;
             }
-            this.showGbaDialogue(`FORAGED CACHE!\n\nGathered: +${sp.coins} ALU Coins${extraMsg}`, 'CACHE DISCOVERED');
+            if (this.player && typeof this.player.gainExp === 'function') {
+                const leveled = this.player.gainExp(20);
+                this.renderer.addFloatingText('+20 EXP', sp.x, sp.y - 20, '#00e5ff');
+                if (leveled) {
+                    this.renderer.addFloatingText(`LEVEL UP! LVL ${this.player.level}`, this.player.pos.x, this.player.pos.y - 28, '#ffd700');
+                    if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playLevelUp();
+                }
+            }
+            this.showGbaDialogue(`FORAGED CACHE!\n\nGathered: +${sp.coins} ALU Coins${extraMsg}\n+20 EXP`, 'CACHE DISCOVERED');
             this.updateHUD();
             return;
         }
@@ -2301,7 +2426,7 @@ class GameApp {
         const questObj = document.getElementById('quest-obj-text');
 
         if (rusticArea && this.currentMap) rusticArea.innerText = this.currentMap.areaName || "CINDERWATCH HAMLET";
-        if (rusticLevel && this.player) rusticLevel.innerText = `${Math.min(99, 1 + Math.floor((this.player.coinsCollected || 0) / 40))}`;
+        if (rusticLevel && this.player) rusticLevel.innerText = `${this.player.level || 1}`;
 
         if (this.player) {
             const hpPct = Math.max(0, Math.min(100, (this.player.hp / this.player.maxHp) * 100));
@@ -2326,13 +2451,14 @@ class GameApp {
         const mins = totalMinutes % 60;
         const hh = (hours < 10 ? '0' : '') + hours;
         const mm = (mins < 10 ? '0' : '') + mins;
-        let periodName = "Day";
-        if (dayProgress >= 0.15 && dayProgress < 0.25) periodName = "Dawn Mist";
-        else if (dayProgress >= 0.25 && dayProgress < 0.40) periodName = "Morning";
-        else if (dayProgress >= 0.40 && dayProgress < 0.50) periodName = "High Noon";
-        else if (dayProgress >= 0.50 && dayProgress < 0.65) periodName = "Golden Hour";
-        else if (dayProgress >= 0.65 && dayProgress < 0.85) periodName = "Starry Night";
-        else periodName = "Midnight";
+        let periodName = "High Noon";
+        if (dayProgress < 0.20) periodName = "Midnight";
+        else if (dayProgress < 0.32) periodName = "Dawn";
+        else if (dayProgress < 0.45) periodName = "Morning";
+        else if (dayProgress < 0.55) periodName = "High Noon";
+        else if (dayProgress < 0.68) periodName = "Afternoon";
+        else if (dayProgress < 0.80) periodName = "Dusk";
+        else periodName = "Night";
 
         if (rusticTimeText) rusticTimeText.innerText = `${hh}:${mm} • ${periodName}`;
 

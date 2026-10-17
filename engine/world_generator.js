@@ -184,7 +184,8 @@ class WorldMap {
     /**
      * Area 1: CINDERWATCH HAMLET (Starting village with cobblestone, houses, river, bridge, NPCs)
      */
-    generateHamlet(prng) {
+    generateHamlet(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
         // Base terrain: grassy plains
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
@@ -197,9 +198,13 @@ class WorldMap {
             }
         }
 
-        // River flowing vertically through the eastern district (x = 48 to 51)
+        // River flowing vertically through eastern district with seed-based curvature
+        const riverBaseX = 48 + (prng.range(0, 5) - 2); // 46 to 50
+        const riverFreq = 0.13 + prng.range(0, 3) * 0.02;
+        const riverAmp = 1.2 + prng.range(0, 3) * 0.4;
+        const riverPhase = (prng.range(0, 20) / 10);
         for (let y = 0; y < this.height; y++) {
-            const rx = 48 + Math.floor(Math.sin(y * 0.15) * 1.5);
+            const rx = Math.floor(riverBaseX + Math.sin(y * riverFreq + riverPhase) * riverAmp);
             this.set(rx - 1, y, TILE.WATER_FOAM);
             this.set(rx, y, TILE.DEEP_WATER);
             this.set(rx + 1, y, TILE.DEEP_WATER);
@@ -215,7 +220,8 @@ class WorldMap {
 
         // Wooden Bridge spanning the river at y = 26 to 28
         for (let by = 26; by <= 28; by++) {
-            for (let bx = 46; bx <= 53; bx++) {
+            const rx = Math.floor(riverBaseX + Math.sin(by * riverFreq + riverPhase) * riverAmp);
+            for (let bx = rx - 2; bx <= rx + 4; bx++) {
                 this.set(bx, by, TILE.WOODEN_BRIDGE);
             }
         }
@@ -236,15 +242,14 @@ class WorldMap {
         }
 
         // East Road leading across bridge
-        for (let x = 32; x < 46; x++) {
-            this.set(x, 26, TILE.PATH_COBBLE);
-            this.set(x, 27, TILE.PATH_COBBLE);
-            this.set(x, 28, TILE.PATH_COBBLE);
-        }
-        for (let x = 54; x < 62; x++) {
-            this.set(x, 26, TILE.PATH_COBBLE);
-            this.set(x, 27, TILE.PATH_COBBLE);
-            this.set(x, 28, TILE.PATH_COBBLE);
+        for (let by = 26; by <= 28; by++) {
+            const rx = Math.floor(riverBaseX + Math.sin(by * riverFreq + riverPhase) * riverAmp);
+            for (let x = 32; x < rx - 2; x++) {
+                this.set(x, by, TILE.PATH_COBBLE);
+            }
+            for (let x = rx + 5; x < 62; x++) {
+                this.set(x, by, TILE.PATH_COBBLE);
+            }
         }
 
         // South Road leading to Southern Gates
@@ -485,7 +490,8 @@ class WorldMap {
     /**
      * Area 2: WHISPERING WOODS (Large 80x80 wilderness with winding rivers, bridges, wildlife, and cave mouth)
      */
-    generateWoods(prng) {
+    generateWoods(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
         // Multi-octave Perlin-style value noise elevation
         const elevation = new Float32Array(this.width * this.height);
         for (let y = 0; y < this.height; y++) {
@@ -577,6 +583,23 @@ class WorldMap {
         // Spawn point when entering from Hamlet
         this.spawnPoint = { x: southX * 16 + 8, y: (southY - 4) * 16 + 8 };
 
+        // Ancient Runic Shrine / Moonlit Stone Circle (Sacred Grove Landmark)
+        const shrineX = 18 + (prng.range(0, 4) - 2);
+        const shrineY = 24 + (prng.range(0, 4) - 2);
+        for (let dy = -3; dy <= 3; dy++) {
+            for (let dx = -3; dx <= 3; dx++) {
+                if (dx * dx + dy * dy <= 9) {
+                    this.set(shrineX + dx, shrineY + dy, TILE.PATH_COBBLE);
+                }
+            }
+        }
+        // 4 Runic Pillars at ordinal corners
+        this.set(shrineX - 2, shrineY - 2, TILE.ANCIENT_TERMINAL);
+        this.set(shrineX + 2, shrineY - 2, TILE.ANCIENT_TERMINAL);
+        this.set(shrineX - 2, shrineY + 2, TILE.ANCIENT_TERMINAL);
+        this.set(shrineX + 2, shrineY + 2, TILE.ANCIENT_TERMINAL);
+        this.set(shrineX, shrineY, TILE.RUNIC_TOTEM);
+
         // Ancient cracked sci-fi terminal in Whispering Woods
         const termX = caveX + 4;
         const termY = caveY + 2;
@@ -632,19 +655,25 @@ class WorldMap {
         }
 
         // Supply Pods & Sparkles in the Woods
-        for (let i = 0; i < 8; i++) {
-            const cx = prng.range(8, this.width - 8);
-            const cy = prng.range(8, this.height - 8);
-            if (this.get(cx, cy) === TILE.GROUND) {
-                this.chests.push({
-                    id: `woods_pod_${i}`,
-                    x: cx * 16 + 8,
-                    y: cy * 16 + 8,
-                    opened: false,
-                    itemId: (i === 0 ? 'SUB_CORE_KEYCARD' : 'NANITE_REPAIR_KIT'),
-                    count: 1,
-                    coins: 20 + prng.range(5, 25)
-                });
+        let chestPlaced = 0;
+        for (let i = 0; i < 6; i++) {
+            for (let attempt = 0; attempt < 40; attempt++) {
+                const cx = prng.range(8, this.width - 8);
+                const cy = prng.range(8, this.height - 8);
+                const tile = this.get(cx, cy);
+                if (tile === TILE.GROUND || tile === TILE.FOIL_GRASS || tile === TILE.DIRT) {
+                    this.chests.push({
+                        id: `woods_pod_${chestPlaced}`,
+                        x: cx * 16 + 8,
+                        y: cy * 16 + 8,
+                        opened: false,
+                        itemId: (chestPlaced === 0 ? 'SUB_CORE_KEYCARD' : 'NANITE_REPAIR_KIT'),
+                        count: 1,
+                        coins: 20 + prng.range(5, 25)
+                    });
+                    chestPlaced++;
+                    break;
+                }
             }
         }
 
@@ -671,7 +700,8 @@ class WorldMap {
     /**
      * Area 3: SUNKEN GROTTO (Subterranean cavern with waterfalls, glowing mushrooms, crystals, and descent to core)
      */
-    generateGrotto(prng) {
+    generateGrotto(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
         // Enclosed cavern
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
@@ -713,14 +743,23 @@ class WorldMap {
             }
         }
 
-        // Bioluminescent glowing mushrooms throughout the cavern
-        for (let i = 0; i < 30; i++) {
-            const mx = prng.range(6, this.width - 6);
-            const my = prng.range(6, this.height - 6);
-            if (this.get(mx, my) === TILE.GROUND) {
-                this.set(mx, my, TILE.MUSHROOM_GLOW);
+        // Luminescent Crystal Chasm (Gleaming Cavern Sanctuary)
+        const chasmX = 48 + (prng.range(0, 4) - 2);
+        const chasmY = 46 + (prng.range(0, 4) - 2);
+        for (let dy = -3; dy <= 3; dy++) {
+            for (let dx = -3; dx <= 3; dx++) {
+                if (dx * dx + dy * dy <= 8) {
+                    this.set(chasmX + dx, chasmY + dy, TILE.MUSHROOM_GLOW);
+                }
             }
         }
+        this.set(chasmX, chasmY, TILE.ANCIENT_TERMINAL);
+        this.terminals.push({
+            x: chasmX * 16 + 8,
+            y: chasmY * 16 + 8,
+            name: "Terminal 09-C: Subterranean Geode Relay",
+            log: "STATUS: Resonant crystal lattice operating at 104% harmonic capacity. Deep seismic tremors detected below."
+        });
 
         // North Ladder leading back to Whispering Woods
         this.set(30, 6, TILE.PORTAL_EXIT);
