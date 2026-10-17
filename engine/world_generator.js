@@ -45,6 +45,8 @@ class WorldMap {
         this.enemies = [];
         this.terminals = [];
         this.interactiveGrass = [];
+        this.chests = [];
+        this.sparkles = [];
 
         this.generate();
     }
@@ -81,7 +83,7 @@ class WorldMap {
         }
     }
 
-    generateSurface(prng) {
+    generateSurface(prng = new AluPrng(this.seed)) {
         // 1. Simplex/Perlin-style Cellular heightmap for Land vs Water & Cliffs
         const elevation = new Float32Array(this.width * this.height);
         
@@ -166,9 +168,50 @@ class WorldMap {
                 });
             }
         }
+
+        // 7. Spawn Quantum Supply Pods (Chests) across overworld
+        const podItems = ['SUB_CORE_KEYCARD', 'NANITE_REPAIR_KIT', 'OVERCLOCK_CELL', 'NANITE_REPAIR_KIT'];
+        for (let i = 0; i < 4; i++) {
+            for (let attempt = 0; attempt < 30; attempt++) {
+                const px = prng.range(8, this.width - 8);
+                const py = prng.range(8, this.height - 8);
+                if (this.get(px, py) === TILE.GROUND && !this.isSolid(px, py)) {
+                    this.chests.push({
+                        id: `surface_pod_${i}`,
+                        x: px * 16 + 8,
+                        y: py * 16 + 8,
+                        opened: false,
+                        itemId: podItems[i % podItems.length],
+                        count: (podItems[i % podItems.length] === 'SUB_CORE_KEYCARD' ? 1 : 2),
+                        coins: 10 + prng.range(5, 15)
+                    });
+                    break;
+                }
+            }
+        }
+
+        // 8. Spawn Glittering Foraging Sparkles in grass and nooks
+        for (let i = 0; i < 7; i++) {
+            for (let attempt = 0; attempt < 25; attempt++) {
+                const sx = prng.range(6, this.width - 6);
+                const sy = prng.range(6, this.height - 6);
+                const tile = this.get(sx, sy);
+                if (tile === TILE.FOIL_GRASS || tile === TILE.GROUND) {
+                    this.sparkles.push({
+                        id: `sparkle_${i}`,
+                        x: sx * 16 + 8,
+                        y: sy * 16 + 8,
+                        collected: false,
+                        coins: 6 + prng.range(2, 8),
+                        itemId: (i === 2 ? 'NANITE_REPAIR_KIT' : null)
+                    });
+                    break;
+                }
+            }
+        }
     }
 
-    generateSubCore(prng) {
+    generateSubCore(prng = new AluPrng(this.seed + 0x9999)) {
         // Deep Sub-Bedrock Dungeon (Binary Space Partitioning & Vaults)
         // Initialize all as solid rock
         for (let i = 0; i < this.width * this.height; i++) {
@@ -250,6 +293,31 @@ class WorldMap {
             isBoss: true,
             state: 'PATROL'
         });
+
+        // Spawn High-Tech Vault Crates (Chests) in dungeon rooms
+        const subItems = ['DYSON_SEED_RELIC', 'OVERCLOCK_CELL', 'NANITE_REPAIR_KIT'];
+        for (let i = 0; i < rooms.length; i++) {
+            if (i === 0) continue; // Skip spawn room
+            const rm = rooms[i];
+            this.chests.push({
+                id: `sub_crate_${i}`,
+                x: (rm.x + 1) * 16 + 8,
+                y: (rm.y + 1) * 16 + 8,
+                opened: false,
+                itemId: subItems[i % subItems.length],
+                count: (subItems[i % subItems.length] === 'DYSON_SEED_RELIC' ? 1 : 2),
+                coins: 30 + prng.range(10, 30)
+            });
+            // Glittering data cache sparkle in room
+            this.sparkles.push({
+                id: `sub_sparkle_${i}`,
+                x: (rm.x + rm.w - 2) * 16 + 8,
+                y: (rm.y + rm.h - 2) * 16 + 8,
+                collected: false,
+                coins: 15 + prng.range(5, 15),
+                itemId: (i === 1 ? 'OVERCLOCK_CELL' : null)
+            });
+        }
     }
 
     /**

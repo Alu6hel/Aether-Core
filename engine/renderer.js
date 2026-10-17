@@ -56,13 +56,18 @@ class RetroRenderer {
                 const screenX = x * 16 - camX;
                 const screenY = y * 16 - camY;
 
-                this.drawTile(tile, screenX, screenY, pal, x, y);
+                this.drawTile(tile, screenX, screenY, pal, x, y, map);
             }
         }
+
+        // Render interactive chests and foragable sparkles
+        if (map.chests) this.renderChests(map.chests, camX, camY);
+        if (map.sparkles) this.renderSparkles(map.sparkles, camX, camY);
     }
 
-    drawTile(tile, sx, sy, pal, tx, ty) {
+    drawTile(tile, sx, sy, pal, tx, ty, map) {
         const ctx = this.ctx;
+        const isSubCore = map && map.layer === 'SUB_CORE';
 
         switch (tile) {
             case 0: // VOID
@@ -70,207 +75,335 @@ class RetroRenderer {
                 ctx.fillRect(sx, sy, 16, 16);
                 break;
 
-            case 1: { // DEEP_WATER (Authentic GBA Diagonal Wavy Ocean - Matching Image 2)
-                ctx.fillStyle = '#325bbf';
+            case 1: { // DEEP_WATER (Authentic GBA Wavy Ocean)
+                ctx.fillStyle = '#254ba8';
                 ctx.fillRect(sx, sy, 16, 16);
 
-                // Animated diagonal wave bands
-                const waveOffset = (sx + sy * 0.8 - this.waterAnimTimer * 20) % 18;
-                const normWave = (waveOffset + 18) % 18;
+                // Deep water gradient tone
+                ctx.fillStyle = '#1c3b88';
+                ctx.fillRect(sx, sy + 10, 16, 6);
 
-                ctx.fillStyle = '#4a75dc';
-                if (normWave < 6) {
-                    ctx.fillRect(sx, sy + 2, 16, 4);
-                } else if (normWave < 12) {
-                    ctx.fillRect(sx, sy + 8, 16, 4);
-                }
+                // Animated wavy water highlights (sinusoidal curves)
+                ctx.fillStyle = '#3f72e5';
+                const waveShift1 = Math.floor(Math.sin(this.waterAnimTimer * 2.5 + tx * 0.7 + ty * 0.5) * 2.5);
+                ctx.fillRect(sx, sy + 3 + waveShift1, 16, 2);
+                ctx.fillRect(sx + 3, sy + 2 + waveShift1, 10, 1);
 
-                // Sparkling wave crests
-                ctx.fillStyle = '#9bc0ff';
-                const sparkle = Math.floor((this.waterAnimTimer * 3 + tx * 2 + ty * 3) % 4);
-                if (sparkle === 0) {
-                    ctx.fillRect(sx + 3, sy + 4, 3, 1);
-                    ctx.fillRect(sx + 10, sy + 11, 4, 1);
-                } else if (sparkle === 2) {
-                    ctx.fillRect(sx + 7, sy + 5, 4, 1);
-                    ctx.fillRect(sx + 2, sy + 12, 3, 1);
+                ctx.fillStyle = '#5c8df5';
+                const waveShift2 = Math.floor(Math.cos(this.waterAnimTimer * 2.0 + tx * 0.5 + ty * 0.8) * 2.0);
+                ctx.fillRect(sx + 2, sy + 8 + waveShift2, 12, 2);
+
+                // Glistening ocean wave crests
+                ctx.fillStyle = '#d4e4ff';
+                const crestTick = Math.floor((this.waterAnimTimer * 3.5 + tx * 3 + ty * 5) % 6);
+                if (crestTick === 0) {
+                    ctx.fillRect(sx + 4, sy + 4 + waveShift1, 3, 1);
+                    ctx.fillRect(sx + 11, sy + 9 + waveShift2, 2, 1);
+                } else if (crestTick === 3) {
+                    ctx.fillRect(sx + 8, sy + 3 + waveShift1, 4, 1);
                 }
                 break;
             }
 
-            case 2: { // WATER_FOAM (Shoreline with white surf crests - Matching Image 2)
-                ctx.fillStyle = '#325bbf';
+            case 2: { // WATER_FOAM (Shoreline with organic curved froth & sand pebbles)
+                ctx.fillStyle = '#254ba8';
                 ctx.fillRect(sx, sy, 16, 16);
 
-                // Shallow coastal turquoise band
-                ctx.fillStyle = '#4ea5d9';
-                ctx.fillRect(sx, sy, 16, 8);
+                // Coastal turquoise shelf
+                ctx.fillStyle = '#3884c7';
+                ctx.fillRect(sx, sy, 16, 10);
+                ctx.fillStyle = '#4fa9e2';
+                ctx.fillRect(sx, sy, 16, 5);
 
-                // Foamy white surf fringe with wave crests
+                // Organic animated foam crests (pulsing surge)
+                const surge = Math.floor(Math.sin(this.waterAnimTimer * 3.0 + tx * 1.2) * 2);
                 ctx.fillStyle = '#ffffff';
-                const foamShift = Math.floor(Math.sin(this.waterAnimTimer * 3 + tx) * 2);
-                ctx.fillRect(sx, sy + 6 + foamShift, 16, 3);
-                ctx.fillRect(sx + 2, sy + 4 + foamShift, 4, 2);
-                ctx.fillRect(sx + 10, sy + 5 + foamShift, 5, 2);
+                ctx.fillRect(sx, sy + 4 + surge, 16, 3);
+                // Foam bubbles with natural rounded tips
+                ctx.fillRect(sx + 1, sy + 2 + surge, 4, 3);
+                ctx.fillRect(sx + 7, sy + 3 + surge, 5, 2);
+                ctx.fillRect(sx + 12, sy + 2 + surge, 3, 3);
 
-                // Foam bubbles
-                ctx.fillStyle = '#e0f2fe';
-                ctx.fillRect(sx + 1, sy + 10, 2, 2);
-                ctx.fillRect(sx + 8, sy + 11, 2, 2);
+                // Translucent froth bubbles
+                ctx.fillStyle = '#e1f5fe';
+                ctx.fillRect(sx + 2, sy + 8 + surge, 3, 2);
+                ctx.fillRect(sx + 9, sy + 9 + surge, 4, 2);
+
+                // Sandy shoreline fringe pebbles at bottom
+                ctx.fillStyle = '#d7ccc8';
+                if ((tx * 7 + ty * 11) % 3 === 0) ctx.fillRect(sx + 2, sy + 14, 2, 2);
+                if ((tx * 13 + ty * 5) % 3 === 0) ctx.fillRect(sx + 10, sy + 13, 2, 2);
                 break;
             }
 
-            case 3: { // GROUND (Lush terrain with soil & moss - Matching Image 2)
-                ctx.fillStyle = pal[2] || '#43a047';
-                ctx.fillRect(sx, sy, 16, 16);
+            case 3: { // GROUND (Lush Overworld Grass or High-Tech Basalt Sub-Core)
+                if (isSubCore) {
+                    // High-tech subterranean metallic floor plate
+                    ctx.fillStyle = '#1c2430';
+                    ctx.fillRect(sx, sy, 16, 16);
 
-                // Subtle ground texture & moss tufts
-                ctx.fillStyle = pal[1] || '#2e7d32';
-                if ((tx * 7 + ty * 13) % 5 === 0) {
-                    ctx.fillRect(sx + 3, sy + 4, 2, 2);
-                    ctx.fillRect(sx + 4, sy + 3, 1, 1);
-                }
-                if ((tx * 11 + ty * 3) % 7 === 0) {
-                    ctx.fillRect(sx + 9, sy + 10, 2, 2);
-                    ctx.fillRect(sx + 11, sy + 11, 1, 1);
-                }
+                    // Diamond-tread / beveled tile seams
+                    ctx.fillStyle = '#283445';
+                    ctx.fillRect(sx + 1, sy + 1, 14, 14);
+                    ctx.fillStyle = '#161d26';
+                    ctx.fillRect(sx + 1, sy + 15, 14, 1);
+                    ctx.fillRect(sx + 15, sy + 1, 1, 15);
 
-                // Tiny decorative wildflowers
-                if ((tx * 17 + ty * 19) % 23 === 0) {
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(sx + 7, sy + 6, 2, 2);
-                    ctx.fillStyle = '#ffd54f';
-                    ctx.fillRect(sx + 7, sy + 7, 1, 1);
+                    // Corner hex bolts
+                    ctx.fillStyle = '#455a64';
+                    ctx.fillRect(sx + 2, sy + 2, 2, 2);
+                    ctx.fillRect(sx + 12, sy + 2, 2, 2);
+                    ctx.fillRect(sx + 2, sy + 12, 2, 2);
+                    ctx.fillRect(sx + 12, sy + 12, 2, 2);
+
+                    // Circuitry traces
+                    if ((tx + ty) % 3 === 0) {
+                        ctx.fillStyle = 'rgba(0, 229, 255, 0.25)';
+                        ctx.fillRect(sx + 7, sy + 3, 2, 10);
+                        ctx.fillRect(sx + 3, sy + 7, 10, 2);
+                    }
+                } else {
+                    // Lush GBA multi-tone green turf
+                    ctx.fillStyle = '#43a047';
+                    ctx.fillRect(sx, sy, 16, 16);
+
+                    // Micro-dithered shading texture
+                    ctx.fillStyle = '#388e3c';
+                    for (let py = 0; py < 16; py += 4) {
+                        for (let px = 0; px < 16; px += 4) {
+                            if ((px + py + tx * 4 + ty * 4) % 8 === 0) {
+                                ctx.fillRect(sx + px, sy + py, 2, 2);
+                            }
+                        }
+                    }
+
+                    // 3-Blade clover clusters
+                    if ((tx * 7 + ty * 13) % 4 === 0) {
+                        ctx.fillStyle = '#2e7d32';
+                        ctx.fillRect(sx + 4, sy + 6, 2, 3);
+                        ctx.fillRect(sx + 3, sy + 5, 2, 2);
+                        ctx.fillRect(sx + 6, sy + 5, 2, 2);
+                        ctx.fillStyle = '#66bb6a';
+                        ctx.fillRect(sx + 4, sy + 4, 2, 2);
+                    }
+                    if ((tx * 11 + ty * 5) % 5 === 0) {
+                        ctx.fillStyle = '#2e7d32';
+                        ctx.fillRect(sx + 10, sy + 11, 2, 3);
+                        ctx.fillRect(sx + 9, sy + 10, 2, 2);
+                        ctx.fillRect(sx + 12, sy + 10, 2, 2);
+                        ctx.fillStyle = '#81c784';
+                        ctx.fillRect(sx + 10, sy + 9, 2, 2);
+                    }
+
+                    // Earth speckles & tiny wildflowers
+                    if ((tx * 17 + ty * 23) % 7 === 0) {
+                        // Wildflower
+                        const flowerColors = ['#ffffff', '#ffd54f', '#ff80ab', '#80d8ff'];
+                        const fCol = flowerColors[(tx + ty) % flowerColors.length];
+                        ctx.fillStyle = fCol;
+                        ctx.fillRect(sx + 6, sy + 9, 3, 3);
+                        ctx.fillStyle = '#ffd600';
+                        ctx.fillRect(sx + 7, sy + 10, 1, 1);
+                    }
                 }
                 break;
             }
 
-            case 4: { // FOIL_GRASS (Tall swaying alien/lush grass)
-                ctx.fillStyle = pal[4] || '#66bb6a';
+            case 4: { // FOIL_GRASS (Authentic Pokémon Emerald Style Tall Grass)
+                // Base turf under grass
+                ctx.fillStyle = '#388e3c';
                 ctx.fillRect(sx, sy, 16, 16);
 
-                // Dark grass blades
-                ctx.fillStyle = pal[3] || '#2e7d32';
-                ctx.fillRect(sx + 2, sy + 4, 2, 7);
-                ctx.fillRect(sx + 6, sy + 2, 2, 10);
-                ctx.fillRect(sx + 10, sy + 5, 2, 7);
-                ctx.fillRect(sx + 13, sy + 3, 2, 9);
+                // Deep root shadows
+                ctx.fillStyle = '#1b5e20';
+                ctx.fillRect(sx + 1, sy + 9, 14, 7);
 
-                // Highlight tips
+                // Animated gentle wind sway for blade tips
+                const wind = Math.floor(Math.sin(this.waterAnimTimer * 2.5 + tx * 1.5) * 1.5);
+
+                // Blade cluster 1 (Left)
+                ctx.fillStyle = '#2e7d32';
+                ctx.fillRect(sx + 2, sy + 6, 3, 8);
+                ctx.fillStyle = '#43a047';
+                ctx.fillRect(sx + 2 + wind, sy + 3, 2, 5);
                 ctx.fillStyle = '#a5d6a7';
-                ctx.fillRect(sx + 2, sy + 4, 2, 2);
-                ctx.fillRect(sx + 6, sy + 2, 2, 2);
-                ctx.fillRect(sx + 10, sy + 5, 2, 2);
-                ctx.fillRect(sx + 13, sy + 3, 2, 2);
+                ctx.fillRect(sx + 2 + wind, sy + 2, 2, 2);
+
+                // Blade cluster 2 (Center)
+                ctx.fillStyle = '#2e7d32';
+                ctx.fillRect(sx + 6, sy + 4, 4, 10);
+                ctx.fillStyle = '#4caf50';
+                ctx.fillRect(sx + 7 + wind, sy + 1, 3, 6);
+                ctx.fillStyle = '#c8e6c9';
+                ctx.fillRect(sx + 7 + wind, sy, 2, 2);
+
+                // Blade cluster 3 (Right)
+                ctx.fillStyle = '#2e7d32';
+                ctx.fillRect(sx + 11, sy + 5, 3, 9);
+                ctx.fillStyle = '#43a047';
+                ctx.fillRect(sx + 12 + wind, sy + 2, 2, 5);
+                ctx.fillStyle = '#a5d6a7';
+                ctx.fillRect(sx + 12 + wind, sy + 1, 2, 2);
                 break;
             }
 
-            case 5: { // CLIFF_LOW (Layered Rocky Cliff with Shaded Ledges - Matching Image 2)
-                // Cliff base rock
-                ctx.fillStyle = '#5d473a';
-                ctx.fillRect(sx, sy, 16, 16);
+            case 5: { // CLIFF_LOW (Stratified Rock Wall or Sub-Core Blast Plate)
+                if (isSubCore) {
+                    // Industrial blast plate wall
+                    ctx.fillStyle = '#18202a';
+                    ctx.fillRect(sx, sy, 16, 16);
+                    ctx.fillStyle = '#2c394b';
+                    ctx.fillRect(sx, sy, 16, 3); // Top bevel
+                    ctx.fillStyle = '#0f141b';
+                    ctx.fillRect(sx, sy + 14, 16, 2); // Base shadow
+                    ctx.fillStyle = '#37474f';
+                    ctx.fillRect(sx + 4, sy + 4, 8, 8);
+                    ctx.fillStyle = '#00e5ff';
+                    ctx.fillRect(sx + 7, sy + 7, 2, 2); // Indicator diode
+                } else {
+                    // Natural stratified rock crag with highlight rim
+                    ctx.fillStyle = '#544036';
+                    ctx.fillRect(sx, sy, 16, 16);
 
-                // Top highlighted ledge rim
-                ctx.fillStyle = '#8d705d';
-                ctx.fillRect(sx, sy, 16, 4);
-                ctx.fillStyle = '#a88a75';
-                ctx.fillRect(sx + 1, sy + 1, 14, 1);
+                    // Top highlighted ledge shelf
+                    ctx.fillStyle = '#8d705d';
+                    ctx.fillRect(sx, sy, 16, 4);
+                    ctx.fillStyle = '#bcaaa4';
+                    ctx.fillRect(sx + 1, sy + 1, 14, 1);
 
-                // Vertical rock stratification cracks
-                ctx.fillStyle = '#3e2e25';
-                ctx.fillRect(sx + 4, sy + 4, 2, 8);
-                ctx.fillRect(sx + 11, sy + 6, 2, 7);
-                ctx.fillRect(sx, sy + 13, 16, 3); // Base ground shadow
+                    // Natural vertical fissures & stone stratification
+                    ctx.fillStyle = '#372820';
+                    ctx.fillRect(sx + 4, sy + 4, 2, 9);
+                    ctx.fillRect(sx + 11, sy + 5, 2, 8);
+                    ctx.fillRect(sx + 5, sy + 8, 4, 2); // Horizontal crack
+
+                    // Base shadow cast onto ground
+                    ctx.fillStyle = '#241a15';
+                    ctx.fillRect(sx, sy + 14, 16, 2);
+                }
                 break;
             }
 
-            case 6: { // CLIFF_HIGH (Upper Plateau & Elevated Rock Shelf - Matching Image 2)
-                ctx.fillStyle = '#795d4d';
-                ctx.fillRect(sx, sy, 16, 16);
+            case 6: { // CLIFF_HIGH (Upper Plateau Rim or Reinforced Vault Wall)
+                if (isSubCore) {
+                    ctx.fillStyle = '#222b38';
+                    ctx.fillRect(sx, sy, 16, 16);
+                    ctx.fillStyle = '#3a4a5e';
+                    ctx.fillRect(sx, sy, 16, 3);
+                    ctx.fillStyle = '#111720';
+                    ctx.fillRect(sx, sy + 13, 16, 3);
+                    ctx.fillStyle = '#ff7043';
+                    ctx.fillRect(sx + 6, sy + 6, 4, 4); // Orange hazard core
+                } else {
+                    ctx.fillStyle = '#6d5446';
+                    ctx.fillRect(sx, sy, 16, 16);
 
-                // Upper plateau rim highlight
-                ctx.fillStyle = '#a18370';
-                ctx.fillRect(sx, sy, 16, 3);
-                ctx.fillStyle = '#bfa593';
-                ctx.fillRect(sx, sy, 16, 1);
+                    // Sun-drenched rocky plateau rim
+                    ctx.fillStyle = '#a18370';
+                    ctx.fillRect(sx, sy, 16, 4);
+                    ctx.fillStyle = '#d7ccc8';
+                    ctx.fillRect(sx, sy + 1, 16, 1);
 
-                // Rock face crevices & shadow
-                ctx.fillStyle = '#4a372d';
-                ctx.fillRect(sx + 2, sy + 5, 3, 7);
-                ctx.fillRect(sx + 9, sy + 4, 3, 9);
-                ctx.fillRect(sx, sy + 14, 16, 2);
+                    // Deep fissures & stone grain
+                    ctx.fillStyle = '#423128';
+                    ctx.fillRect(sx + 2, sy + 5, 3, 8);
+                    ctx.fillRect(sx + 9, sy + 4, 3, 9);
+                    ctx.fillRect(sx, sy + 14, 16, 2);
+                }
                 break;
             }
 
-            case 7: { // CAVE_ENTRANCE (Rounded dark cavern mouth - Matching Image 2)
+            case 7: { // CAVE_ENTRANCE (Deep arched cavern mouth)
                 // Surrounding rock face
-                ctx.fillStyle = '#5d473a';
+                ctx.fillStyle = '#544036';
                 ctx.fillRect(sx, sy, 16, 16);
-                ctx.fillStyle = '#795d4d';
+                ctx.fillStyle = '#8d705d';
                 ctx.fillRect(sx, sy, 16, 3);
 
-                // Dark arched cavern tunnel opening
+                // Dark arched cavern tunnel opening with smooth stones
                 ctx.fillStyle = '#080810';
                 ctx.beginPath();
                 ctx.arc(sx + 8, sy + 12, 6, Math.PI, 0, false);
                 ctx.fill();
                 ctx.fillRect(sx + 2, sy + 11, 12, 5);
 
-                // Inner gradient darkness
+                // Deepest abyss inside
                 ctx.fillStyle = '#000000';
                 ctx.beginPath();
                 ctx.arc(sx + 8, sy + 12, 4, Math.PI, 0, false);
                 ctx.fill();
                 ctx.fillRect(sx + 4, sy + 12, 8, 4);
 
-                // Stone threshold stones
-                ctx.fillStyle = '#8d705d';
-                ctx.fillRect(sx + 2, sy + 15, 12, 1);
+                // Carved stone threshold
+                ctx.fillStyle = '#a88a75';
+                ctx.fillRect(sx + 1, sy + 15, 14, 1);
+                ctx.fillStyle = '#d7ccc8';
+                ctx.fillRect(sx + 3, sy + 15, 2, 1);
+                ctx.fillRect(sx + 11, sy + 15, 2, 1);
                 break;
             }
 
-            case 8: { // SCIFI_CONDUIT (Hidden energy pipeline in bedrock)
-                ctx.fillStyle = '#263238';
+            case 8: { // SCIFI_CONDUIT (Glowing neon energy pipeline in bedrock)
+                ctx.fillStyle = '#1c2430';
                 ctx.fillRect(sx, sy, 16, 16);
+
+                // Heavy conduit trench
+                ctx.fillStyle = '#0d131a';
+                ctx.fillRect(sx + 4, sy, 8, 16);
+
+                // Vibrant cyan neon plasma tube
                 ctx.fillStyle = '#00e5ff';
                 ctx.fillRect(sx + 6, sy, 4, 16);
+
+                // Pulsing electric charge
+                const pulse = Math.floor((this.waterAnimTimer * 12 + ty * 2) % 16);
                 ctx.fillStyle = '#ffffff';
-                const pulse = Math.floor((this.waterAnimTimer * 8 + ty) % 16);
                 ctx.fillRect(sx + 7, sy + pulse, 2, 4);
                 break;
             }
 
-            case 9: { // ANCIENT_TERMINAL / STEPPED ALTAR (Matching Image 3)
-                // Dungeon pavement floor
-                ctx.fillStyle = '#37474f';
+            case 9: { // ANCIENT_TERMINAL / STEPPED ALTAR (With levitating quantum core)
+                // Base pavement
+                ctx.fillStyle = '#263238';
                 ctx.fillRect(sx, sy, 16, 16);
 
-                // Stepped stone tier 1 (Base altar)
-                ctx.fillStyle = '#546e7a';
+                // Stepped altar tier 1 (Outer stone step)
+                ctx.fillStyle = '#455a64';
                 ctx.fillRect(sx + 1, sy + 2, 14, 12);
-                ctx.fillStyle = '#78909c';
+                ctx.fillStyle = '#607d8b';
                 ctx.fillRect(sx + 2, sy + 3, 12, 2);
 
-                // Stepped stone tier 2 (Top altar pedestal)
-                ctx.fillStyle = '#90a4ae';
-                ctx.fillRect(sx + 3, sy + 5, 10, 7);
-                ctx.fillStyle = '#cfd8dc';
+                // Stepped altar tier 2 (Pedestal)
+                ctx.fillStyle = '#78909c';
+                ctx.fillRect(sx + 3, sy + 5, 10, 8);
+                ctx.fillStyle = '#b0bec5';
                 ctx.fillRect(sx + 4, sy + 6, 8, 2);
 
-                // Cyan quantum core / rune glow
+                // Levitating glowing quantum core artifact with bob
+                const coreBob = Math.floor(Math.sin(this.waterAnimTimer * 4.0) * 2);
                 ctx.fillStyle = '#00e5ff';
-                ctx.fillRect(sx + 6, sy + 8, 4, 3);
+                ctx.fillRect(sx + 6, sy + 7 + coreBob, 4, 4);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx + 7, sy + 8 + coreBob, 2, 2);
                 break;
             }
 
-            case 10: { // SECRET_SOIL (Arable 3x3 plot for Farmer)
-                ctx.fillStyle = '#4e342e';
+            case 10: { // SECRET_SOIL (Arable 3x3 plot for Farmer with cosmic saplings)
+                ctx.fillStyle = '#3e2723';
                 ctx.fillRect(sx, sy, 16, 16);
-                ctx.fillStyle = '#6d4c41';
-                ctx.fillRect(sx + 2, sy + 3, 12, 3);
-                ctx.fillRect(sx + 2, sy + 9, 12, 3);
+
+                // Rich dark fertile soil furrows
+                ctx.fillStyle = '#4e342e';
+                ctx.fillRect(sx + 1, sy + 2, 14, 3);
+                ctx.fillRect(sx + 1, sy + 7, 14, 3);
+                ctx.fillRect(sx + 1, sy + 12, 14, 3);
+
+                // Glowing reality sapling with gentle pulse
                 ctx.fillStyle = '#76ff03';
-                ctx.fillRect(sx + 7, sy + 4, 2, 2);
+                ctx.fillRect(sx + 7, sy + 3, 2, 2);
+                ctx.fillRect(sx + 6, sy + 8, 3, 2);
+                ctx.fillStyle = '#ffd700';
+                ctx.fillRect(sx + 7, sy + 7, 1, 1);
                 break;
             }
         }
@@ -646,6 +779,20 @@ class RetroRenderer {
             }
         }
 
+        // Draw Dash Afterimages (Ghost trail)
+        if (char.dashTrail && char.dashTrail.length > 0) {
+            for (const tr of char.dashTrail) {
+                if (tr.alpha <= 0.05) continue;
+                ctx.save();
+                ctx.globalAlpha = tr.alpha * 0.55;
+                const tx = Math.round(tr.x) - camX;
+                const ty = Math.round(tr.y) - camY;
+                ctx.fillStyle = (tr.charClass === 'SUPER_SOLDIER' ? '#ff6d00' : (tr.charClass === 'TECHNO_MAGE' ? '#00e5ff' : '#76ff03'));
+                ctx.fillRect(tx - 6, ty - 8, 12, 16);
+                ctx.restore();
+            }
+        }
+
         // Parry Hard-Light Shield Effect
         if (char.isParryActive) {
             ctx.strokeStyle = '#00ffff';
@@ -655,18 +802,140 @@ class RetroRenderer {
             ctx.stroke();
         }
 
+        // Attack Swings & Kinetic Weapon FX
+        if (char.attackSwing) {
+            const sw = char.attackSwing;
+            const progress = 1.0 - (sw.timer / sw.maxTimer);
+            if (sw.type === 'WARRIOR_SLASH') {
+                ctx.save();
+                ctx.translate(sx, sy);
+                ctx.rotate(sw.angle);
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                const startAngle = -sw.arc / 2 + progress * 0.2;
+                const endAngle = sw.arc / 2;
+                ctx.arc(0, 0, sw.range, startAngle, endAngle);
+                ctx.stroke();
+
+                ctx.strokeStyle = '#ff9100';
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.arc(0, 0, sw.range - 2, startAngle + 0.2, endAngle);
+                ctx.stroke();
+                ctx.restore();
+            } else if (sw.type === 'MAGE_PULSE') {
+                ctx.save();
+                ctx.translate(sx, sy);
+                ctx.rotate(sw.angle);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(12, -3, 6, 6);
+                ctx.fillStyle = '#00e5ff';
+                ctx.fillRect(14, -5, 4, 10);
+                ctx.fillStyle = '#e040fb';
+                ctx.fillRect(18, -2, 4, 4);
+                ctx.restore();
+            } else if (sw.type === 'FARMER_REAP') {
+                ctx.save();
+                ctx.translate(sx, sy);
+                ctx.rotate(sw.angle);
+                ctx.strokeStyle = '#ffd700';
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.arc(0, 0, sw.range, -sw.arc / 2, sw.arc / 2);
+                ctx.stroke();
+
+                ctx.strokeStyle = '#76ff03';
+                ctx.lineWidth = 7;
+                ctx.beginPath();
+                ctx.arc(0, 0, sw.range - 3, -sw.arc / 2 + 0.2, sw.arc / 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
         // Projectiles
         for (const p of char.projectiles) {
             ctx.fillStyle = p.color || '#ffff00';
             ctx.beginPath();
-            ctx.arc(p.x - camX, p.y - camY, 3, 0, Math.PI * 2);
+            ctx.arc(p.x - camX, p.y - camY, (p.radius ? p.radius / 3 : 3), 0, Math.PI * 2);
             ctx.fill();
+            // Glow halo
+            ctx.fillStyle = p.color || '#ffff00';
+            ctx.globalAlpha = 0.3;
+            ctx.beginPath();
+            ctx.arc(p.x - camX, p.y - camY, (p.radius ? p.radius / 1.5 : 6), 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
         }
 
         // Sparks
         for (const s of char.sparks) {
             ctx.fillStyle = s.color || '#ffffff';
             ctx.fillRect(s.x - camX, s.y - camY, 2, 2);
+        }
+    }
+
+    renderChests(chests, camX, camY) {
+        const ctx = this.ctx;
+        for (const chest of chests) {
+            const sx = Math.round(chest.x) - camX;
+            const sy = Math.round(chest.y) - camY;
+            if (sx < -20 || sx > this.width + 20 || sy < -20 || sy > this.height + 20) continue;
+
+            if (chest.opened) {
+                // Opened chest: tilted lid with glowing golden interior
+                ctx.fillStyle = '#3e2723';
+                ctx.fillRect(sx - 7, sy - 2, 14, 8);
+                ctx.fillStyle = '#5d4037';
+                ctx.fillRect(sx - 6, sy - 1, 12, 6);
+                ctx.fillStyle = '#8d6e63';
+                ctx.fillRect(sx - 7, sy - 7, 14, 4);
+                ctx.fillStyle = '#ffd700';
+                ctx.fillRect(sx - 3, sy, 6, 3);
+            } else {
+                // Closed cyber-chest: brass & metallic body with cyan latch
+                ctx.fillStyle = '#263238';
+                ctx.fillRect(sx - 8, sy - 7, 16, 14);
+                ctx.fillStyle = '#b08953';
+                ctx.fillRect(sx - 7, sy - 6, 14, 12);
+                ctx.fillStyle = '#5d4037';
+                ctx.fillRect(sx - 7, sy - 2, 14, 2);
+
+                // Reinforced corner brackets
+                ctx.fillStyle = '#37474f';
+                ctx.fillRect(sx - 8, sy - 7, 3, 3);
+                ctx.fillRect(sx + 5, sy - 7, 3, 3);
+                ctx.fillRect(sx - 8, sy + 4, 3, 3);
+                ctx.fillRect(sx + 5, sy + 4, 3, 3);
+
+                // Glowing cyan quantum lock
+                const lockBob = (Math.floor(Date.now() / 250) % 2 === 0);
+                ctx.fillStyle = lockBob ? '#00e5ff' : '#00b0ff';
+                ctx.fillRect(sx - 2, sy - 2, 4, 4);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx - 1, sy - 1, 2, 2);
+            }
+        }
+    }
+
+    renderSparkles(sparkles, camX, camY) {
+        const ctx = this.ctx;
+        const tick = Math.floor(Date.now() / 140);
+        for (const sp of sparkles) {
+            if (sp.collected) continue;
+            const sx = Math.round(sp.x) - camX;
+            const sy = Math.round(sp.y) - camY;
+            if (sx < -20 || sx > this.width + 20 || sy < -20 || sy > this.height + 20) continue;
+
+            const anim = (tick + (Math.floor(sp.x) * 3 + Math.floor(sp.y) * 7)) % 8;
+            if (anim < 4) {
+                ctx.fillStyle = (anim % 2 === 0) ? '#ffd700' : '#ffffff';
+                ctx.fillRect(sx - 1, sy - 3, 2, 6);
+                ctx.fillRect(sx - 3, sy - 1, 6, 2);
+                ctx.fillStyle = '#00e5ff';
+                ctx.fillRect(sx - 1, sy - 1, 2, 2);
+            }
         }
     }
 

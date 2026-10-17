@@ -107,6 +107,18 @@ class KinematicBody {
     }
 
     update(dt, map) {
+        // If in DASHING state, maintain high burst speed and glide through obstacles
+        if (this.state === 'DASHING') {
+            const dashSpeed = this.vel.length();
+            if (dashSpeed > 0.1) {
+                const drop = (this.decel * 0.4) * dt;
+                const newSpeed = Math.max(0, dashSpeed - drop);
+                this.vel.scale(newSpeed / dashSpeed);
+            }
+            this.moveWithCollision(this.vel.x * dt, this.vel.y * dt, map);
+            return;
+        }
+
         // Target velocity based on analog input
         const targetVel = this.input.clone().scale(this.maxSpeed);
 

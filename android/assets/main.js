@@ -197,8 +197,11 @@ class GameApp {
         const touchControls = document.getElementById('touch-controls');
         if (!touchControls) return;
 
-        const anyModalOpen = document.querySelector('.game-modal:not(.hidden)');
-        if (anyModalOpen || this.screens.currentScreen !== 'GAMEPLAY') {
+        // ONLY hide touch controls if the initial character setup modal is actively open
+        const setupModal = document.getElementById('setup-modal');
+        const isSetupOpen = setupModal && !setupModal.classList.contains('hidden');
+
+        if (isSetupOpen) {
             touchControls.classList.add('controls-hidden');
         } else {
             touchControls.classList.remove('controls-hidden');
@@ -297,9 +300,10 @@ class GameApp {
                 }
             }
 
-            // 3. Menu Toggle
+            // 3. Menu / Modal Escape Handler
             if (e.key === 'Escape') {
-                this.toggleGbaMenu();
+                e.preventDefault();
+                this.handleBackOrEscape();
                 return;
             }
 
@@ -852,6 +856,29 @@ class GameApp {
         }
     }
 
+    handleBackOrEscape() {
+        // 1. Close dialogue capsule if open
+        const dialogue = document.getElementById('gba-dialogue-capsule');
+        if (dialogue && !dialogue.classList.contains('hidden')) {
+            dialogue.classList.add('hidden');
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+            return;
+        }
+
+        // 2. Close any open modals
+        const openModals = Array.from(document.querySelectorAll('.game-modal:not(.hidden)'));
+        if (openModals.length > 0) {
+            openModals.forEach(m => m.classList.add('hidden'));
+            this.screens.currentScreen = 'GAMEPLAY';
+            this.updateTouchControlsVisibility();
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+            return;
+        }
+
+        // 3. Toggle GBA Start Menu
+        this.toggleGbaMenu();
+    }
+
     toggleGbaMenu() {
         const menu = document.getElementById('gba-start-menu');
         if (!menu) return;
@@ -1079,7 +1106,25 @@ class GameApp {
         const px = this.player.pos.x;
         const py = this.player.pos.y;
 
-        // 1. Terminals in Sub-Core
+        // 1. Quantum Supply Pods / Chests
+        if (this.currentMap.chests) {
+            for (const chest of this.currentMap.chests) {
+                if (!chest.opened && Math.hypot(px - chest.x, py - chest.y) < 26) {
+                    return { type: 'CHEST', entity: chest, label: 'OPEN POD' };
+                }
+            }
+        }
+
+        // 2. Glittering Foraging Sparkles
+        if (this.currentMap.sparkles) {
+            for (const sp of this.currentMap.sparkles) {
+                if (!sp.collected && Math.hypot(px - sp.x, py - sp.y) < 22) {
+                    return { type: 'SPARKLE', entity: sp, label: 'GATHER' };
+                }
+            }
+        }
+
+        // 3. Terminals in Sub-Core
         if (this.currentLayer === 'SUB_CORE' && this.currentMap.terminals) {
             for (const term of this.currentMap.terminals) {
                 if (Math.hypot(px - term.x, py - term.y) < 32) {
@@ -1088,7 +1133,7 @@ class GameApp {
             }
         }
 
-        // 2. Cave Entrance on Surface
+        // 4. Cave Entrance on Surface
         if (this.currentLayer === 'SURFACE' && this.currentMap.caveEntrance) {
             const ce = this.currentMap.caveEntrance;
             if (Math.hypot(px - (ce.x * 16 + 8), py - (ce.y * 16 + 8)) < 28) {
@@ -1096,7 +1141,7 @@ class GameApp {
             }
         }
 
-        // 3. Return Ladder in Sub-Core
+        // 5. Return Ladder in Sub-Core
         if (this.currentLayer === 'SUB_CORE') {
             const sp = this.currentMap.spawnPoint;
             if (Math.hypot(px - sp.x, py - sp.y) < 28) {
@@ -1104,7 +1149,7 @@ class GameApp {
             }
         }
 
-        // 4. Secret 3x3 Arable Plot in Sub-Core
+        // 6. Secret 3x3 Arable Plot in Sub-Core
         if (this.currentLayer === 'SUB_CORE' && !this.isFarmerUnlocked) {
             const plotX = 36 * 16 + 24;
             const plotY = 25 * 16 + 24;
@@ -1128,8 +1173,13 @@ class GameApp {
     handleAttack() {
         this.player.primaryAttack(this.currentMap.enemies);
         if (this.soundEnabled && this.sfxEnabled) {
-            if (this.player.charClass === 'TECHNO_MAGE') this.renderer.audio.playShoot();
-            else this.renderer.audio.playSlash();
+            if (this.player.charClass === 'SUPER_SOLDIER') {
+                this.renderer.audio.playSlash(1);
+            } else if (this.player.charClass === 'TECHNO_MAGE') {
+                this.renderer.audio.playShoot();
+            } else if (this.player.charClass === 'FARMER_GOD') {
+                this.renderer.audio.playHarvest();
+            }
         }
 
         // Secret Farmer check: Did player strike the hidden 3x3 arable soil?
@@ -1150,13 +1200,49 @@ class GameApp {
 
     handleDash() {
         if (!this.player) return;
-        this.player.performSkill(this.currentMap.enemies);
-        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playShoot();
+        const didDash = this.player.performDash();
+        if (didDash && this.soundEnabled && this.sfxEnabled) {
+            this.renderer.audio.playDash();
+        }
     }
 
     handleInteract() {
         const px = this.player.pos.x;
         const py = this.player.pos.y;
+        const interactable = this.getNearestInteractable();
+        if (!interactable) return;
+
+        // Open Chest
+        if (interactable.type === 'CHEST') {
+            const chest = interactable.entity;
+            chest.opened = true;
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playItemObtained();
+            const itemDef = (typeof BASE_ITEMS !== 'undefined' && BASE_ITEMS[chest.itemId]) 
+                ? BASE_ITEMS[chest.itemId] 
+                : { id: chest.itemId, name: chest.itemId, desc: 'Valuable equipment' };
+            if (this.player.inventory) this.player.inventory.addItem(itemDef, chest.count || 1);
+            if (chest.coins) this.player.coinsCollected += chest.coins;
+            this.showGbaDialogue(`SUPPLY POD UNLOCKED!\n\nObtained: ${chest.count || 1}x ${itemDef.name}\n+${chest.coins || 0} ALU Coins!`, 'ITEM DISCOVERED');
+            this.updateHUD();
+            return;
+        }
+
+        // Gather Sparkle
+        if (interactable.type === 'SPARKLE') {
+            const sp = interactable.entity;
+            sp.collected = true;
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCoin();
+            this.player.coinsCollected += (sp.coins || 5);
+            let extraMsg = '';
+            if (sp.itemId && typeof BASE_ITEMS !== 'undefined' && BASE_ITEMS[sp.itemId]) {
+                const itemDef = BASE_ITEMS[sp.itemId];
+                if (this.player.inventory) this.player.inventory.addItem(itemDef, 1);
+                extraMsg = ` & ${itemDef.name}`;
+            }
+            this.showGbaDialogue(`FORAGED CACHE!\n\nGathered: +${sp.coins} ALU Coins${extraMsg}`, 'CACHE DISCOVERED');
+            this.updateHUD();
+            return;
+        }
 
         // 1. Check if near an Ancient Terminal
         for (const term of this.currentMap.terminals) {
@@ -1423,6 +1509,21 @@ class GameApp {
             this.player.update(dt, this.currentMap);
             this.player.updateCombat(dt, this.currentMap.enemies);
             this.updateEnemies(dt);
+
+            // Proximity sparkle collection when walking over glints
+            if (this.currentMap && this.currentMap.sparkles) {
+                for (const sp of this.currentMap.sparkles) {
+                    if (!sp.collected && Math.hypot(this.player.pos.x - sp.x, this.player.pos.y - sp.y) < 14) {
+                        sp.collected = true;
+                        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCoin();
+                        this.player.coinsCollected += (sp.coins || 5);
+                        if (sp.itemId && typeof BASE_ITEMS !== 'undefined' && BASE_ITEMS[sp.itemId]) {
+                            const itemDef = BASE_ITEMS[sp.itemId];
+                            if (this.player.inventory) this.player.inventory.addItem(itemDef, 1);
+                        }
+                    }
+                }
+            }
         }
 
         // 2. Camera Update (Follow player smoothly)
@@ -1457,7 +1558,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // Native Android back button dispatcher
 window.handleAndroidBack = function() {
-    if (window.game && window.game.screens) {
-        window.game.screens.handleEscape();
+    if (window.game) {
+        window.game.handleBackOrEscape();
     }
 };

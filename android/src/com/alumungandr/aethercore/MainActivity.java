@@ -114,6 +114,17 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    public boolean dispatchKeyEvent(android.view.KeyEvent event) {
+        if (event.getKeyCode() == android.view.KeyEvent.KEYCODE_BACK && event.getAction() == android.view.KeyEvent.ACTION_UP) {
+            if (webView != null) {
+                webView.evaluateJavascript("if (typeof window.handleAndroidBack === 'function') { window.handleAndroidBack(); }", null);
+                return true;
+            }
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    @Override
     public void onBackPressed() {
         if (webView != null) {
             webView.evaluateJavascript("if (typeof window.handleAndroidBack === 'function') { window.handleAndroidBack(); }", null);
