@@ -82,6 +82,8 @@ class KinematicBody {
         
         // State
         this.facing = new Vector2(0, 1); // Default facing down
+        this.cardinalFacing = 'DOWN';    // 'DOWN', 'UP', 'LEFT', 'RIGHT'
+        this.walkTimer = 0;
         this.isMoving = false;
         this.isSkidding = false;
     }
@@ -93,6 +95,11 @@ class KinematicBody {
         }
         if (this.input.length() > 0.1) {
             this.facing.set(this.input.x, this.input.y).normalize();
+            if (Math.abs(this.input.y) >= Math.abs(this.input.x)) {
+                this.cardinalFacing = this.input.y > 0 ? 'DOWN' : 'UP';
+            } else {
+                this.cardinalFacing = this.input.x > 0 ? 'RIGHT' : 'LEFT';
+            }
             this.isMoving = true;
         } else {
             this.isMoving = false;
@@ -112,6 +119,7 @@ class KinematicBody {
             this.vel.x += Math.sign(diffX) * Math.min(Math.abs(diffX), maxDelta);
             this.vel.y += Math.sign(diffY) * Math.min(Math.abs(diffY), maxDelta);
             this.isSkidding = false;
+            this.walkTimer += dt * 8.0;
         } else {
             // Decelerate (apply braking friction)
             const speed = this.vel.length();
@@ -120,9 +128,11 @@ class KinematicBody {
                 const newSpeed = Math.max(0, speed - drop);
                 this.vel.scale(newSpeed / speed);
                 this.isSkidding = speed > (this.maxSpeed * 0.4);
+                this.walkTimer += dt * 4.0;
             } else {
                 this.vel.set(0, 0);
                 this.isSkidding = false;
+                this.walkTimer = 0;
             }
         }
 

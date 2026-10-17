@@ -7,6 +7,8 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.ConsoleMessage;
+import android.webkit.JsPromptResult;
+import android.webkit.JsResult;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -55,6 +57,27 @@ public class MainActivity extends Activity {
                 Log.d(TAG, "[" + consoleMessage.messageLevel() + "] " 
                     + consoleMessage.message() + " (" 
                     + consoleMessage.sourceId() + ":" + consoleMessage.lineNumber() + ")");
+                return true;
+            }
+
+            @Override
+            public boolean onJsAlert(WebView view, String url, String message, JsResult result) {
+                Log.d(TAG, "JS Alert intercepted: " + message);
+                result.confirm();
+                return true;
+            }
+
+            @Override
+            public boolean onJsConfirm(WebView view, String url, String message, JsResult result) {
+                Log.d(TAG, "JS Confirm intercepted: " + message);
+                result.confirm();
+                return true;
+            }
+
+            @Override
+            public boolean onJsPrompt(WebView view, String url, String message, String defaultValue, JsPromptResult result) {
+                Log.d(TAG, "JS Prompt intercepted: " + message);
+                result.confirm(defaultValue != null ? defaultValue : "");
                 return true;
             }
         });

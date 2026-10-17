@@ -18,21 +18,19 @@ body, html {
     overflow: hidden;
 }
 
-/* App Main Container (Authentic GBA Enclosure) */
+/* App Main Container (True Fullscreen Display) */
 #app-container {
     display: flex;
     flex-direction: column;
     width: 100vw;
     height: 100vh;
-    max-width: 960px;
-    max-height: 640px;
-    margin: auto;
-    position: absolute;
+    max-width: 100vw;
+    max-height: 100vh;
+    margin: 0;
+    padding: 0;
+    position: fixed;
     inset: 0;
-    background: #0f131a;
-    box-shadow: 0 0 50px rgba(0, 0, 0, 0.95);
-    border: 4px solid #1a2230;
-    border-radius: 12px;
+    background: #000;
     overflow: hidden;
 }
 
@@ -154,8 +152,8 @@ body, html {
 #game-canvas {
     width: 100%;
     height: 100%;
-    max-height: 100%;
-    object-fit: contain;
+    display: block;
+    object-fit: fill;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
 }
@@ -1016,3 +1014,153 @@ body, html {
     color: #81c784;
     font-size: 8px;
 }
+
+/* Authentic GBA In-Game Start / Pause Menu (Matching Emerald Reference Image 5) */
+.gba-side-menu {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 150;
+    pointer-events: auto;
+    display: block;
+    animation: gba-menu-pop 0.12s ease-out;
+}
+
+@keyframes gba-menu-pop {
+    from { opacity: 0; transform: translateX(12px) scale(0.97); }
+    to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+.gba-side-menu.hidden {
+    display: none !important;
+}
+
+.gba-menu-frame {
+    background: #ffffff;
+    border: 3px solid #5a6275;
+    border-radius: 6px;
+    box-shadow: inset 2px 2px 0px #ffffff, inset -2px -2px 0px #8892a6, 0 8px 24px rgba(0, 0, 0, 0.7);
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 150px;
+}
+
+.gba-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: #37474f;
+    letter-spacing: 0.5px;
+    transition: background 0.08s, color 0.08s;
+}
+
+.gba-menu-item:hover, .gba-menu-item.active {
+    background: #eef2f7;
+    color: #102027;
+}
+
+.gba-menu-item .gba-cursor {
+    display: inline-block;
+    width: 12px;
+    font-size: 10px;
+    color: transparent;
+    user-select: none;
+}
+
+.gba-menu-item.active .gba-cursor,
+.gba-menu-item:hover .gba-cursor {
+    color: #263238;
+}
+
+.gba-menu-item.dev-item {
+    color: #7b1fa2;
+}
+
+.gba-menu-item.dev-item.active {
+    color: #4a148c;
+    background: #f3e5f5;
+}
+
+/* Authentic GBA Dialogue Capsule (Matching Reference Image 4) */
+.gba-dialogue-capsule {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 92%;
+    max-width: 720px;
+    background: #ffffff;
+    border: 4px solid #7986cb;
+    border-radius: 16px;
+    box-shadow: inset 3px 3px 0px #e8eaf6, inset -3px -3px 0px #3f51b5, 0 10px 30px rgba(0,0,0,0.85);
+    padding: 14px 18px;
+    z-index: 200;
+    font-family: 'Press Start 2P', monospace;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.gba-dialogue-capsule.hidden {
+    display: none !important;
+}
+
+.gba-dialogue-speaker {
+    font-size: 9px;
+    color: #1a237e;
+    letter-spacing: 1px;
+}
+
+.gba-dialogue-text {
+    font-size: 9px;
+    line-height: 1.6;
+    color: #212121;
+}
+
+.gba-dialogue-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.gba-dialogue-prompt {
+    align-self: flex-end;
+    color: #d32f2f;
+    font-size: 11px;
+    animation: blink-prompt 0.6s infinite alternate;
+}
+
+@keyframes blink-prompt {
+    from { opacity: 0.2; transform: translateY(0); }
+    to { opacity: 1; transform: translateY(3px); }
+}
+
+/* Seed Input within GBA Capsule */
+.gba-seed-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.gba-seed-input {
+    background: #f5f5f5;
+    border: 2px solid #5c6bc0;
+    border-radius: 4px;
+    color: #1a237e;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    padding: 6px 10px;
+    flex: 1;
+    outline: none;
+}
+

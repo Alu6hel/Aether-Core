@@ -136,6 +136,64 @@
                 </div>
             </div>
 
+            <!-- Authentic GBA Right-Hand Start / Pause Menu (Image 5) -->
+            <div id="gba-start-menu" class="gba-side-menu hidden">
+                <div class="gba-menu-frame" id="gba-menu-items-container">
+                    <div class="gba-menu-item active" data-action="expedition">
+                        <span class="gba-cursor">▶</span>
+                        <span class="gba-label">EXPEDITION</span>
+                    </div>
+                    <div class="gba-menu-item" data-action="inventory">
+                        <span class="gba-cursor"> </span>
+                        <span class="gba-label">BAG</span>
+                    </div>
+                    <div class="gba-menu-item" data-action="market">
+                        <span class="gba-cursor"> </span>
+                        <span class="gba-label">ALU COIN</span>
+                    </div>
+                    <div class="gba-menu-item" data-action="new-seed">
+                        <span class="gba-cursor"> </span>
+                        <span class="gba-label">NEW SEED</span>
+                    </div>
+                    <div class="gba-menu-item" data-action="sound">
+                        <span class="gba-cursor"> </span>
+                        <span class="gba-label">OPTION</span>
+                    </div>
+                    <div class="gba-menu-item" data-action="pioneer">
+                        <span class="gba-cursor"> </span>
+                        <span class="gba-label">ROSTER</span>
+                    </div>
+                    <div class="gba-menu-item dev-item" data-action="dev">
+                        <span class="gba-cursor"> </span>
+                        <span class="gba-label">DEV TOOLS</span>
+                    </div>
+                    <div class="gba-menu-item" data-action="reboot">
+                        <span class="gba-cursor"> </span>
+                        <span class="gba-label">REBOOT</span>
+                    </div>
+                    <div class="gba-menu-item" data-action="exit">
+                        <span class="gba-cursor"> </span>
+                        <span class="gba-label">EXIT</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GBA Dialogue / Notification / Seed Capsule (Image 4) -->
+            <div id="gba-dialogue-capsule" class="gba-dialogue-capsule hidden">
+                <div class="gba-dialogue-speaker" id="gba-capsule-speaker">SYSTEM COMMUNICATOR</div>
+                <div class="gba-dialogue-text" id="gba-capsule-text">Message goes here...</div>
+                <div id="gba-capsule-input-container" class="gba-seed-input-row hidden">
+                    <input type="text" id="gba-seed-input" class="gba-seed-input" placeholder="0x7F3A59DF" />
+                    <button id="gba-btn-seed-apply" class="gba-btn-sm">APPLY</button>
+                    <button id="gba-btn-seed-random" class="gba-btn-sm">🎲 RANDOM</button>
+                    <button id="gba-btn-seed-cancel" class="gba-btn-sm">CANCEL</button>
+                </div>
+                <div class="gba-dialogue-actions" id="gba-capsule-actions">
+                    <button id="gba-capsule-ok" class="gba-btn-sm">OK (A)</button>
+                </div>
+                <span class="gba-dialogue-prompt">▼</span>
+            </div>
+
             <!-- Full System Menu Hub Modal -->
             <div id="menu-hub-modal" class="game-modal hidden">
                 <div class="modal-content hub-content">

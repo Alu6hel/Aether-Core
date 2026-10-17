@@ -283,18 +283,19 @@ class ScreenManager {
         } else if (opt === 'CONTINUE') {
             this.currentScreen = 'GAMEPLAY';
         } else if (opt === 'CHOOSE WORLD SEED') {
-            const inputSeed = prompt("Enter 32-bit World Seed (hex or integer):", "0x7F3A59DF");
-            if (inputSeed) {
-                const parsed = parseInt(inputSeed, inputSeed.startsWith('0x') ? 16 : 10);
-                if (!isNaN(parsed)) {
-                    this.game.loadNewWorld(parsed);
-                    this.currentScreen = 'GAMEPLAY';
-                }
+            if (this.game.showGbaSeedDialog) {
+                this.game.showGbaSeedDialog();
+            } else {
+                const nextSeed = (Math.random() * 0xFFFFFFFF) >>> 0;
+                this.game.loadNewWorld(nextSeed);
             }
+            this.currentScreen = 'GAMEPLAY';
         } else if (opt === 'CHARACTER ROSTER') {
             this.currentScreen = 'ROSTER';
         } else if (opt === 'SETTINGS') {
-            alert("SETTINGS: Audio is Enabled. Full 8-direction analog momentum with corner sliding active. CRT Filter: ON.");
+            if (this.game.toggleSoundModal) {
+                this.game.toggleSoundModal();
+            }
         }
     }
 

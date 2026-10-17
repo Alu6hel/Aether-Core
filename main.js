@@ -54,12 +54,18 @@ class GameApp {
             }
         }
 
-        // 2. Generate Maps from Master Seed
+        // 2. Setup Fullscreen Viewport & Canvas Scaling (Edge-to-Edge)
+        this.resizeCanvas();
+        window.addEventListener('resize', () => this.resizeCanvas());
+        window.addEventListener('orientationchange', () => this.resizeCanvas());
+
+        // 3. Generate Maps from Master Seed
         this.loadNewWorld(this.currentSeed);
 
-        // 3. Setup Input Handlers & Modals
+        // 4. Setup Input Handlers, GBA Menu & Modals
         this.setupKeyboard();
         this.setupTouchControls();
+        this.setupGbaMenu();
         this.setupUI();
         this.setupModals();
 
@@ -89,6 +95,23 @@ class GameApp {
         this.edgeClient.mintWorldCoin(this.currentSeed).then(res => {
             console.log("[EDGE SYNC]", res);
         });
+    }
+
+    resizeCanvas() {
+        const wrapper = document.getElementById('viewport-wrapper');
+        if (!wrapper || !this.canvas) return;
+        const rect = wrapper.getBoundingClientRect();
+        const w = rect.width || window.innerWidth;
+        const h = rect.height || (window.innerHeight - 80);
+        
+        // Target vertical resolution around 240-320px for crisp retro GBA scaling
+        const scale = Math.max(1, Math.floor(h / 240)) || 2;
+        this.canvas.width = Math.round(w / scale);
+        this.canvas.height = Math.round(h / scale);
+        if (this.renderer) {
+            this.renderer.width = this.canvas.width;
+            this.renderer.height = this.canvas.height;
+        }
     }
 
     bindTap(elem, cb) {
@@ -237,11 +260,46 @@ class GameApp {
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
             this.keys[key] = true;
-            this.renderer.audio.init();
+            if (this.renderer && this.renderer.audio) this.renderer.audio.init();
 
-            // Menu Hub / Pause toggle
+            // 1. If GBA dialogue capsule is visible, Enter/Space/J/Escape dismisses it (if not entering seed text)
+            const gbaCapsule = document.getElementById('gba-dialogue-capsule');
+            if (gbaCapsule && !gbaCapsule.classList.contains('hidden')) {
+                const inputRow = document.getElementById('gba-capsule-input-container');
+                if (!inputRow || inputRow.classList.contains('hidden')) {
+                    if (key === 'enter' || key === ' ' || key === 'j' || key === 'escape') {
+                        e.preventDefault();
+                        this.hideGbaDialogue();
+                        return;
+                    }
+                }
+            }
+
+            // 2. GBA Side Menu Navigation (Image 5)
+            const gbaMenu = document.getElementById('gba-start-menu');
+            if (gbaMenu && !gbaMenu.classList.contains('hidden')) {
+                if (key === 'arrowup' || key === 'w') {
+                    e.preventDefault();
+                    this.navigateGbaMenu('up');
+                    return;
+                } else if (key === 'arrowdown' || key === 's') {
+                    e.preventDefault();
+                    this.navigateGbaMenu('down');
+                    return;
+                } else if (key === 'enter' || key === ' ' || key === 'j') {
+                    e.preventDefault();
+                    this.selectGbaMenuItem();
+                    return;
+                } else if (key === 'escape' || key === 'k') {
+                    e.preventDefault();
+                    this.toggleGbaMenu();
+                    return;
+                }
+            }
+
+            // 3. Menu Toggle
             if (e.key === 'Escape') {
-                this.toggleMenuHub();
+                this.toggleGbaMenu();
                 return;
             }
 
@@ -289,9 +347,16 @@ class GameApp {
             const dir = btn.getAttribute('data-dir');
             const press = (e) => {
                 if (e.cancelable) e.preventDefault();
+                // Check if GBA side menu is open
+                const gbaMenu = document.getElementById('gba-start-menu');
+                if (gbaMenu && !gbaMenu.classList.contains('hidden')) {
+                    if (dir === 'up') this.navigateGbaMenu('up');
+                    else if (dir === 'down') this.navigateGbaMenu('down');
+                    return;
+                }
                 this.touchDirs[dir] = true;
                 btn.classList.add('pressed');
-                this.renderer.audio.init();
+                if (this.renderer && this.renderer.audio) this.renderer.audio.init();
             };
             const release = (e) => {
                 if (e.cancelable) e.preventDefault();
@@ -312,11 +377,33 @@ class GameApp {
 
         const bindAction = (elem, cb) => this.bindTap(elem, cb);
 
-        // A Button: Context-sensitive (Attack or Examine)
-        bindAction(btnA, () => this.handleAction());
+        // A Button: Context-sensitive (Attack or Examine) or Menu Select
+        bindAction(btnA, () => {
+            const gbaMenu = document.getElementById('gba-start-menu');
+            if (gbaMenu && !gbaMenu.classList.contains('hidden')) {
+                this.selectGbaMenuItem();
+                return;
+            }
+            const gbaCapsule = document.getElementById('gba-dialogue-capsule');
+            if (gbaCapsule && !gbaCapsule.classList.contains('hidden')) {
+                const inputRow = document.getElementById('gba-capsule-input-container');
+                if (!inputRow || inputRow.classList.contains('hidden')) {
+                    this.hideGbaDialogue();
+                    return;
+                }
+            }
+            this.handleAction();
+        });
 
-        // B Button: Nine Sols Parry
-        bindAction(btnB, () => this.handleParry());
+        // B Button: Nine Sols Parry or Menu Close
+        bindAction(btnB, () => {
+            const gbaMenu = document.getElementById('gba-start-menu');
+            if (gbaMenu && !gbaMenu.classList.contains('hidden')) {
+                this.toggleGbaMenu();
+                return;
+            }
+            this.handleParry();
+        });
 
         // C Button: Dash Evasion
         bindAction(btnC, () => this.handleDash());
@@ -329,11 +416,11 @@ class GameApp {
         bindAction(btnSkip, () => this.devSkip());
 
         const btnStart = document.getElementById('btn-start');
-        bindAction(btnStart, () => this.toggleMenuHub());
+        bindAction(btnStart, () => this.toggleGbaMenu());
 
         // Top Header Buttons
         const btnMenuTop = document.getElementById('btn-menu-top');
-        bindAction(btnMenuTop, () => this.toggleMenuHub());
+        bindAction(btnMenuTop, () => this.toggleGbaMenu());
 
         const btnDevTop = document.getElementById('btn-dev-top');
         bindAction(btnDevTop, () => this.toggleDevModal());
@@ -365,7 +452,7 @@ class GameApp {
                 const targetClass = card.getAttribute('data-class');
                 if (targetClass === 'FARMER_GOD' && !this.isFarmerUnlocked) {
                     if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
-                    alert("🌾 The Farmer is locked! Discover the ancient 3x3 arable plot beneath the sub-bedrock reactor, or use Dev Tools to awaken the Deific Harvester.");
+                    this.showGbaDialogue("SYSTEM OVERSEER", "🌾 The Farmer is locked! Discover the ancient 3x3 arable plot beneath the sub-bedrock reactor, or use Dev Tools to awaken the Deific Harvester.");
                     return;
                 }
                 this.selectedClass = targetClass;
@@ -456,15 +543,8 @@ class GameApp {
         if (hubNewSeed) {
             hubNewSeed.addEventListener('pointerdown', (e) => {
                 e.preventDefault();
-                const inputSeed = prompt("Enter 32-bit World Seed (hex or integer):", "0x" + Math.floor(Math.random() * 0xFFFFFFFF).toString(16).toUpperCase());
-                if (inputSeed) {
-                    const parsed = parseInt(inputSeed, inputSeed.startsWith('0x') ? 16 : 10);
-                    if (!isNaN(parsed)) {
-                        this.loadNewWorld(parsed);
-                        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCoin();
-                        alert(`Generated new world with Seed 0x${parsed.toString(16).toUpperCase()}!\nCoin Ticker: ${this.currentMap.bondingCurve.ticker}`);
-                    }
-                }
+                menuHubModal.classList.add('hidden');
+                this.showGbaSeedDialog();
             });
         }
 
@@ -697,6 +777,200 @@ class GameApp {
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
             });
         }
+    }
+
+    setupGbaMenu() {
+        const menu = document.getElementById('gba-start-menu');
+        if (!menu) return;
+
+        const items = Array.from(menu.querySelectorAll('.gba-menu-item'));
+        this.gbaMenuIndex = 0;
+
+        const updateCursor = () => {
+            items.forEach((item, idx) => {
+                const cursor = item.querySelector('.gba-cursor');
+                if (idx === this.gbaMenuIndex) {
+                    item.classList.add('active');
+                    if (cursor) cursor.textContent = '▶';
+                } else {
+                    item.classList.remove('active');
+                    if (cursor) cursor.textContent = ' ';
+                }
+            });
+        };
+
+        this.updateGbaMenuCursor = updateCursor;
+
+        // Click / touch handler on each item
+        items.forEach((item, idx) => {
+            this.bindTap(item, () => {
+                this.gbaMenuIndex = idx;
+                updateCursor();
+                const action = item.getAttribute('data-action');
+                this.executeGbaMenuAction(action);
+            });
+        });
+
+        // Setup Dialogue Capsule OK button
+        const capsuleOk = document.getElementById('gba-capsule-ok');
+        if (capsuleOk) {
+            this.bindTap(capsuleOk, () => {
+                this.hideGbaDialogue();
+            });
+        }
+
+        // Setup Seed apply / random / cancel
+        const btnSeedApply = document.getElementById('gba-btn-seed-apply');
+        const btnSeedRandom = document.getElementById('gba-btn-seed-random');
+        const btnSeedCancel = document.getElementById('gba-btn-seed-cancel');
+        const seedInput = document.getElementById('gba-seed-input');
+
+        if (btnSeedRandom && seedInput) {
+            this.bindTap(btnSeedRandom, () => {
+                const rnd = '0x' + Math.floor(Math.random() * 0xFFFFFFFF).toString(16).toUpperCase();
+                seedInput.value = rnd;
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playRoll();
+            });
+        }
+
+        if (btnSeedApply && seedInput) {
+            this.bindTap(btnSeedApply, () => {
+                const val = seedInput.value.trim();
+                const parsed = parseInt(val, val.startsWith('0x') ? 16 : 10);
+                if (!isNaN(parsed)) {
+                    this.loadNewWorld(parsed);
+                    if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCoin();
+                    this.showGbaDialogue("ALU COIN MATRIX", `World synthesized with Seed 0x${(parsed >>> 0).toString(16).toUpperCase()}!\nCoin Ticker: ${this.currentMap.bondingCurve.ticker}`);
+                }
+            });
+        }
+
+        if (btnSeedCancel) {
+            this.bindTap(btnSeedCancel, () => {
+                this.hideGbaDialogue();
+            });
+        }
+    }
+
+    toggleGbaMenu() {
+        const menu = document.getElementById('gba-start-menu');
+        if (!menu) return;
+        const isHidden = menu.classList.contains('hidden');
+        if (isHidden) {
+            // Close any open modals
+            document.querySelectorAll('.game-modal').forEach(m => m.classList.add('hidden'));
+            menu.classList.remove('hidden');
+            this.screens.currentScreen = 'MENU';
+            this.gbaMenuIndex = 0;
+            if (this.updateGbaMenuCursor) this.updateGbaMenuCursor();
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
+        } else {
+            menu.classList.add('hidden');
+            this.screens.currentScreen = 'GAMEPLAY';
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+        }
+        this.updateTouchControlsVisibility();
+    }
+
+    navigateGbaMenu(dir) {
+        const menu = document.getElementById('gba-start-menu');
+        if (!menu || menu.classList.contains('hidden')) return false;
+
+        const items = menu.querySelectorAll('.gba-menu-item');
+        if (!items || items.length === 0) return false;
+
+        if (dir === 'up') {
+            this.gbaMenuIndex = (this.gbaMenuIndex - 1 + items.length) % items.length;
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuMove();
+        } else if (dir === 'down') {
+            this.gbaMenuIndex = (this.gbaMenuIndex + 1) % items.length;
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuMove();
+        }
+        if (this.updateGbaMenuCursor) this.updateGbaMenuCursor();
+        return true;
+    }
+
+    selectGbaMenuItem() {
+        const menu = document.getElementById('gba-start-menu');
+        if (!menu || menu.classList.contains('hidden')) return false;
+
+        const items = menu.querySelectorAll('.gba-menu-item');
+        if (items[this.gbaMenuIndex]) {
+            const action = items[this.gbaMenuIndex].getAttribute('data-action');
+            this.executeGbaMenuAction(action);
+            return true;
+        }
+        return false;
+    }
+
+    executeGbaMenuAction(action) {
+        const menu = document.getElementById('gba-start-menu');
+        if (menu) menu.classList.add('hidden');
+
+        switch (action) {
+            case 'expedition':
+                this.showGbaDialogue("EXPEDITION DISPATCH", `Current Layer: ${this.currentLayer}\nWorld Seed: 0x${(this.currentSeed >>> 0).toString(16).toUpperCase()}\nPioneer: ${this.pioneerName} (${this.selectedClass})\nHarvested: ${this.player ? this.player.coinsCollected : 0} $ALU`);
+                break;
+            case 'inventory':
+                this.toggleInventory();
+                break;
+            case 'market':
+                this.toggleMarket();
+                break;
+            case 'new-seed':
+                this.showGbaSeedDialog();
+                break;
+            case 'sound':
+                this.toggleSoundModal();
+                break;
+            case 'pioneer':
+                document.getElementById('setup-modal').classList.remove('hidden');
+                this.screens.currentScreen = 'SETUP';
+                this.updateTouchControlsVisibility();
+                break;
+            case 'dev':
+                this.toggleDevModal();
+                break;
+            case 'reboot':
+                this.restartPioneer();
+                break;
+            case 'exit':
+                this.screens.currentScreen = 'GAMEPLAY';
+                this.updateTouchControlsVisibility();
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+                break;
+        }
+    }
+
+    showGbaDialogue(speaker, message) {
+        const capsule = document.getElementById('gba-dialogue-capsule');
+        if (!capsule) return;
+        document.getElementById('gba-capsule-speaker').textContent = speaker || "COMMUNICATOR";
+        document.getElementById('gba-capsule-text').innerText = message || "";
+        document.getElementById('gba-capsule-input-container').classList.add('hidden');
+        document.getElementById('gba-capsule-actions').classList.remove('hidden');
+        capsule.classList.remove('hidden');
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playBlip();
+    }
+
+    showGbaSeedDialog() {
+        const capsule = document.getElementById('gba-dialogue-capsule');
+        if (!capsule) return;
+        document.getElementById('gba-capsule-speaker').textContent = "PROCEDURAL MATRIX SEED";
+        document.getElementById('gba-capsule-text').innerText = "Enter or randomize 32-bit world generation seed to rebuild the ALU Coin map:";
+        const inputContainer = document.getElementById('gba-capsule-input-container');
+        inputContainer.classList.remove('hidden');
+        const seedInput = document.getElementById('gba-seed-input');
+        if (seedInput) seedInput.value = '0x' + Math.floor(Math.random() * 0xFFFFFFFF).toString(16).toUpperCase();
+        document.getElementById('gba-capsule-actions').classList.add('hidden');
+        capsule.classList.remove('hidden');
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playBlip();
+    }
+
+    hideGbaDialogue() {
+        const capsule = document.getElementById('gba-dialogue-capsule');
+        if (capsule) capsule.classList.add('hidden');
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuMove();
     }
 
     toggleMenuHub() {
@@ -1017,7 +1291,7 @@ class GameApp {
 
     unlockFarmerDev() {
         this.unlockFarmer();
-        alert("🌾 The Secret Farmer class is now fully unlocked in your roster!");
+        this.showGbaDialogue("FARMER DEIFIC AWAKENING", "🌾 The Secret Farmer class is now fully unlocked in your roster!");
     }
 
     saveState() {
