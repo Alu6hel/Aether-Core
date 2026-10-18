@@ -26,7 +26,7 @@ class GameApp {
         this.player = null;
         this.selectedClass = 'SUPER_SOLDIER';
         this.pioneerName = 'ALU-01';
-        this.isFarmerUnlocked = false;
+        this.isFarmerUnlocked = true;
         this.soundEnabled = true;
         this.bgmEnabled = true;
         this.sfxEnabled = true;
@@ -65,9 +65,7 @@ class GameApp {
             if (saved.seed) this.currentSeed = saved.seed;
             if (saved.pioneerName) this.pioneerName = saved.pioneerName;
             if (saved.selectedClass) this.selectedClass = saved.selectedClass;
-            if (saved.isFarmerUnlocked) {
-                this.isFarmerUnlocked = true;
-            }
+            this.isFarmerUnlocked = saved.isFarmerUnlocked !== undefined ? saved.isFarmerUnlocked : true;
             if (saved.hasInitializedProfile) {
                 this.hasInitializedProfile = true;
             }
@@ -449,24 +447,22 @@ class GameApp {
                         <button class="slot-action-btn slot-delete-btn" type="button" title="Wipe Slot">🗑️ WIPE</button>
                     </div>
                 `;
-                setTimeout(() => {
-                    const resumeBtn = card.querySelector('.slot-resume-btn');
-                    const deleteBtn = card.querySelector('.slot-delete-btn');
-                    
-                    if (resumeBtn) {
-                        this.bindTap(resumeBtn, (e) => {
-                            if (e && e.stopPropagation) e.stopPropagation();
-                            this.loadSlot(i);
-                        });
-                    }
-                    if (deleteBtn) {
-                        this.bindTap(deleteBtn, (e) => {
-                            if (e && e.stopPropagation) e.stopPropagation();
-                            this.deleteSlot(i);
-                        });
-                    }
-                    this.bindTap(card, () => this.loadSlot(i));
-                }, 150);
+                const resumeBtn = card.querySelector('.slot-resume-btn');
+                const deleteBtn = card.querySelector('.slot-delete-btn');
+                
+                if (resumeBtn) {
+                    this.bindTap(resumeBtn, (e) => {
+                        if (e && e.stopPropagation) e.stopPropagation();
+                        this.loadSlot(i);
+                    });
+                }
+                if (deleteBtn) {
+                    this.bindTap(deleteBtn, (e) => {
+                        if (e && e.stopPropagation) e.stopPropagation();
+                        this.deleteSlot(i);
+                    });
+                }
+                this.bindTap(card, () => this.loadSlot(i));
             } else {
                 card.innerHTML = `
                     <div class="slot-num">SLOT 0${i + 1}</div>
@@ -476,16 +472,14 @@ class GameApp {
                         <button class="slot-action-btn slot-new-btn" type="button">CHOOSE CLASS ▶</button>
                     </div>
                 `;
-                setTimeout(() => {
-                    const newBtn = card.querySelector('.slot-new-btn');
-                    if (newBtn) {
-                        this.bindTap(newBtn, (e) => {
-                            if (e && e.stopPropagation) e.stopPropagation();
-                            this.openCharacterSelectionForSlot(i);
-                        });
-                    }
-                    this.bindTap(card, () => this.openCharacterSelectionForSlot(i));
-                }, 150);
+                const newBtn = card.querySelector('.slot-new-btn');
+                if (newBtn) {
+                    this.bindTap(newBtn, (e) => {
+                        if (e && e.stopPropagation) e.stopPropagation();
+                        this.openCharacterSelectionForSlot(i);
+                    });
+                }
+                this.bindTap(card, () => this.openCharacterSelectionForSlot(i));
             }
 
             grid.appendChild(card);
@@ -892,7 +886,10 @@ class GameApp {
             }
 
             // Gameplay Action keys
-            if (key === 'j' || key === ' ') { // A = Action (Attack or Examine)
+            if (key === ' ' || key === 'x') { // Jump / Leap
+                e.preventDefault();
+                this.handleJump();
+            } else if (key === 'j' || key === 'z') { // A = Action (Attack or Examine)
                 this.handleAction();
             } else if (key === 'k') { // B = Parry / Deflect
                 this.handleParry();
@@ -950,8 +947,12 @@ class GameApp {
         const btnA = document.getElementById('btn-a');
         const btnB = document.getElementById('btn-b');
         const btnC = document.getElementById('btn-c');
+        const btnJump = document.getElementById('btn-jump');
 
         const bindAction = (elem, cb) => this.bindTap(elem, cb);
+
+        // Jump Button: Elevation Leap
+        if (btnJump) bindAction(btnJump, () => this.handleJump());
 
         // A Button: Context-sensitive (Attack or Examine) or Menu Select
         bindAction(btnA, () => {
@@ -2163,6 +2164,14 @@ class GameApp {
         const didDash = this.player.performDash();
         if (didDash && this.soundEnabled && this.sfxEnabled) {
             this.renderer.audio.playDash();
+        }
+    }
+
+    handleJump() {
+        if (!this.player) return;
+        const didJump = this.player.jump();
+        if (didJump && this.soundEnabled && this.sfxEnabled && this.renderer && this.renderer.audio) {
+            this.renderer.audio.playJump();
         }
     }
 

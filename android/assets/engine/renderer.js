@@ -46,27 +46,81 @@ class RetroRenderer {
         const pal = map.palette.colors;
         const camX = Math.round(this.camera.x);
         const camY = Math.round(this.camera.y);
+        const heightStep = map.heightStep || 10;
 
-        const startCol = Math.floor(camX / 16);
-        const endCol = Math.min(map.width - 1, Math.ceil((camX + this.width) / 16));
-        const startRow = Math.floor(camY / 16);
-        const endRow = Math.min(map.height - 1, Math.ceil((camY + this.height) / 16));
+        const startCol = Math.max(0, Math.floor(camX / 16) - 1);
+        const endCol = Math.min(map.width - 1, Math.ceil((camX + this.width) / 16) + 1);
+        const startRow = Math.max(0, Math.floor(camY / 16) - 3);
+        const endRow = Math.min(map.height - 1, Math.ceil((camY + this.height) / 16) + 3);
 
         for (let y = startRow; y <= endRow; y++) {
             for (let x = startCol; x <= endCol; x++) {
                 const tile = map.get(x, y);
+                const elev = map.getElevation ? map.getElevation(x, y) : 1;
                 const screenX = x * 16 - camX;
-                const screenY = y * 16 - camY;
+                const screenY = y * 16 - camY - elev * heightStep;
 
                 this.drawTile(tile, screenX, screenY, pal, x, y, map);
+
+                // South-facing cliff drop facade (Isoccor 2.5D cliff wall model)
+                if (map.getElevation) {
+                    const southElev = (y + 1 < map.height) ? map.getElevation(x, y + 1) : elev;
+                    if (elev > southElev) {
+                        const cliffDrop = (elev - southElev) * heightStep;
+                        const facadeTop = screenY + 16;
+                        this.drawCliffFacade(screenX, facadeTop, cliffDrop, pal, x, y, map);
+                        this.drawCliffDropShadow(screenX, facadeTop + cliffDrop, pal, x, y, map);
+                    }
+                }
             }
         }
 
         // Render ground objects: chests, sparkles, portals, and depleted stumps / ground flora
-        if (map.chests) this.renderChests(map.chests, camX, camY);
-        if (map.sparkles) this.renderSparkles(map.sparkles, camX, camY);
-        if (map.portals) this.renderPortals(map.portals, camX, camY);
-        if (map.resourceNodes) this.renderGroundResourceNodes(map.resourceNodes, camX, camY, dt);
+        if (map.chests) this.renderChests(map.chests, camX, camY, map);
+        if (map.sparkles) this.renderSparkles(map.sparkles, camX, camY, map);
+        if (map.portals) this.renderPortals(map.portals, camX, camY, map);
+        if (map.resourceNodes) this.renderGroundResourceNodes(map.resourceNodes, camX, camY, dt, map);
+    }
+
+    drawCliffFacade(sx, sy, heightPx, pal, tx, ty, map) {
+        const ctx = this.ctx;
+        const h = Math.max(4, heightPx || 10);
+
+        // Base cliff body: rich rocky tone
+        const baseColor = (pal && pal[1]) ? pal[1] : '#2b303c';
+        const shadowColor = (pal && pal[0]) ? pal[0] : '#181b22';
+        const highlightColor = (pal && pal[3]) ? pal[3] : '#607d8b';
+
+        ctx.fillStyle = baseColor;
+        ctx.fillRect(sx, sy, 16, h);
+
+        // Top cliff rim highlight (sunlit rocky ledge edge)
+        ctx.fillStyle = highlightColor;
+        ctx.fillRect(sx, sy, 16, 2);
+
+        // Geological strata: dark horizontal banding
+        ctx.fillStyle = shadowColor;
+        if (h >= 6) ctx.fillRect(sx, sy + Math.floor(h * 0.4), 16, 2);
+        if (h >= 12) ctx.fillRect(sx, sy + Math.floor(h * 0.75), 16, 2);
+
+        // Vertical rock fractures & fissures
+        const seedShift = (tx * 7 + ty * 13) % 11;
+        ctx.fillStyle = shadowColor;
+        ctx.fillRect(sx + 3 + (seedShift % 3), sy + 2, 1, Math.min(h - 3, 8));
+        ctx.fillRect(sx + 9 + (seedShift % 4), sy + 3, 1, Math.min(h - 4, 10));
+
+        // Cliff bottom ambient shadow meeting ground
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx.fillRect(sx, sy + h - 2, 16, 2);
+    }
+
+    drawCliffDropShadow(sx, sy, pal, tx, ty, map) {
+        const ctx = this.ctx;
+        // Translucent ground drop shadow cast southwards
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+        ctx.fillRect(sx, sy, 16, 6);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.14)';
+        ctx.fillRect(sx, sy + 6, 16, 3);
     }
 
     drawTile(tile, sx, sy, pal, tx, ty, map) {
@@ -780,20 +834,84 @@ class RetroRenderer {
                 ctx.fillRect(sx + refOffset, sy + 2, 3, 12);
                 break;
             }
+
+            case 27: { // STONE_RAMP (Carved stone incline connecting elevation levels)
+                ctx.fillStyle = '#455a64';
+                ctx.fillRect(sx, sy, 16, 16);
+
+                // Ramp incline shading (lighter at top, darker at bottom)
+                ctx.fillStyle = '#607d8b';
+                ctx.fillRect(sx + 1, sy, 14, 5);
+                ctx.fillStyle = '#546e7a';
+                ctx.fillRect(sx + 1, sy + 5, 14, 5);
+                ctx.fillStyle = '#37474f';
+                ctx.fillRect(sx + 1, sy + 10, 14, 6);
+
+                // Side retaining stone curbs
+                ctx.fillStyle = '#263238';
+                ctx.fillRect(sx, sy, 2, 16);
+                ctx.fillRect(sx + 14, sy, 2, 16);
+                ctx.fillStyle = '#78909c';
+                ctx.fillRect(sx, sy, 1, 16);
+
+                // Stepping grip ridges
+                ctx.fillStyle = '#263238';
+                ctx.fillRect(sx + 2, sy + 4, 12, 1);
+                ctx.fillRect(sx + 2, sy + 9, 12, 1);
+                ctx.fillRect(sx + 2, sy + 14, 12, 1);
+                break;
+            }
+
+            case 28: { // WOODEN_STAIRS (Timber stairway with wooden planks and nail studs)
+                ctx.fillStyle = '#3e2723';
+                ctx.fillRect(sx, sy, 16, 16);
+
+                // 3 wooden stair risers
+                for (let r = 0; r < 3; r++) {
+                    const ry = sy + r * 5;
+                    ctx.fillStyle = '#8d6e63';
+                    ctx.fillRect(sx + 1, ry, 14, 3); // Tread
+                    ctx.fillStyle = '#4e342e';
+                    ctx.fillRect(sx + 1, ry + 3, 14, 2); // Riser shadow
+
+                    // Golden brass nail studs
+                    ctx.fillStyle = '#ffd54f';
+                    ctx.fillRect(sx + 2, ry + 1, 1, 1);
+                    ctx.fillRect(sx + 13, ry + 1, 1, 1);
+                }
+                // Side timber balusters
+                ctx.fillStyle = '#271c19';
+                ctx.fillRect(sx, sy, 1, 16);
+                ctx.fillRect(sx + 15, sy, 1, 16);
+                break;
+            }
+
+            case 29: { // CLIFF_FACE (Vertical cliff rock facade)
+                this.drawCliffFacade(sx, sy, 16, pal, tx, ty, map);
+                break;
+            }
         }
     }
 
-    renderCharacter(char, pal) {
+    renderCharacter(char, pal, map = null) {
         const ctx = this.ctx;
         const camX = Math.round(this.camera.x);
         const camY = Math.round(this.camera.y);
-        const sx = Math.round(char.pos.x) - camX;
-        const sy = Math.round(char.pos.y) - camY;
 
-        // Shadow under character
-        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        const groundElev = (map && map.getElevationAt ? map.getElevationAt(char.pos.x, char.pos.y) : (char.groundElevation || 1));
+        const heightStep = (map ? map.heightStep : 10) || 10;
+        const elevY = groundElev * heightStep;
+
+        const sx = Math.round(char.pos.x) - camX;
+        const groundY = Math.round(char.pos.y) - camY - elevY;
+        const jumpZ = (char.pos && char.pos.z) ? char.pos.z : 0;
+        const sy = groundY - jumpZ;
+
+        // Ground shadow under character stays on terrain surface at groundY
+        const shadowScale = Math.max(0.35, 1.0 - jumpZ / 45.0);
+        ctx.fillStyle = `rgba(0,0,0,${0.4 * shadowScale})`;
         ctx.beginPath();
-        ctx.ellipse(sx, sy + 6, 6, 3, 0, 0, Math.PI * 2);
+        ctx.ellipse(sx, groundY + 6, 6 * shadowScale, 3 * shadowScale, 0, 0, Math.PI * 2);
         ctx.fill();
 
         if (char.invulnerableTimer > 0 && Math.floor(Date.now() / 60) % 2 === 0) {
@@ -1534,11 +1652,13 @@ class RetroRenderer {
         }
     }
 
-    renderChests(chests, camX, camY) {
+    renderChests(chests, camX, camY, map = null) {
         const ctx = this.ctx;
+        const heightStep = map ? (map.heightStep || 10) : 10;
         for (const chest of chests) {
+            const elev = (map && map.getElevationAt) ? map.getElevationAt(chest.x, chest.y) : 1;
             const sx = Math.round(chest.x) - camX;
-            const sy = Math.round(chest.y) - camY;
+            const sy = Math.round(chest.y) - camY - elev * heightStep;
             if (sx < -20 || sx > this.width + 20 || sy < -20 || sy > this.height + 20) continue;
 
             if (chest.opened) {
@@ -1577,13 +1697,15 @@ class RetroRenderer {
         }
     }
 
-    renderSparkles(sparkles, camX, camY) {
+    renderSparkles(sparkles, camX, camY, map = null) {
         const ctx = this.ctx;
+        const heightStep = map ? (map.heightStep || 10) : 10;
         const tick = Math.floor(Date.now() / 140);
         for (const sp of sparkles) {
             if (sp.collected) continue;
+            const elev = (map && map.getElevationAt) ? map.getElevationAt(sp.x, sp.y) : 1;
             const sx = Math.round(sp.x) - camX;
-            const sy = Math.round(sp.y) - camY;
+            const sy = Math.round(sp.y) - camY - elev * heightStep;
             if (sx < -20 || sx > this.width + 20 || sy < -20 || sy > this.height + 20) continue;
 
             const anim = (tick + (Math.floor(sp.x) * 3 + Math.floor(sp.y) * 7)) % 8;
@@ -1597,12 +1719,14 @@ class RetroRenderer {
         }
     }
 
-    renderPortals(portals, camX, camY) {
+    renderPortals(portals, camX, camY, map = null) {
         if (!portals) return;
         const ctx = this.ctx;
+        const heightStep = map ? (map.heightStep || 10) : 10;
         for (const p of portals) {
+            const elev = (map && map.getElevationAt) ? map.getElevationAt(p.x, p.y) : 1;
             const sx = Math.round(p.x) - camX;
-            const sy = Math.round(p.y) - camY;
+            const sy = Math.round(p.y) - camY - elev * heightStep;
             if (sx < -40 || sx > this.width + 40 || sy < -40 || sy > this.height + 40) continue;
 
             // Portal aura ring
@@ -1622,12 +1746,14 @@ class RetroRenderer {
         }
     }
 
-    renderNpcs(npcs, camX, camY, playerPos) {
+    renderNpcs(npcs, camX, camY, playerPos, map = null) {
         if (!npcs) return;
         const ctx = this.ctx;
+        const heightStep = map ? (map.heightStep || 10) : 10;
         for (const npc of npcs) {
+            const elev = (map && map.getElevationAt) ? map.getElevationAt(npc.x, npc.y) : 1;
             const sx = Math.round(npc.x) - camX;
-            const sy = Math.round(npc.y) - camY;
+            const sy = Math.round(npc.y) - camY - elev * heightStep;
             if (sx < -30 || sx > this.width + 30 || sy < -30 || sy > this.height + 30) continue;
 
             // Shadow
@@ -1791,11 +1917,13 @@ class RetroRenderer {
         ctx.restore();
     }
 
-    renderGroundResourceNodes(nodes, camX, camY, dt) {
+    renderGroundResourceNodes(nodes, camX, camY, dt, map = null) {
         const ctx = this.ctx;
+        const heightStep = map ? (map.heightStep || 10) : 10;
         for (const node of nodes) {
+            const elev = (map && map.getElevationAt) ? map.getElevationAt(node.x, node.y) : 1;
             let sx = Math.round(node.x) - camX;
-            let sy = Math.round(node.y) - camY;
+            let sy = Math.round(node.y) - camY - elev * heightStep;
 
             if (sx < -40 || sx > this.width + 40 || sy < -40 || sy > this.height + 40) continue;
 
@@ -1892,10 +2020,12 @@ class RetroRenderer {
         }
     }
 
-    renderSingleStandingNode(node, camX, camY, dt, player) {
+    renderSingleStandingNode(node, camX, camY, dt, player, map = null) {
         const ctx = this.ctx;
+        const heightStep = map ? (map.heightStep || 10) : 10;
+        const elev = (map && map.getElevationAt) ? map.getElevationAt(node.x, node.y) : 1;
         let sx = Math.round(node.x) - camX;
-        let sy = Math.round(node.y) - camY;
+        let sy = Math.round(node.y) - camY - elev * heightStep;
 
         if (sx < -40 || sx > this.width + 40 || sy < -40 || sy > this.height + 40) return;
 
@@ -2104,11 +2234,13 @@ class RetroRenderer {
         }
     }
 
-    renderSingleEnemy(enemy, pal, camX, camY) {
+    renderSingleEnemy(enemy, pal, camX, camY, map = null) {
         if (!enemy || enemy.hp <= 0) return;
         const ctx = this.ctx;
+        const heightStep = map ? (map.heightStep || 10) : 10;
+        const elev = (map && map.getElevationAt) ? map.getElevationAt(enemy.x, enemy.y) : 1;
         const sx = Math.round(enemy.x) - camX;
-        const sy = Math.round(enemy.y) - camY;
+        const sy = Math.round(enemy.y) - camY - elev * heightStep;
 
         if (sx < -40 || sx > this.width + 40 || sy < -40 || sy > this.height + 40) return;
 
@@ -2241,9 +2373,11 @@ class RetroRenderer {
             for (const node of map.resourceNodes) {
                 if (node.hp <= 0) continue; // Harvested stumps are drawn during ground pass!
                 if (node.type === 'WILD_CABBAGE' || node.type === 'BERRY_BUSH' || node.type === 'MEDICINAL_HERB' || node.type === 'CAMPFIRE_SITE') continue;
+                const elev = map.getElevationAt ? map.getElevationAt(node.x, node.y) : 1;
                 renderList.push({
                     type: 'NODE',
-                    y: node.y + 4,
+                    y: node.y + 4 + elev * 16,
+                    elevation: elev,
                     ref: node
                 });
             }
@@ -2251,26 +2385,32 @@ class RetroRenderer {
 
         // 2. Player
         if (player) {
+            const elev = map && map.getElevationAt ? map.getElevationAt(player.pos.x, player.pos.y) : (player.groundElevation || 1);
             renderList.push({
                 type: 'PLAYER',
-                y: player.pos.y + 6,
+                y: player.pos.y + 6 + elev * 16,
+                elevation: elev,
                 ref: player
             });
 
             // Active Class Summons
             if (player.activePrisms && player.activePrisms.length > 0) {
                 for (const prism of player.activePrisms) {
+                    const pelev = map && map.getElevationAt ? map.getElevationAt(prism.x, prism.y) : elev;
                     renderList.push({
                         type: 'PRISM',
-                        y: prism.y + 4,
+                        y: prism.y + 4 + pelev * 16,
+                        elevation: pelev,
                         ref: prism
                     });
                 }
             }
             if (player.activeDecoy) {
+                const delev = map && map.getElevationAt ? map.getElevationAt(player.activeDecoy.x, player.activeDecoy.y) : elev;
                 renderList.push({
                     type: 'DECOY',
-                    y: player.activeDecoy.y + 6,
+                    y: player.activeDecoy.y + 6 + delev * 16,
+                    elevation: delev,
                     ref: player.activeDecoy
                 });
             }
@@ -2280,9 +2420,11 @@ class RetroRenderer {
         if (enemies && enemies.length > 0) {
             for (const enemy of enemies) {
                 if (enemy.hp <= 0) continue;
+                const elev = map && map.getElevationAt ? map.getElevationAt(enemy.x, enemy.y) : 1;
                 renderList.push({
                     type: 'ENEMY',
-                    y: enemy.y + (enemy.isBoss ? 8 : 5),
+                    y: enemy.y + (enemy.isBoss ? 8 : 5) + elev * 16,
+                    elevation: elev,
                     ref: enemy
                 });
             }
@@ -2291,9 +2433,11 @@ class RetroRenderer {
         // 4. NPCs
         if (npcs && npcs.length > 0) {
             for (const npc of npcs) {
+                const elev = map && map.getElevationAt ? map.getElevationAt(npc.x, npc.y) : 1;
                 renderList.push({
                     type: 'NPC',
-                    y: npc.y + 6,
+                    y: npc.y + 6 + elev * 16,
+                    elevation: elev,
                     ref: npc
                 });
             }
@@ -2302,35 +2446,37 @@ class RetroRenderer {
         // 5. Critters
         if (critters && critters.critters && critters.critters.length > 0) {
             for (const c of critters.critters) {
+                const elev = map && map.getElevationAt ? map.getElevationAt(c.x, c.y) : 1;
                 renderList.push({
                     type: 'CRITTER',
-                    y: c.y + 2,
+                    y: c.y + 2 + elev * 16,
+                    elevation: elev,
                     ref: c
                 });
             }
         }
 
-        // Unified Y-sorting: entities with smaller Y (higher on screen) draw FIRST
+        // Unified 3D Y-sorting: entities with smaller sorting order draw FIRST
         renderList.sort((a, b) => a.y - b.y);
 
         // Render sorted entities in precise depth order
         for (const item of renderList) {
             if (item.type === 'PLAYER') {
-                this.renderCharacter(player, map.palette.colors);
+                this.renderCharacter(player, map.palette.colors, map);
             } else if (item.type === 'NODE') {
-                this.renderSingleStandingNode(item.ref, camX, camY, dt, player);
+                this.renderSingleStandingNode(item.ref, camX, camY, dt, player, map);
             } else if (item.type === 'ENEMY') {
-                this.renderSingleEnemy(item.ref, map.palette.colors, camX, camY);
+                this.renderSingleEnemy(item.ref, map.palette.colors, camX, camY, map);
             } else if (item.type === 'NPC') {
-                this.renderNpcs([item.ref], camX, camY, player.pos);
+                this.renderNpcs([item.ref], camX, camY, player.pos, map);
             } else if (item.type === 'CRITTER') {
                 if (critters.renderSingle) {
-                    critters.renderSingle(this.ctx, item.ref, camX, camY, isNight);
+                    critters.renderSingle(this.ctx, item.ref, camX, camY, isNight, map);
                 }
             } else if (item.type === 'PRISM') {
-                this.renderSinglePrism(item.ref, camX, camY, dt);
+                this.renderSinglePrism(item.ref, camX, camY, dt, map);
             } else if (item.type === 'DECOY') {
-                this.renderSingleDecoy(item.ref, camX, camY, dt);
+                this.renderSingleDecoy(item.ref, camX, camY, dt, map);
             }
         }
     }

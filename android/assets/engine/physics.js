@@ -65,7 +65,9 @@ class AABB {
 class KinematicBody {
     constructor(x, y, width = 10, height = 8) {
         this.pos = new Vector2(x, y);
+        this.pos.z = 0; // Vertical air height (pixels above terrain)
         this.vel = new Vector2(0, 0);
+        this.vel.z = 0; // Vertical velocity (pixels per second)
         this.input = new Vector2(0, 0);
         this.phasingThroughWalls = false;
         
@@ -75,6 +77,12 @@ class KinematicBody {
         this.decelTime = 0.08;     // 0.08s to stop (crisp brake)
         this.accel = this.maxSpeed / this.accelTime;
         this.decel = this.maxSpeed / this.decelTime;
+
+        // 3D Jump & Elevation physics (Isoccor & Ace Rollola terrain specification)
+        this.gravity = 420.0;      // Downward gravity in px/s^2
+        this.jumpPower = 115.0;    // Jump launch impulse
+        this.isJumping = false;
+        this.groundElevation = 1;  // Current terrain elevation tier (0..3)
 
         // Collision bounds (smaller than 16x16 tile to allow tight navigation)
         this.boxWidth = width;
@@ -87,6 +95,15 @@ class KinematicBody {
         this.walkTimer = 0;
         this.isMoving = false;
         this.isSkidding = false;
+    }
+
+    jump() {
+        if (!this.isJumping && this.pos.z <= 0.001) {
+            this.isJumping = true;
+            this.vel.z = this.jumpPower;
+            return true;
+        }
+        return false;
     }
 
     setInput(x, y) {
@@ -108,6 +125,17 @@ class KinematicBody {
     }
 
     update(dt, map) {
+        // Vertical jump physics & gravitational drop
+        if (this.isJumping || this.pos.z > 0.001) {
+            this.vel.z -= this.gravity * dt;
+            this.pos.z += this.vel.z * dt;
+            if (this.pos.z <= 0) {
+                this.pos.z = 0;
+                this.vel.z = 0;
+                this.isJumping = false;
+            }
+        }
+
         // If in DASHING state, maintain high burst speed and glide through obstacles
         if (this.state === 'DASHING') {
             const dashSpeed = this.vel.length();
@@ -160,6 +188,8 @@ class KinematicBody {
             return;
         }
 
+        const startElev = map.getElevationAt ? map.getElevationAt(this.pos.x, this.pos.y) : (this.groundElevation || 1);
+
         // Try moving X axis first
         if (Math.abs(dx) > 0.0001) {
             const nextX = this.pos.x + dx;
@@ -183,6 +213,20 @@ class KinematicBody {
                 this.vel.y = 0;
             }
         }
+
+        // Height & Elevation synchronization (falling off cliffs, landing on terrain)
+        if (map && map.getElevationAt) {
+            const currentElev = map.getElevationAt(this.pos.x, this.pos.y);
+            const prevElev = Math.max(startElev, this.groundElevation || 1);
+            if (currentElev < prevElev) {
+                // Stepped off cliff edge downward! Convert height difference to air z so gravity drops entity smoothly
+                const dropPx = (prevElev - currentElev) * (map.heightStep || 10);
+                this.pos.z += dropPx;
+                this.isJumping = true;
+                if (this.vel.z > 0) this.vel.z = 0;
+            }
+            this.groundElevation = currentElev;
+        }
     }
 
     checkTileCollision(x, y, map) {
@@ -194,10 +238,27 @@ class KinematicBody {
         const top = Math.floor((feetY - this.boxHeight / 2) / map.tileSize);
         const bottom = Math.floor((feetY + this.boxHeight / 2 - 0.01) / map.tileSize);
 
+        const currentElev = (map.getElevationAt ? map.getElevationAt(this.pos.x, this.pos.y) : this.groundElevation) || 1;
+
         for (let ty = top; ty <= bottom; ty++) {
             for (let tx = left; tx <= right; tx++) {
                 if (map.isSolid(tx, ty)) {
                     return true;
+                }
+
+                if (map.getElevation) {
+                    const targetElev = map.getElevation(tx, ty);
+                    const isTargetRamp = map.isRamp ? map.isRamp(tx, ty) : false;
+                    const isCurRamp = map.isRamp ? map.isRamp(Math.floor(this.pos.x / map.tileSize), Math.floor(this.pos.y / map.tileSize)) : false;
+
+                    // If target is at higher elevation and neither tile is a ramp
+                    if (targetElev > currentElev && !isTargetRamp && !isCurRamp) {
+                        const stepHeightPx = (targetElev - currentElev) * (map.heightStep || 10);
+                        // If jumping and above the step threshold, entity can leap onto the cliff!
+                        if (this.pos.z < stepHeightPx * 0.70) {
+                            return true; // Cliff ledge blocks horizontal movement
+                        }
+                    }
                 }
             }
         }

@@ -309,6 +309,34 @@ class ChiptuneSynth {
         } catch(e) {}
     }
 
+    // Springy retro jump sound: upward pitch sweep with low-pass filtering
+    playJump() {
+        if (!this.ctx) return;
+        try {
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const flt = this.ctx.createBiquadFilter();
+            const gain = this.ctx.createGain();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.exponentialRampToValueAtTime(390, now + 0.12);
+
+            flt.type = 'lowpass';
+            flt.frequency.setValueAtTime(1600, now);
+
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+            osc.connect(flt);
+            flt.connect(gain);
+            gain.connect(this.masterGain);
+
+            osc.start(now);
+            osc.stop(now + 0.14);
+        } catch(e) {}
+    }
+
     playShoot() {
         // Techno-Mage Arcane Pulse: Resonant dual-tone electric pulse
         this.playWarmNote(740, 'triangle', 0.12, 0.08, 4200);

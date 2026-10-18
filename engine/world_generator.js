@@ -15,6 +15,8 @@ if (typeof require !== 'undefined' && typeof window === 'undefined') {
     global.AluPrng = _core.AluPrng;
     global.AluPaletteGenerator = _core.AluPaletteGenerator;
     global.AluCoinBondingCurve = _core.AluCoinBondingCurve;
+    global.AluNoise = _core.AluNoise;
+    global.AluPerlinFbm = _core.AluPerlinFbm;
 }
 
 // Tile Type Indices
@@ -45,7 +47,10 @@ const TILE = {
     SANDSTONE_RUIN: 23, // Ancient weathered sandstone monolith / wall (solid)
     QUICKSAND: 24,      // Shifting desert sand pit (solid/hazard)
     CLOUD_TURF: 25,     // Solidified cumulus cloud turf in zenith (walkable)
-    CELESTIAL_GLASS: 26 // Translucent luminescent glass walkway (walkable)
+    CELESTIAL_GLASS: 26,// Translucent luminescent glass walkway (walkable)
+    STONE_RAMP: 27,     // Walkable carved stone ramp connecting elevation levels
+    WOODEN_STAIRS: 28,  // Walkable wooden stairs connecting cliffs
+    CLIFF_FACE: 29      // Vertical cliff rock facade
 };
 
 const AREA_CONFIG = {
@@ -117,6 +122,10 @@ class WorldMap {
         this.tileSize = 16;
         
         this.tiles = new Uint8Array(this.width * this.height);
+        this.elevation = new Uint8Array(this.width * this.height);
+        this.elevation.fill(1); // Default tier 1
+        this.heightStep = 10;   // Pixels per elevation tier
+        this.ramps = [];        // Carved ramp markers
         this.decor = new Uint8Array(this.width * this.height);
         this.palette = AluPaletteGenerator.generate(seed);
         this.bondingCurve = new AluCoinBondingCurve(seed);
@@ -146,8 +155,40 @@ class WorldMap {
         }
     }
 
+    getElevation(x, y) {
+        if (x < 0 || x >= this.width || y < 0 || y >= this.height) return 1;
+        return this.elevation[y * this.width + x];
+    }
+
+    setElevation(x, y, elev) {
+        if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+            this.elevation[y * this.width + x] = Math.max(0, Math.min(3, Math.round(elev)));
+        }
+    }
+
+    getElevationAt(worldX, worldY) {
+        const tx = Math.floor(worldX / this.tileSize);
+        const ty = Math.floor(worldY / this.tileSize);
+        return this.getElevation(tx, ty);
+    }
+
+    isRamp(tx, ty) {
+        const t = this.get(tx, ty);
+        return t === TILE.STONE_RAMP || t === TILE.WOODEN_STAIRS;
+    }
+
+    isCliffEdge(tx, ty) {
+        const cur = this.getElevation(tx, ty);
+        const south = this.getElevation(tx, ty + 1);
+        return cur > south;
+    }
+
     isSolid(tx, ty) {
         const t = this.get(tx, ty);
+        // Ramps and stairs are explicitly walkable transitions
+        if (t === TILE.STONE_RAMP || t === TILE.WOODEN_STAIRS) {
+            return false;
+        }
         if (
             t === TILE.CLIFF_LOW ||
             t === TILE.CLIFF_HIGH ||
@@ -177,6 +218,27 @@ class WorldMap {
         }
 
         return false;
+    }
+
+    carveElevationRamps() {
+        for (let y = 4; y < this.height - 5; y++) {
+            for (let x = 4; x < this.width - 5; x++) {
+                const z = this.getElevation(x, y);
+                const zSouth = this.getElevation(x, y + 1);
+                // When there is a south-facing 1-tier drop from tier 2 to tier 1
+                if (z === 2 && zSouth === 1) {
+                    const tNorth = this.get(x, y);
+                    const tSouth = this.get(x, y + 1);
+                    if ((tNorth === TILE.GROUND || tNorth === TILE.FOIL_GRASS) &&
+                        (tSouth === TILE.GROUND || tSouth === TILE.FOIL_GRASS || tSouth === TILE.PATH_COBBLE)) {
+                        this.set(x, y, TILE.STONE_RAMP);
+                        this.set(x, y + 1, TILE.STONE_RAMP);
+                        this.ramps.push({ x, y, tierLow: 1, tierHigh: 2, dir: 'SOUTH' });
+                        x += 8; // Spread ramps naturally along ridge lines
+                    }
+                }
+            }
+        }
     }
 
     generate() {
@@ -218,19 +280,26 @@ class WorldMap {
      */
     generateHamlet(prng = null) {
         if (!prng) prng = new AluPrng(this.seed);
-        // Base terrain: grassy plains
+        // Base terrain: grassy plains (Tier 1) with northern elevated terrace (Tier 2)
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 if (x === 0 || x === this.width - 1 || y === 0 || y === this.height - 1) {
                     this.set(x, y, TILE.CLIFF_LOW);
+                    this.setElevation(x, y, 2);
+                } else if (y <= 7) {
+                    // Northern elevated foothill terrace
+                    const isFoil = (prng.range(0, 100) < 16);
+                    this.set(x, y, isFoil ? TILE.FOIL_GRASS : TILE.GROUND);
+                    this.setElevation(x, y, 2);
                 } else {
                     const isFoil = (prng.range(0, 100) < 16);
                     this.set(x, y, isFoil ? TILE.FOIL_GRASS : TILE.GROUND);
+                    this.setElevation(x, y, 1);
                 }
             }
         }
 
-        // River flowing vertically through eastern district with seed-based curvature
+        // River flowing vertically through eastern district with seed-based curvature (Tier 0)
         const riverBaseX = 48 + (prng.range(0, 5) - 2); // 46 to 50
         const riverFreq = 0.13 + prng.range(0, 3) * 0.02;
         const riverAmp = 1.2 + prng.range(0, 3) * 0.4;
@@ -243,19 +312,32 @@ class WorldMap {
             this.set(rx + 2, y, TILE.DEEP_WATER);
             this.set(rx + 3, y, TILE.WATER_FOAM);
 
+            for (let bx = rx - 1; bx <= rx + 3; bx++) {
+                this.setElevation(bx, y, 0); // Deep river channel
+            }
+
             // Reeds along the riverbanks
             if (y % 4 === 0) {
                 this.set(rx - 2, y, TILE.REEDS_WATER);
                 this.set(rx + 4, y, TILE.REEDS_WATER);
+                this.setElevation(rx - 2, y, 0);
+                this.setElevation(rx + 4, y, 0);
             }
         }
 
-        // Wooden Bridge spanning the river at y = 26 to 28
+        // Wooden Bridge spanning the river at y = 26 to 28 (Tier 1 bridge walkway)
         for (let by = 26; by <= 28; by++) {
             const rx = Math.floor(riverBaseX + Math.sin(by * riverFreq + riverPhase) * riverAmp);
             for (let bx = rx - 2; bx <= rx + 4; bx++) {
                 this.set(bx, by, TILE.WOODEN_BRIDGE);
+                this.setElevation(bx, by, 1);
             }
+        }
+
+        // Wooden Stairs connecting northern terrace to hamlet square
+        for (let sx = 27; sx <= 29; sx++) {
+            this.set(sx, 8, TILE.WOODEN_STAIRS);
+            this.ramps.push({ x: sx, y: 8, tierLow: 1, tierHigh: 2, dir: 'SOUTH' });
         }
 
         // Cobblestone Main Road (North-South & East-West crossing at Town Square)
@@ -556,38 +638,41 @@ class WorldMap {
      */
     generateWoods(prng = null) {
         if (!prng) prng = new AluPrng(this.seed);
-        // Multi-octave Perlin-style value noise elevation
-        const elevation = new Float32Array(this.width * this.height);
-        for (let y = 0; y < this.height; y++) {
-            for (let x = 0; x < this.width; x++) {
-                const nx = x / this.width - 0.5;
-                const ny = y / this.height - 0.5;
-                const distFromCenter = Math.sqrt(nx * nx + ny * ny) * 2.0;
-                const n1 = Math.sin(x * 0.10 + prng.nextFloat()) * Math.cos(y * 0.10 + prng.nextFloat());
-                const n2 = Math.sin(x * 0.22) * Math.sin(y * 0.22) * 0.5;
-                elevation[y * this.width + x] = (1.0 - distFromCenter * 0.6) + n1 * 0.35 + n2 * 0.2;
-            }
-        }
-
+        // Multi-octave Fractional Brownian Motion (fBm) noise elevation (Ace Rollola & Isoccor model)
+        const noise = (typeof AluNoise !== 'undefined') ? new AluNoise(this.seed + 0x1111) : null;
+        
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 if (x === 0 || x === this.width - 1 || y === 0 || y === this.height - 1) {
                     this.set(x, y, TILE.CLIFF_LOW);
+                    this.setElevation(x, y, 2);
                     continue;
                 }
 
-                const val = elevation[y * this.width + x];
-                if (val < 0.14) {
+                const nx = x / this.width - 0.5;
+                const ny = y / this.height - 0.5;
+                const distFromCenter = Math.sqrt(nx * nx + ny * ny) * 2.0;
+
+                const fbmVal = noise ? noise.fbm(x, y, 4, 0.5, 2.0, 0.055) : 0.5;
+                const val = (1.0 - distFromCenter * 0.4) * 0.3 + fbmVal * 0.7;
+
+                if (val < 0.22) {
                     this.set(x, y, TILE.DEEP_WATER);
-                } else if (val < 0.26) {
+                    this.setElevation(x, y, 0); // Lowland water basin
+                } else if (val < 0.30) {
                     this.set(x, y, TILE.WATER_FOAM);
-                } else if (val < 0.70) {
+                    this.setElevation(x, y, 0);
+                } else if (val < 0.62) {
                     const isFoil = (prng.range(0, 100) < 24);
                     this.set(x, y, isFoil ? TILE.FOIL_GRASS : TILE.GROUND);
-                } else if (val < 0.86) {
-                    this.set(x, y, TILE.CLIFF_LOW);
+                    this.setElevation(x, y, 1); // Base forest plain
+                } else if (val < 0.82) {
+                    const isFoil = (prng.range(0, 100) < 15);
+                    this.set(x, y, isFoil ? TILE.FOIL_GRASS : TILE.GROUND);
+                    this.setElevation(x, y, 2); // Highland plateau
                 } else {
                     this.set(x, y, TILE.CLIFF_HIGH);
+                    this.setElevation(x, y, 3); // High mountain ridge
                 }
             }
         }
@@ -600,10 +685,15 @@ class WorldMap {
             this.set(rx + 1, y, TILE.DEEP_WATER);
             this.set(rx + 2, y, TILE.DEEP_WATER);
             this.set(rx + 3, y, TILE.WATER_FOAM);
+            for (let bx = rx - 1; bx <= rx + 3; bx++) {
+                this.setElevation(bx, y, 0);
+            }
 
             if (y % 5 === 0) {
                 this.set(rx - 2, y, TILE.REEDS_WATER);
                 this.set(rx + 4, y, TILE.REEDS_WATER);
+                this.setElevation(rx - 2, y, 0);
+                this.setElevation(rx + 4, y, 0);
             }
         }
 
@@ -613,9 +703,13 @@ class WorldMap {
             for (let bdy = -1; bdy <= 1; bdy++) {
                 for (let bx = rx - 2; bx <= rx + 5; bx++) {
                     this.set(bx, by + bdy, TILE.WOODEN_BRIDGE);
+                    this.setElevation(bx, by + bdy, 1);
                 }
             }
         }
+
+        // Carve walkable stone ramps connecting elevation tiers
+        this.carveElevationRamps();
 
         // South Gate returning to Cinderwatch Hamlet
         const southY = Math.min(this.height - 2, 78);
@@ -784,8 +878,10 @@ class WorldMap {
             for (let x = 0; x < this.width; x++) {
                 if (x < 3 || x >= this.width - 3 || y < 3 || y >= this.height - 3) {
                     this.set(x, y, TILE.CLIFF_LOW);
+                    this.setElevation(x, y, 2);
                 } else {
                     this.set(x, y, TILE.GROUND);
+                    this.setElevation(x, y, 1);
                 }
             }
         }
@@ -799,37 +895,47 @@ class WorldMap {
                 for (let dx = -r; dx <= r; dx++) {
                     if (dx * dx + dy * dy <= r * r) {
                         this.set(px + dx, py + dy, TILE.CLIFF_LOW);
+                        this.setElevation(px + dx, py + dy, 2);
                     }
                 }
             }
         }
 
-        // Underground stream flowing across cavern floor
+        // Underground stream flowing across cavern floor (Tier 0)
         for (let x = 6; x < this.width - 6; x++) {
             const sy = Math.floor(34 + Math.sin(x * 0.15) * 3.0);
             this.set(x, sy - 1, TILE.WATER_FOAM);
             this.set(x, sy, TILE.DEEP_WATER);
             this.set(x, sy + 1, TILE.DEEP_WATER);
             this.set(x, sy + 2, TILE.WATER_FOAM);
-        }
-
-        // Wooden Bridge over underground stream
-        for (let bx = 28; bx <= 32; bx++) {
-            for (let by = 32; by <= 37; by++) {
-                this.set(bx, by, TILE.WOODEN_BRIDGE);
+            for (let dy = -1; dy <= 2; dy++) {
+                this.setElevation(x, sy + dy, 0);
             }
         }
 
-        // Luminescent Crystal Chasm (Gleaming Cavern Sanctuary)
+        // Wooden Bridge over underground stream (Tier 1)
+        for (let bx = 28; bx <= 32; bx++) {
+            for (let by = 32; by <= 37; by++) {
+                this.set(bx, by, TILE.WOODEN_BRIDGE);
+                this.setElevation(bx, by, 1);
+            }
+        }
+
+        // Luminescent Crystal Chasm (Gleaming Cavern Sanctuary at Tier 2)
         const chasmX = 48 + (prng.range(0, 4) - 2);
         const chasmY = 46 + (prng.range(0, 4) - 2);
         for (let dy = -3; dy <= 3; dy++) {
             for (let dx = -3; dx <= 3; dx++) {
                 if (dx * dx + dy * dy <= 8) {
                     this.set(chasmX + dx, chasmY + dy, TILE.MUSHROOM_GLOW);
+                    this.setElevation(chasmX + dx, chasmY + dy, 2);
                 }
             }
         }
+        // Carved stone ramp into the sanctuary
+        this.set(chasmX, chasmY + 3, TILE.STONE_RAMP);
+        this.ramps.push({ x: chasmX, y: chasmY + 3, tierLow: 1, tierHigh: 2, dir: 'SOUTH' });
+
         this.set(chasmX, chasmY, TILE.ANCIENT_TERMINAL);
         this.terminals.push({
             x: chasmX * 16 + 8,
@@ -894,10 +1000,11 @@ class WorldMap {
      */
     generateSubCore(prng = null) {
         if (!prng) prng = new AluPrng(this.seed + 0x9999);
-        // Enclosed industrial vault
+        // Enclosed industrial vault (Tier 0 abyss void)
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 this.set(x, y, TILE.VOID);
+                this.setElevation(x, y, 0);
             }
         }
 
@@ -915,26 +1022,46 @@ class WorldMap {
                 for (let rx = rm.x; rx < rm.x + rm.w; rx++) {
                     if (rx === rm.x || rx === rm.x + rm.w - 1 || ry === rm.y || ry === rm.y + rm.h - 1) {
                         this.set(rx, ry, TILE.CLIFF_LOW);
+                        this.setElevation(rx, ry, 2);
                     } else {
                         this.set(rx, ry, TILE.GROUND);
+                        this.setElevation(rx, ry, 1);
                     }
                 }
             }
         }
 
-        // Corridors connecting chambers
+        // Corridors connecting chambers (Tier 1 floor)
         for (let cy = 13; cy <= 24; cy++) {
             this.set(31, cy, TILE.GROUND);
             this.set(32, cy, TILE.GROUND);
+            this.setElevation(31, cy, 1);
+            this.setElevation(32, cy, 1);
         }
         for (let cx = 23; cx <= 41; cx++) {
             this.set(cx, 24, TILE.GROUND);
             this.set(cx, 25, TILE.GROUND);
+            this.setElevation(cx, 24, 1);
+            this.setElevation(cx, 25, 1);
         }
         for (let cy = 25; cy <= 39; cy++) {
             this.set(31, cy, TILE.GROUND);
             this.set(32, cy, TILE.GROUND);
+            this.setElevation(31, cy, 1);
+            this.setElevation(32, cy, 1);
         }
+
+        // Boss Sanctum elevated quantum reactor throne (Tier 2)
+        for (let ry = 46; ry <= 52; ry++) {
+            for (let rx = 28; rx <= 36; rx++) {
+                this.setElevation(rx, ry, 2);
+            }
+        }
+        // Metallic stairs leading to reactor throne
+        this.set(31, 46, TILE.WOODEN_STAIRS);
+        this.set(32, 46, TILE.WOODEN_STAIRS);
+        this.ramps.push({ x: 31, y: 46, tierLow: 1, tierHigh: 2, dir: 'SOUTH' });
+        this.ramps.push({ x: 32, y: 46, tierLow: 1, tierHigh: 2, dir: 'SOUTH' });
 
         // 3x3 Secret Arable Plot to unlock Farmer God in West Lab
         this.secretSoilArea = { x: 14, y: 24, w: 3, h: 3 };
@@ -1028,39 +1155,47 @@ class WorldMap {
     generateSolariumDunes(prng = null) {
         if (!prng) prng = new AluPrng(this.seed + 0x3333);
 
-        // Fill base map with SAND_DUNE
+        // Fill base map with SAND_DUNE (Tier 1 flats)
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 if (x === 0 || x === this.width - 1 || y === 0 || y === this.height - 1) {
                     this.set(x, y, TILE.CLIFF_HIGH);
+                    this.setElevation(x, y, 3);
                 } else {
                     this.set(x, y, TILE.SAND_DUNE);
+                    this.setElevation(x, y, 1);
                 }
             }
         }
 
-        // Generate Sandstone Ruins & Ancient Columns
+        // Generate Sandstone Ruins & Ancient Columns on Elevated Ridges (Tier 2)
         for (let i = 0; i < 14; i++) {
             const rx = prng.range(6, this.width - 12);
             const ry = prng.range(8, this.height - 12);
-            const rw = prng.range(2, 5);
-            const rh = prng.range(2, 5);
+            const rw = prng.range(3, 6);
+            const rh = prng.range(3, 6);
             for (let dy = 0; dy < rh; dy++) {
                 for (let dx = 0; dx < rw; dx++) {
-                    if (dx === 0 || dx === rw - 1 || dy === 0 || dy === rh - 1) {
-                        this.set(rx + dx, ry + dy, TILE.SANDSTONE_RUIN);
-                    }
+                    const isBorder = (dx === 0 || dx === rw - 1 || dy === 0 || dy === rh - 1);
+                    this.set(rx + dx, ry + dy, isBorder ? TILE.SANDSTONE_RUIN : TILE.SAND_DUNE);
+                    this.setElevation(rx + dx, ry + dy, 2);
                 }
             }
+            // Sandstone ramp leading onto ruin platform
+            this.set(rx + Math.floor(rw / 2), ry + rh - 1, TILE.STONE_RAMP);
+            this.ramps.push({ x: rx + Math.floor(rw / 2), y: ry + rh - 1, tierLow: 1, tierHigh: 2, dir: 'SOUTH' });
         }
 
-        // Quicksand hazards
+        // Quicksand hazards (Tier 0 sinkholes)
         for (let i = 0; i < 8; i++) {
             const qx = prng.range(8, this.width - 8);
             const qy = prng.range(8, this.height - 8);
             this.set(qx, qy, TILE.QUICKSAND);
             this.set(qx + 1, qy, TILE.QUICKSAND);
             this.set(qx, qy + 1, TILE.QUICKSAND);
+            this.setElevation(qx, qy, 0);
+            this.setElevation(qx + 1, qy, 0);
+            this.setElevation(qx, qy + 1, 0);
         }
 
         // Central Oasis
@@ -1195,14 +1330,15 @@ class WorldMap {
     generateCelestialZenith(prng = null) {
         if (!prng) prng = new AluPrng(this.seed + 0x7777);
 
-        // Fill base map with open azure VOID (sky drop)
+        // Fill base map with open azure VOID (sky drop at Tier 0)
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 this.set(x, y, TILE.VOID);
+                this.setElevation(x, y, 0);
             }
         }
 
-        // 5 Floating Cloud Islands
+        // 5 Floating Cloud Islands (Tier 1 cloud turf)
         const islands = [
             { cx: 35, cy: 35, r: 12 }, // Central Grand Altar Island
             { cx: 16, cy: 18, r: 8 },  // North-West Wind Spire
@@ -1220,13 +1356,14 @@ class WorldMap {
                         const ty = isl.cy + dy;
                         if (tx >= 0 && tx < this.width && ty >= 0 && ty < this.height) {
                             this.set(tx, ty, TILE.CLOUD_TURF);
+                            this.setElevation(tx, ty, 1);
                         }
                     }
                 }
             }
         }
 
-        // Celestial Glass Bridges connecting islands to Center
+        // Celestial Glass Bridges connecting islands to Center (Tier 2 elevated bridges)
         for (let i = 1; i < islands.length; i++) {
             const isl = islands[i];
             const steps = 30;
@@ -1236,8 +1373,22 @@ class WorldMap {
                 const by = Math.round(isl.cy + (35 - isl.cy) * t);
                 this.set(bx, by, TILE.CELESTIAL_GLASS);
                 this.set(bx + 1, by, TILE.CELESTIAL_GLASS);
+                this.setElevation(bx, by, 2);
+                this.setElevation(bx + 1, by, 2);
             }
         }
+
+        // Central Grand Altar High Summit (Tier 3)
+        for (let dy = -5; dy <= 5; dy++) {
+            for (let dx = -5; dx <= 5; dx++) {
+                if (dx * dx + dy * dy <= 24) {
+                    this.setElevation(35 + dx, 35 + dy, 3);
+                }
+            }
+        }
+        // Wooden/Celestial stairs to altar summit
+        this.set(35, 40, TILE.WOODEN_STAIRS);
+        this.ramps.push({ x: 35, y: 40, tierLow: 1, tierHigh: 3, dir: 'SOUTH' });
 
         // East Portal on South-East island (52, 52) returning to Whispering Woods
         this.set(62, 52, TILE.PORTAL_EXIT);

@@ -247,7 +247,114 @@ class AluCoinBondingCurve {
     }
 }
 
+class AluNoise {
+    /**
+     * Deterministic Multi-Octave Fractional Brownian Motion (fBm) Noise
+     * Synthesized from Ken Perlin's Improved Noise with lacunarity and octave domain rotation
+     * as formulated in the Ace Rollola & Isoccor procedural terrain specifications.
+     */
+    constructor(seed = 1337) {
+        this.seed = seed;
+        this.p = new Uint8Array(512);
+        const permutation = new Uint8Array(256);
+        for (let i = 0; i < 256; i++) permutation[i] = i;
+
+        // Shuffle with seed
+        let s = (seed ^ 0x5DEECE66) >>> 0;
+        for (let i = 255; i > 0; i--) {
+            s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+            const j = s % (i + 1);
+            const tmp = permutation[i];
+            permutation[i] = permutation[j];
+            permutation[j] = tmp;
+        }
+        for (let i = 0; i < 512; i++) {
+            this.p[i] = permutation[i & 255];
+        }
+    }
+
+    fade(t) {
+        // Quintic Hermite interpolant: 6t^5 - 15t^4 + 10t^3
+        return t * t * t * (t * (t * 6 - 15) + 10);
+    }
+
+    lerp(t, a, b) {
+        return a + t * (b - a);
+    }
+
+    grad(hash, x, y) {
+        const h = hash & 7;
+        const u = h < 4 ? x : y;
+        const v = h < 4 ? y : x;
+        return ((h & 1) === 0 ? u : -u) + ((h & 2) === 0 ? v : -v);
+    }
+
+    sample(x, y) {
+        const X = Math.floor(x) & 255;
+        const Y = Math.floor(y) & 255;
+        const xf = x - Math.floor(x);
+        const yf = y - Math.floor(y);
+
+        const u = this.fade(xf);
+        const v = this.fade(yf);
+
+        const aa = this.p[this.p[X] + Y];
+        const ab = this.p[this.p[X] + Y + 1];
+        const ba = this.p[this.p[X + 1] + Y];
+        const bb = this.p[this.p[X + 1] + Y + 1];
+
+        const x1 = this.lerp(u, this.grad(aa, xf, yf), this.grad(ba, xf - 1, yf));
+        const x2 = this.lerp(u, this.grad(ab, xf, yf - 1), this.grad(bb, xf - 1, yf - 1));
+
+        return (this.lerp(v, x1, x2) + 1.0) * 0.5;
+    }
+
+    noise2D(x, y) {
+        return this.sample(x, y);
+    }
+
+    /**
+     * Fractional Brownian Motion (fBm) with octave rotation and lacunarity
+     * @param {number} x - Horizontal coordinate
+     * @param {number} y - Vertical coordinate
+     * @param {number} octaves - Number of noise octaves (default 4)
+     * @param {number} persistence - Amplitude multiplier per octave (default 0.5)
+     * @param {number} lacunarity - Frequency multiplier per octave (default 2.0)
+     * @param {number} scale - Starting frequency scale (default 0.06)
+     * @returns {number} Normalized value between 0.0 and 1.0
+     */
+    fbm(x, y, octaves = 4, persistence = 0.5, lacunarity = 2.0, scale = 0.06) {
+        let total = 0;
+        let frequency = scale;
+        let amplitude = 1.0;
+        let maxValue = 0;
+
+        // Domain rotation angle to break axial repetition
+        const cosAngle = 0.866025; // cos(30 deg)
+        const sinAngle = 0.500000; // sin(30 deg)
+
+        let curX = x;
+        let curY = y;
+
+        for (let i = 0; i < octaves; i++) {
+            total += this.sample(curX * frequency, curY * frequency) * amplitude;
+            maxValue += amplitude;
+            amplitude *= persistence;
+            frequency *= lacunarity;
+
+            // Rotate domain for next octave
+            const nextX = curX * cosAngle - curY * sinAngle;
+            const nextY = curX * sinAngle + curY * cosAngle;
+            curX = nextX;
+            curY = nextY;
+        }
+
+        return Math.max(0.0, Math.min(1.0, total / (maxValue || 1.0)));
+    }
+}
+
 // Export for Node and browser
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { AluPrng, AluPaletteGenerator, AluCoinBondingCurve };
+    module.exports = { AluPrng, AluPaletteGenerator, AluCoinBondingCurve, AluNoise, AluPerlinFbm: AluNoise };
 }
+
