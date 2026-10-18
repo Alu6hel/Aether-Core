@@ -1,3 +1,8 @@
+:root {
+    --touch-scale: 1.0;
+    --ui-font-scale: 1.0;
+}
+
 /* Reset & Base Fonts */
 * {
     box-sizing: border-box;
@@ -16,6 +21,7 @@ body, html {
     color: #e6edf3;
     font-family: 'JetBrains Mono', monospace;
     overflow: hidden;
+    font-size: calc(12px * var(--ui-font-scale, 1.0));
 }
 
 .hidden,
@@ -367,6 +373,9 @@ body, html {
     flex-direction: column;
     align-items: center;
     opacity: 0.92;
+    transform: scale(var(--touch-scale, 1.0));
+    transform-origin: bottom left;
+    transition: transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 }
 
 .dpad-row {
@@ -405,13 +414,16 @@ body, html {
     box-shadow: inset 1px 1px 0px rgba(0,0,0,0.8);
 }
 
-/* Right Action Buttons (C = Dash, B = Parry, A = Attack/Examine) */
+/* Right Action Buttons (SP = Class Ability, C = Dash, B = Parry, A = Attack/Examine) */
 #action-buttons {
     display: flex;
     align-items: flex-end;
     gap: 12px;
     margin-bottom: 6px;
     opacity: 0.95;
+    transform: scale(var(--touch-scale, 1.0));
+    transform-origin: bottom right;
+    transition: transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 }
 
 .action-btn {
@@ -2046,50 +2058,54 @@ body, html {
 
 .skill-node-name {
     font-family: 'Press Start 2P', monospace;
-    font-size: 8px;
+    font-size: 9.5px;
     color: #ffffff;
+    letter-spacing: 0.5px;
 }
 
 .skill-node-tier {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 8px;
-    color: #90a4ae;
+    font-size: 9px;
+    color: #80deea;
+    font-weight: bold;
 }
 
 .skill-node-desc {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 8.5px;
-    line-height: 1.3;
-    color: #cfd8dc;
-    margin: 2px 0;
+    font-size: 10px;
+    line-height: 1.4;
+    color: #e0e0e0;
+    margin: 3px 0;
 }
 
 .skill-node-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 2px;
+    margin-top: 4px;
 }
 
 .skill-cost-badge {
     font-family: 'Press Start 2P', monospace;
-    font-size: 7px;
+    font-size: 8px;
     color: #ffd54f;
     background: #263238;
-    padding: 2px 6px;
+    padding: 3px 8px;
     border-radius: 3px;
+    border: 1px solid #37474f;
 }
 
 .skill-status-tag {
     font-family: 'Press Start 2P', monospace;
-    font-size: 7px;
-    padding: 2px 6px;
+    font-size: 8px;
+    padding: 3px 8px;
     border-radius: 3px;
 }
 
 .skill-status-tag.mastered {
-    color: #a5d6a7;
+    color: #b9f6ca;
     background: #1b5e20;
+    border: 1px solid #2e7d32;
 }
 
 .skill-status-tag.locked {
@@ -2099,28 +2115,135 @@ body, html {
 
 .skill-unlock-btn {
     font-family: 'Press Start 2P', monospace;
-    font-size: 7.5px;
-    padding: 4px 10px;
-    background: #00b0ff;
+    font-size: 8.5px;
+    padding: 6px 12px;
+    background: #00e5ff;
     color: #000;
     border: none;
     border-radius: 3px;
     cursor: pointer;
     font-weight: bold;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    box-shadow: 0 2px 6px rgba(0,229,255,0.4);
+    transition: transform 0.05s, background 0.05s;
 }
 
 .skill-unlock-btn:active {
     transform: translateY(1px);
-    background: #40c4ff;
+    background: #64ffda;
 }
 
 .skill-footer-tip {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 7.5px;
-    color: #78909c;
+    font-size: 9px;
+    color: #90a4ae;
     text-align: center;
-    margin-top: 6px;
+    margin-top: 8px;
+}
+
+/* ==========================================================================
+   Game & Controls Settings Modal Styles
+   ========================================================================== */
+.settings-modal-content {
+    max-width: 440px;
+    background: #0f1722;
+    border: 3px solid #263445;
+}
+
+.settings-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.settings-section {
+    background: #141e2c;
+    border: 1px solid #253342;
+    border-radius: 4px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.settings-section-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7.5px;
+    color: #00e5ff;
+    letter-spacing: 0.5px;
+}
+
+.settings-btn-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+}
+
+.scale-choice-btn, .font-choice-btn {
+    background: #1a2535;
+    border: 1px solid #37474f;
+    color: #b0bec5;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    padding: 8px 4px;
+    border-radius: 3px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s ease;
+}
+
+.scale-choice-btn.active, .font-choice-btn.active {
+    background: #00b0ff;
+    color: #000;
+    border-color: #80d8ff;
+    box-shadow: 0 0 8px rgba(0, 176, 255, 0.4);
+    font-weight: bold;
+}
+
+.footer-settings-btn {
+    background: #1e293b;
+    border: 1px solid #3b82f6;
+    color: #93c5fd;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7.5px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    transition: background 0.1s, transform 0.05s;
+}
+
+.footer-settings-btn:active {
+    background: #2563eb;
+    color: #fff;
+    transform: translateY(1px);
+}
+
+/* ==========================================================================
+   Large & Legible Font Mode (High Contrast Accessibility)
+   ========================================================================== */
+body.font-mode-large {
+    --ui-font-scale: 1.18;
+}
+
+body.font-mode-large .guide-text {
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+}
+
+body.font-mode-large .skill-node-desc {
+    font-size: 11px !important;
+    line-height: 1.45 !important;
+}
+
+body.font-mode-large .vital-num, 
+body.font-mode-large .crest-val,
+body.font-mode-large #rustic-area-title {
+    font-size: 9px !important;
+}
+
+body.font-mode-large .quest-title,
+body.font-mode-large .quest-obj {
+    font-size: 9px !important;
 }
 
 

@@ -40,7 +40,12 @@ const TILE = {
     REEDS_WATER: 18,    // Swaying riverbank reeds (walkable)
     FLOWER_BED: 19,     // Vibrant flower garden (walkable)
     MUSHROOM_GLOW: 20,  // Bioluminescent grotto mushroom (walkable)
-    PORTAL_EXIT: 21     // Stone archway / transition gate
+    PORTAL_EXIT: 21,    // Stone archway / transition gate
+    SAND_DUNE: 22,      // Desert sand dunes (walkable)
+    SANDSTONE_RUIN: 23, // Ancient weathered sandstone monolith / wall (solid)
+    QUICKSAND: 24,      // Shifting desert sand pit (solid/hazard)
+    CLOUD_TURF: 25,     // Solidified cumulus cloud turf in zenith (walkable)
+    CELESTIAL_GLASS: 26 // Translucent luminescent glass walkway (walkable)
 };
 
 const AREA_CONFIG = {
@@ -75,6 +80,22 @@ const AREA_CONFIG = {
         height: 64,
         bgMusic: 'CORE_THEME',
         ambientLight: 0.70
+    },
+    SOLARIUM_DUNES: {
+        id: 'SOLARIUM_DUNES',
+        name: 'SOLARIUM WASTES & DUNES',
+        width: 64,
+        height: 64,
+        bgMusic: 'DUNES_THEME',
+        ambientLight: 1.0
+    },
+    CELESTIAL_ZENITH: {
+        id: 'CELESTIAL_ZENITH',
+        name: 'CELESTIAL ZENITH PEAK',
+        width: 70,
+        height: 70,
+        bgMusic: 'ZENITH_THEME',
+        ambientLight: 1.0
     }
 };
 
@@ -136,15 +157,18 @@ class WorldMap {
             t === TILE.FENCE_WOOD ||
             t === TILE.BUILDING_WALL ||
             t === TILE.BUILDING_ROOF ||
-            t === TILE.BUILDING_WINDOW
+            t === TILE.BUILDING_WINDOW ||
+            t === TILE.SANDSTONE_RUIN ||
+            t === TILE.QUICKSAND
         ) {
             return true;
         }
 
         // Check if unharvested solid resource node blocks this tile
+        // Note: For pine trees, only the base trunk/stump tile is solid; the canopy space above is fully walkable so the player can walk behind it!
         if (this.resourceNodes && this.resourceNodes.length > 0) {
             for (const node of this.resourceNodes) {
-                if (node.hp > 0 && (node.type === 'PINE_TREE' || node.type === 'FLINT_BOULDER' || node.type === 'RUNIC_TOTEM')) {
+                if (node.hp > 0 && (node.type === 'PINE_TREE' || node.type === 'FLINT_BOULDER' || node.type === 'RUNIC_TOTEM' || node.type === 'SUNSTONE_NODE' || node.type === 'STAR_CRYSTAL')) {
                     const ntx = Math.floor(node.x / 16);
                     const nty = Math.floor(node.y / 16);
                     if (ntx === tx && nty === ty) return true;
@@ -158,7 +182,9 @@ class WorldMap {
     generate() {
         const prng = new AluPrng(this.seed + (this.areaId === 'WHISPERING_WOODS' ? 0x1111 : 
                                                this.areaId === 'SUNKEN_GROTTO' ? 0x5555 : 
-                                               this.areaId === 'SUB_BEDROCK_CORE' ? 0x9999 : 0x0000));
+                                               this.areaId === 'SUB_BEDROCK_CORE' ? 0x9999 : 
+                                               this.areaId === 'SOLARIUM_DUNES' ? 0x3333 :
+                                               this.areaId === 'CELESTIAL_ZENITH' ? 0x7777 : 0x0000));
 
         switch (this.areaId) {
             case 'CINDERWATCH_HAMLET':
@@ -174,6 +200,12 @@ class WorldMap {
             case 'SUB_BEDROCK_CORE':
             case 'SUB_CORE':
                 this.generateSubCore(prng);
+                break;
+            case 'SOLARIUM_DUNES':
+                this.generateSolariumDunes(prng);
+                break;
+            case 'CELESTIAL_ZENITH':
+                this.generateCelestialZenith(prng);
                 break;
             default:
                 this.generateHamlet(prng);
@@ -312,6 +344,17 @@ class WorldMap {
             label: 'NORTH TO WHISPERING WOODS'
         });
 
+        // South Gate leads to SOLARIUM_DUNES
+        this.set(28, 62, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_to_dunes',
+            x: 28 * 16 + 8,
+            y: 62 * 16 + 8,
+            targetArea: 'SOLARIUM_DUNES',
+            targetSpawn: { x: 32 * 16 + 8, y: 5 * 16 + 8 },
+            label: 'SOUTH TO SOLARIUM WASTES'
+        });
+
         // Ancient cracked sci-fi terminal near boundary
         this.set(10, 8, TILE.ANCIENT_TERMINAL);
         this.terminals.push({
@@ -429,22 +472,43 @@ class WorldMap {
             });
         }
 
-        // Pine trees in outskirts (18 count)
-        for (let i = 0; i < 18; i++) {
-            const px = 4 + (i % 6) * 3;
-            const py = 4 + Math.floor(i / 6) * 4;
-            this.resourceNodes.push({
-                id: `hamlet_pine_${i}`,
-                type: 'PINE_TREE',
-                x: px * 16 + 8,
-                y: py * 16 + 8,
-                hp: 3,
-                maxHp: 3,
-                drops: 'BRANCH',
-                dropCount: 2,
-                dropCoins: 1,
-                name: 'Village Boundary Pine'
-            });
+        // Pine trees in outskirts (18 count) - placed strictly on clear grassy ground
+        let pineCount = 0;
+        let attempts = 0;
+        while (pineCount < 18 && attempts < 300) {
+            attempts++;
+            let px, py;
+            const region = pineCount % 3;
+            if (region === 0) {
+                px = 3 + ((attempts * 3) % 13);
+                py = 3 + (Math.floor(attempts / 13) % 20);
+            } else if (region === 1) {
+                px = 3 + ((attempts * 2) % 8);
+                py = 36 + (Math.floor(attempts / 8) % 20);
+            } else {
+                px = 48 + ((attempts * 2) % 12);
+                py = 3 + (Math.floor(attempts / 12) % 20);
+            }
+            if (px >= 2 && px < this.width - 2 && py >= 2 && py < this.height - 2) {
+                if (this.get(px, py) === TILE.GROUND && !this.isSolid(px, py)) {
+                    const existing = this.resourceNodes.find(n => Math.floor(n.x / 16) === px && Math.floor(n.y / 16) === py);
+                    if (!existing) {
+                        this.resourceNodes.push({
+                            id: `hamlet_pine_${pineCount}`,
+                            type: 'PINE_TREE',
+                            x: px * 16 + 8,
+                            y: py * 16 + 8,
+                            hp: 3,
+                            maxHp: 3,
+                            drops: 'BRANCH',
+                            dropCount: 2,
+                            dropCoins: 1,
+                            name: 'Village Boundary Pine'
+                        });
+                        pineCount++;
+                    }
+                }
+            }
         }
 
         // Flint Rock Boulders near stone quarry & boundary cliffs (12 count)
@@ -578,6 +642,19 @@ class WorldMap {
             targetArea: 'SUNKEN_GROTTO',
             targetSpawn: { x: 30 * 16 + 8, y: 10 * 16 + 8 },
             label: 'DESCEND TO SUNKEN GROTTO'
+        });
+
+        // West Sky-Ascension Gate leading to Celestial Zenith Peak
+        const westX = 3;
+        const westY = 40;
+        this.set(westX, westY, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_to_zenith',
+            x: westX * 16 + 8,
+            y: westY * 16 + 8,
+            targetArea: 'CELESTIAL_ZENITH',
+            targetSpawn: { x: 58 * 16 + 8, y: 52 * 16 + 8 },
+            label: 'ASCEND TO CELESTIAL ZENITH'
         });
 
         // Spawn point when entering from Hamlet
@@ -943,6 +1020,318 @@ class WorldMap {
                 name: 'Titanium High-Energy Conduit'
             });
         }
+    }
+
+    /**
+     * Area 5: SOLARIUM WASTES & DUNES (Sun-scorched desert, sandstone ruins, ancient solar obelisks, and oasis)
+     */
+    generateSolariumDunes(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed + 0x3333);
+
+        // Fill base map with SAND_DUNE
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                if (x === 0 || x === this.width - 1 || y === 0 || y === this.height - 1) {
+                    this.set(x, y, TILE.CLIFF_HIGH);
+                } else {
+                    this.set(x, y, TILE.SAND_DUNE);
+                }
+            }
+        }
+
+        // Generate Sandstone Ruins & Ancient Columns
+        for (let i = 0; i < 14; i++) {
+            const rx = prng.range(6, this.width - 12);
+            const ry = prng.range(8, this.height - 12);
+            const rw = prng.range(2, 5);
+            const rh = prng.range(2, 5);
+            for (let dy = 0; dy < rh; dy++) {
+                for (let dx = 0; dx < rw; dx++) {
+                    if (dx === 0 || dx === rw - 1 || dy === 0 || dy === rh - 1) {
+                        this.set(rx + dx, ry + dy, TILE.SANDSTONE_RUIN);
+                    }
+                }
+            }
+        }
+
+        // Quicksand hazards
+        for (let i = 0; i < 8; i++) {
+            const qx = prng.range(8, this.width - 8);
+            const qy = prng.range(8, this.height - 8);
+            this.set(qx, qy, TILE.QUICKSAND);
+            this.set(qx + 1, qy, TILE.QUICKSAND);
+            this.set(qx, qy + 1, TILE.QUICKSAND);
+        }
+
+        // Central Oasis
+        const ox = Math.floor(this.width / 2);
+        const oy = Math.floor(this.height / 2);
+        for (let dy = -4; dy <= 4; dy++) {
+            for (let dx = -5; dx <= 5; dx++) {
+                const dist = Math.hypot(dx, dy);
+                if (dist < 3.2) {
+                    this.set(ox + dx, oy + dy, TILE.DEEP_WATER);
+                } else if (dist < 4.5) {
+                    this.set(ox + dx, oy + dy, TILE.WATER_FOAM);
+                }
+            }
+        }
+        // Oasis Reeds
+        for (let r = 0; r < 8; r++) {
+            const angle = (r * Math.PI * 2) / 8;
+            const rx = Math.round(ox + Math.cos(angle) * 4.2);
+            const ry = Math.round(oy + Math.sin(angle) * 3.8);
+            this.set(rx, ry, TILE.REEDS_WATER);
+        }
+
+        // North Gate leading back to Cinderwatch Hamlet
+        this.set(32, 2, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_to_hamlet_south',
+            x: 32 * 16 + 8,
+            y: 3 * 16 + 8,
+            targetArea: 'CINDERWATCH_HAMLET',
+            targetSpawn: { x: 28 * 16 + 8, y: 59 * 16 + 8 },
+            label: 'NORTH TO CINDERWATCH HAMLET'
+        });
+
+        // Spawn point when entering from Hamlet
+        this.spawnPoint = { x: 32 * 16 + 8, y: 6 * 16 + 8 };
+
+        // Ancient Solar Obelisk in the eastern ruins
+        this.set(48, 22, TILE.ANCIENT_TERMINAL);
+        this.terminals.push({
+            x: 48 * 16 + 8,
+            y: 22 * 16 + 8,
+            name: "Solarium Monolith 03: Solar Harvester",
+            log: "LOG: Thermal collection array online. Solar radiation at maximum yield. Beware sand scorpions near the northern perimeter."
+        });
+
+        // Enemies in the dunes
+        this.enemies = [];
+        for (let i = 0; i < 4; i++) {
+            this.enemies.push({
+                id: `dune_scorpion_${i}`,
+                x: prng.range(10, this.width - 10) * 16 + 8,
+                y: prng.range(12, this.height - 12) * 16 + 8,
+                hp: 60,
+                maxHp: 60,
+                speed: 70,
+                attack: 14,
+                type: 'SCORPION',
+                name: 'Solar Sand-Scorpion'
+            });
+        }
+        this.enemies.push({
+            id: 'dune_sentinel_1',
+            x: 46 * 16 + 8,
+            y: 28 * 16 + 8,
+            hp: 120,
+            maxHp: 120,
+            speed: 45,
+            attack: 22,
+            type: 'SENTINEL',
+            name: 'Solar Mirage Sentinel'
+        });
+        this.enemies.push({
+            id: 'dune_reaver_boss',
+            x: 20 * 16 + 8,
+            y: 44 * 16 + 8,
+            hp: 210,
+            maxHp: 210,
+            speed: 55,
+            attack: 26,
+            isBoss: true,
+            type: 'BOSS',
+            name: 'Ancient Dune Reaver'
+        });
+
+        // Resource Nodes: Sunstones and Desert Agave
+        this.resourceNodes = [];
+        for (let i = 0; i < 8; i++) {
+            this.resourceNodes.push({
+                id: `sunstone_${i}`,
+                type: 'SUNSTONE_NODE',
+                x: prng.range(8, this.width - 8) * 16 + 8,
+                y: prng.range(8, this.height - 8) * 16 + 8,
+                hp: 3,
+                maxHp: 3,
+                drops: 'SUNSTONE_CORE',
+                dropCount: 2,
+                dropCoins: 4,
+                name: 'Sunstone Core Node'
+            });
+        }
+        for (let i = 0; i < 6; i++) {
+            this.resourceNodes.push({
+                id: `agave_${i}`,
+                type: 'DESERT_AGAVE',
+                x: (ox - 8 + (i % 3) * 8) * 16 + 8,
+                y: (oy - 8 + Math.floor(i / 3) * 16) * 16 + 8,
+                hp: 1,
+                maxHp: 1,
+                drops: 'AGAVE_NECTAR',
+                dropCount: 2,
+                dropCoins: 2,
+                name: 'Desert Agave'
+            });
+        }
+
+        // Golden Relic Chest
+        this.chests = [{
+            id: 'dunes_relic_chest',
+            x: 48 * 16 + 8,
+            y: 20 * 16 + 8,
+            opened: false,
+            itemId: 'PRIMITIVE_TORCH',
+            count: 2,
+            coins: 50
+        }];
+    }
+
+    /**
+     * Area 6: CELESTIAL ZENITH PEAK (Skyward cloud archipelago, celestial glass bridges, and star shrines)
+     */
+    generateCelestialZenith(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed + 0x7777);
+
+        // Fill base map with open azure VOID (sky drop)
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                this.set(x, y, TILE.VOID);
+            }
+        }
+
+        // 5 Floating Cloud Islands
+        const islands = [
+            { cx: 35, cy: 35, r: 12 }, // Central Grand Altar Island
+            { cx: 16, cy: 18, r: 8 },  // North-West Wind Spire
+            { cx: 54, cy: 18, r: 8 },  // North-East Storm Sanctuary
+            { cx: 18, cy: 52, r: 8 },  // South-West Aurora Haven
+            { cx: 52, cy: 52, r: 9 }   // South-East Arrival Haven (connects to Woods)
+        ];
+
+        for (const isl of islands) {
+            for (let dy = -isl.r; dy <= isl.r; dy++) {
+                for (let dx = -isl.r; dx <= isl.r; dx++) {
+                    const d = Math.hypot(dx, dy);
+                    if (d <= isl.r) {
+                        const tx = isl.cx + dx;
+                        const ty = isl.cy + dy;
+                        if (tx >= 0 && tx < this.width && ty >= 0 && ty < this.height) {
+                            this.set(tx, ty, TILE.CLOUD_TURF);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Celestial Glass Bridges connecting islands to Center
+        for (let i = 1; i < islands.length; i++) {
+            const isl = islands[i];
+            const steps = 30;
+            for (let s = 0; s <= steps; s++) {
+                const t = s / steps;
+                const bx = Math.round(isl.cx + (35 - isl.cx) * t);
+                const by = Math.round(isl.cy + (35 - isl.cy) * t);
+                this.set(bx, by, TILE.CELESTIAL_GLASS);
+                this.set(bx + 1, by, TILE.CELESTIAL_GLASS);
+            }
+        }
+
+        // East Portal on South-East island (52, 52) returning to Whispering Woods
+        this.set(62, 52, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_to_woods_east',
+            x: 62 * 16 + 8,
+            y: 52 * 16 + 8,
+            targetArea: 'WHISPERING_WOODS',
+            targetSpawn: { x: 5 * 16 + 8, y: 40 * 16 + 8 },
+            label: 'DESCEND TO WHISPERING WOODS'
+        });
+
+        // Spawn point when arriving
+        this.spawnPoint = { x: 56 * 16 + 8, y: 52 * 16 + 8 };
+
+        // Central Star Altar
+        this.set(35, 35, TILE.ANCIENT_TERMINAL);
+        this.terminals.push({
+            x: 35 * 16 + 8,
+            y: 35 * 16 + 8,
+            name: "Zenith Star Altar: Aether Conduit",
+            log: "LOG: High atmospheric stellar focus operational. You stand at the pinnacle of the Dyson sphere atmosphere."
+        });
+
+        // Enemies: Sky Wyverns and Storm Sentinels
+        this.enemies = [];
+        for (let i = 0; i < 4; i++) {
+            this.enemies.push({
+                id: `wyvern_${i}`,
+                x: (20 + (i % 2) * 30) * 16 + 8,
+                y: (22 + Math.floor(i / 2) * 26) * 16 + 8,
+                hp: 75,
+                maxHp: 75,
+                speed: 85,
+                attack: 18,
+                type: 'WYVERN',
+                name: 'Celestial Sky-Wyvern'
+            });
+        }
+        this.enemies.push({
+            id: 'zenith_archon_boss',
+            x: 35 * 16 + 8,
+            y: 30 * 16 + 8,
+            hp: 230,
+            maxHp: 230,
+            speed: 55,
+            attack: 28,
+            isBoss: true,
+            type: 'BOSS',
+            name: 'Archon of the Star Zenith'
+        });
+
+        // Resource Nodes: Star Crystals and Sky Lilies
+        this.resourceNodes = [];
+        for (let i = 0; i < 8; i++) {
+            const isl = islands[i % islands.length];
+            this.resourceNodes.push({
+                id: `star_crystal_${i}`,
+                type: 'STAR_CRYSTAL',
+                x: (isl.cx - 3 + (i % 3) * 3) * 16 + 8,
+                y: (isl.cy - 3 + Math.floor(i / 3) * 3) * 16 + 8,
+                hp: 4,
+                maxHp: 4,
+                drops: 'AETHER_SHARD',
+                dropCount: 2,
+                dropCoins: 5,
+                name: 'Luminescent Star Crystal'
+            });
+        }
+        for (let i = 0; i < 6; i++) {
+            this.resourceNodes.push({
+                id: `sky_lily_${i}`,
+                type: 'SKY_LILY',
+                x: (32 + (i % 3) * 3) * 16 + 8,
+                y: (38 + Math.floor(i / 3) * 2) * 16 + 8,
+                hp: 1,
+                maxHp: 1,
+                drops: 'CELESTIAL_ESSENCE',
+                dropCount: 2,
+                dropCoins: 3,
+                name: 'Sky Lily'
+            });
+        }
+
+        // Skyward Relic Chest
+        this.chests = [{
+            id: 'zenith_relic_chest',
+            x: 16 * 16 + 8,
+            y: 16 * 16 + 8,
+            opened: false,
+            itemId: 'NANITE_REPAIR_KIT',
+            count: 2,
+            coins: 60
+        }];
     }
 
     findNearbyNode(x, y, radius = 26) {

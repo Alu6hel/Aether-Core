@@ -63,10 +63,11 @@ class AABB {
 }
 
 class KinematicBody {
-    constructor(x, y, width = 12, height = 12) {
+    constructor(x, y, width = 10, height = 8) {
         this.pos = new Vector2(x, y);
         this.vel = new Vector2(0, 0);
         this.input = new Vector2(0, 0);
+        this.phasingThroughWalls = false;
         
         // Physics constants
         this.maxSpeed = 120.0;     // Pixels per second
@@ -185,10 +186,13 @@ class KinematicBody {
     }
 
     checkTileCollision(x, y, map) {
+        if (this.phasingThroughWalls) return false;
+        // Feet box: centered horizontally at x, located at feet (y - 1 to y + 6)
+        const feetY = y + 2;
         const left = Math.floor((x - this.boxWidth / 2) / map.tileSize);
         const right = Math.floor((x + this.boxWidth / 2 - 0.01) / map.tileSize);
-        const top = Math.floor((y - this.boxHeight / 2) / map.tileSize);
-        const bottom = Math.floor((y + this.boxHeight / 2 - 0.01) / map.tileSize);
+        const top = Math.floor((feetY - this.boxHeight / 2) / map.tileSize);
+        const bottom = Math.floor((feetY + this.boxHeight / 2 - 0.01) / map.tileSize);
 
         for (let ty = top; ty <= bottom; ty++) {
             for (let tx = left; tx <= right; tx++) {

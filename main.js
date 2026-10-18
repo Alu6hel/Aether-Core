@@ -88,6 +88,7 @@ class GameApp {
         this.setupGbaMenu();
         this.setupUI();
         this.setupModals();
+        this.initSettings();
 
         // 5. Initial State: Always Boot Directly to Atmospheric Start Screen (No Gameplay Blur)
         this.setGameState('START_SCREEN');
@@ -103,6 +104,53 @@ class GameApp {
         // 8. Sync with edge gateway in background
         this.edgeClient.mintWorldCoin(this.currentSeed).then(res => {
             console.log("[EDGE SYNC]", res);
+        });
+    }
+
+    initSettings() {
+        try {
+            const savedScale = localStorage.getItem('aether_btn_scale') || '1.0';
+            this.setButtonScale(savedScale);
+            const savedFont = localStorage.getItem('aether_font_mode') || 'standard';
+            this.setFontMode(savedFont);
+        } catch (e) {
+            console.warn("Could not load settings:", e);
+        }
+    }
+
+    setButtonScale(scale) {
+        this.touchButtonScale = scale;
+        document.documentElement.style.setProperty('--touch-scale', String(scale));
+        try {
+            localStorage.setItem('aether_btn_scale', String(scale));
+        } catch (e) {}
+        document.querySelectorAll('.scale-choice-btn').forEach(b => {
+            if (b.getAttribute('data-scale') === String(scale)) {
+                b.classList.add('active');
+            } else {
+                b.classList.remove('active');
+            }
+        });
+    }
+
+    setFontMode(mode) {
+        this.fontMode = mode;
+        if (mode === 'large') {
+            document.body.classList.add('font-mode-large');
+            document.documentElement.style.setProperty('--ui-font-scale', '1.18');
+        } else {
+            document.body.classList.remove('font-mode-large');
+            document.documentElement.style.setProperty('--ui-font-scale', '1.0');
+        }
+        try {
+            localStorage.setItem('aether_font_mode', mode);
+        } catch (e) {}
+        document.querySelectorAll('.font-choice-btn').forEach(b => {
+            if (b.getAttribute('data-font') === mode) {
+                b.classList.add('active');
+            } else {
+                b.classList.remove('active');
+            }
         });
     }
 
@@ -186,6 +234,24 @@ class GameApp {
             console.log("[UI CANVASES] Drew farmer preview.");
         }
 
+        const cChrono = document.getElementById('canvas-chrono');
+        if (cChrono) {
+            const ctx = cChrono.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            ctx.clearRect(0, 0, 32, 32);
+            ctx.drawImage(this.renderer.sprites.getClassPreview('CHRONO_GLITCHER'), 0, 0);
+            console.log("[UI CANVASES] Drew chrono preview.");
+        }
+
+        const cArchitect = document.getElementById('canvas-architect');
+        if (cArchitect) {
+            const ctx = cArchitect.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            ctx.clearRect(0, 0, 32, 32);
+            ctx.drawImage(this.renderer.sprites.getClassPreview('SOLARION_ARCHITECT'), 0, 0);
+            console.log("[UI CANVASES] Drew architect preview.");
+        }
+
         // 3. Gold Coin Medallion
         const cCoin = document.getElementById('canvas-coin');
         if (cCoin) {
@@ -266,6 +332,8 @@ class GameApp {
                 if (this.currentAreaId === 'SUB_BEDROCK_CORE') track = 'SUB_CORE';
                 else if (this.currentAreaId === 'WHISPERING_WOODS') track = 'WHISPERING_WOODS';
                 else if (this.currentAreaId === 'SUNKEN_GROTTO') track = 'SUNKEN_GROTTO';
+                else if (this.currentAreaId === 'SOLARIUM_DUNES') track = 'SOLARIUM_DUNES';
+                else if (this.currentAreaId === 'CELESTIAL_ZENITH') track = 'CELESTIAL_ZENITH';
                 this.renderer.audio.startBgm(track);
             }
         }
@@ -679,7 +747,9 @@ class GameApp {
             CINDERWATCH_HAMLET: new WorldMap(seed, 64, 64, 'CINDERWATCH_HAMLET'),
             WHISPERING_WOODS: new WorldMap(seed, 80, 80, 'WHISPERING_WOODS'),
             SUNKEN_GROTTO: new WorldMap(seed, 64, 64, 'SUNKEN_GROTTO'),
-            SUB_BEDROCK_CORE: new WorldMap(seed, 64, 64, 'SUB_BEDROCK_CORE')
+            SUB_BEDROCK_CORE: new WorldMap(seed, 64, 64, 'SUB_BEDROCK_CORE'),
+            SOLARIUM_DUNES: new WorldMap(seed, 72, 72, 'SOLARIUM_DUNES'),
+            CELESTIAL_ZENITH: new WorldMap(seed, 70, 70, 'CELESTIAL_ZENITH')
         };
         this.surfaceMap = this.areaMaps.CINDERWATCH_HAMLET;
         this.subCoreMap = this.areaMaps.SUB_BEDROCK_CORE;
@@ -742,6 +812,8 @@ class GameApp {
             if (newAreaId === 'SUB_BEDROCK_CORE') track = 'SUB_CORE';
             else if (newAreaId === 'WHISPERING_WOODS') track = 'WHISPERING_WOODS';
             else if (newAreaId === 'SUNKEN_GROTTO') track = 'SUNKEN_GROTTO';
+            else if (newAreaId === 'SOLARIUM_DUNES') track = 'SOLARIUM_DUNES';
+            else if (newAreaId === 'CELESTIAL_ZENITH') track = 'CELESTIAL_ZENITH';
             this.renderer.audio.startBgm(track);
         }
 
@@ -917,15 +989,16 @@ class GameApp {
         const btnSp = document.getElementById('btn-sp');
         if (btnSp) bindAction(btnSp, () => this.handleSpecialAbility());
 
-        // Center Buttons: Restart, Dev Skip, Menu
-        const btnRestart = document.getElementById('btn-restart');
-        bindAction(btnRestart, () => this.restartPioneer());
-
-        const btnSkip = document.getElementById('btn-skip');
-        bindAction(btnSkip, () => this.devSkip());
+        // Center Buttons: Settings & Menu
+        const btnTouchSettings = document.getElementById('btn-touch-settings');
+        if (btnTouchSettings) bindAction(btnTouchSettings, () => this.toggleSoundModal());
 
         const btnStart = document.getElementById('btn-start');
-        bindAction(btnStart, () => this.toggleGbaMenu());
+        if (btnStart) bindAction(btnStart, () => this.toggleGbaMenu());
+
+        // Footer Settings Button
+        const btnSettingsFooter = document.getElementById('btn-settings-footer');
+        if (btnSettingsFooter) bindAction(btnSettingsFooter, () => this.toggleSoundModal());
 
         // Top Header Buttons
         const btnSkillsTop = document.getElementById('btn-skills-top');
@@ -1203,6 +1276,28 @@ class GameApp {
 
         const btnTestHit = document.getElementById('btn-test-hit');
         if (btnTestHit) btnTestHit.addEventListener('pointerdown', (e) => { e.preventDefault(); this.renderer.audio.playSlash(); });
+
+        // Touch Controls Scale buttons
+        const scaleButtons = document.querySelectorAll('.scale-choice-btn');
+        scaleButtons.forEach(btn => {
+            btn.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                const scale = btn.getAttribute('data-scale');
+                this.setButtonScale(scale);
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
+            });
+        });
+
+        // Typography Mode buttons
+        const fontButtons = document.querySelectorAll('.font-choice-btn');
+        fontButtons.forEach(btn => {
+            btn.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                const fontMode = btn.getAttribute('data-font');
+                this.setFontMode(fontMode);
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
+            });
+        });
 
         // 4. Dev / Debug Modal Controls
         const devModal = document.getElementById('dev-modal');
@@ -2663,14 +2758,15 @@ class GameApp {
         // 3. Render Pass
         this.renderer.clear();
         this.renderer.renderMap(this.currentMap, dt);
-        this.renderer.renderEnemies(this.currentMap.enemies, this.currentMap.palette.colors);
-        if (this.npcs) {
-            this.renderer.renderNpcs(this.npcs.npcs, Math.round(this.renderer.camera.x), Math.round(this.renderer.camera.y), this.player.pos);
-        }
-        if (this.critters) {
-            this.critters.render(this.renderer.ctx, Math.round(this.renderer.camera.x), Math.round(this.renderer.camera.y), isNight);
-        }
-        this.renderer.renderCharacter(this.player, this.currentMap.palette.colors);
+        this.renderer.renderEntitiesYSorted(
+            this.currentMap,
+            this.player,
+            this.currentMap.enemies,
+            this.npcs ? this.npcs.npcs : [],
+            this.critters,
+            dt,
+            isNight
+        );
 
         // 4. Render Day/Night Lighting Mask (Darkness + Torchlight radial aperture)
         this.renderer.renderLighting(this.dayTimer, this.player, Math.round(this.renderer.camera.x), Math.round(this.renderer.camera.y), this.currentMap);

@@ -62,11 +62,11 @@ class RetroRenderer {
             }
         }
 
-        // Render interactive chests, resource nodes, foragable sparkles and portals
-        if (map.resourceNodes) this.renderResourceNodes(map.resourceNodes, camX, camY, dt);
+        // Render ground objects: chests, sparkles, portals, and depleted stumps / ground flora
         if (map.chests) this.renderChests(map.chests, camX, camY);
         if (map.sparkles) this.renderSparkles(map.sparkles, camX, camY);
         if (map.portals) this.renderPortals(map.portals, camX, camY);
+        if (map.resourceNodes) this.renderGroundResourceNodes(map.resourceNodes, camX, camY, dt);
     }
 
     drawTile(tile, sx, sy, pal, tx, ty, map) {
@@ -683,6 +683,103 @@ class RetroRenderer {
                 ctx.fillRect(sx + 6, sy + 6, 4, 8);
                 break;
             }
+
+            case 22: { // SAND_DUNE (Solarium Dunes golden desert sands)
+                ctx.fillStyle = '#d49b58';
+                ctx.fillRect(sx, sy, 16, 16);
+
+                // Wind-blown rippling dune shading
+                ctx.fillStyle = '#c58b45';
+                ctx.fillRect(sx, sy + 11, 16, 5);
+                ctx.fillStyle = '#e8b874';
+                ctx.fillRect(sx + 2, sy + 3, 12, 3);
+
+                // Glistening silica specks
+                if ((tx * 13 + ty * 19) % 5 === 0) {
+                    ctx.fillStyle = '#fff8e1';
+                    ctx.fillRect(sx + 4, sy + 7, 2, 2);
+                }
+                if ((tx * 7 + ty * 11) % 6 === 0) {
+                    ctx.fillStyle = '#ffe082';
+                    ctx.fillRect(sx + 11, sy + 4, 2, 1);
+                }
+                break;
+            }
+
+            case 23: { // SANDSTONE_RUIN (Ancient Sunken Megalith Walls)
+                ctx.fillStyle = '#8d6e63';
+                ctx.fillRect(sx, sy, 16, 16);
+
+                // Carved stone blocks & beveled mortar
+                ctx.fillStyle = '#6d4c41';
+                ctx.fillRect(sx + 1, sy + 1, 14, 14);
+                ctx.fillStyle = '#4e342e';
+                ctx.fillRect(sx + 1, sy + 15, 14, 1);
+                ctx.fillRect(sx + 15, sy + 1, 1, 15);
+
+                // Ancient sun-glyph engravings
+                ctx.fillStyle = '#ffd54f';
+                ctx.fillRect(sx + 7, sy + 6, 2, 4);
+                ctx.fillRect(sx + 5, sy + 7, 6, 2);
+                break;
+            }
+
+            case 24: { // QUICKSAND (Swirling Perilous Dune Sinkhole)
+                ctx.fillStyle = '#a67332';
+                ctx.fillRect(sx, sy, 16, 16);
+
+                // Concentric swirling vortex
+                const vortex = Math.floor(this.waterAnimTimer * 4 + tx + ty) % 4;
+                ctx.fillStyle = '#7a4e1d';
+                ctx.fillRect(sx + 2 + vortex, sy + 3, 12 - vortex * 2, 10);
+                ctx.fillStyle = '#4e2f0d';
+                ctx.fillRect(sx + 5, sy + 5, 6, 6);
+                ctx.fillStyle = '#261405';
+                ctx.fillRect(sx + 7, sy + 7, 2, 2);
+                break;
+            }
+
+            case 25: { // CLOUD_TURF (Celestial Floating Cloud Archipelago)
+                ctx.fillStyle = '#e1f5fe';
+                ctx.fillRect(sx, sy, 16, 16);
+
+                // Fluffy cloud puffs & cumulus shading
+                ctx.fillStyle = '#b3e5fc';
+                ctx.fillRect(sx, sy + 10, 16, 6);
+                ctx.fillRect(sx + 2, sy + 8, 4, 3);
+                ctx.fillRect(sx + 9, sy + 7, 5, 4);
+
+                // Brilliant celestial rim highlights
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx + 1, sy + 2, 6, 3);
+                ctx.fillRect(sx + 8, sy + 1, 7, 3);
+
+                // Tiny glowing star-dust sparkles
+                if ((tx * 11 + ty * 17) % 7 === 0) {
+                    const sAlpha = Math.sin(this.waterAnimTimer * 3 + tx) > 0;
+                    ctx.fillStyle = sAlpha ? '#fff59d' : '#80d8ff';
+                    ctx.fillRect(sx + 7, sy + 5, 2, 2);
+                }
+                break;
+            }
+
+            case 26: { // CELESTIAL_GLASS (Shimmering Crystalline Sky Bridge)
+                ctx.fillStyle = 'rgba(0, 229, 255, 0.35)';
+                ctx.fillRect(sx, sy, 16, 16);
+
+                // Translucent geometric glass frame
+                ctx.fillStyle = '#00b0ff';
+                ctx.fillRect(sx, sy, 16, 1);
+                ctx.fillRect(sx, sy + 15, 16, 1);
+                ctx.fillRect(sx, sy, 1, 16);
+                ctx.fillRect(sx + 15, sy, 1, 16);
+
+                // Diagonal crystalline light reflection
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                const refOffset = Math.floor(this.waterAnimTimer * 6 + tx * 2) % 16;
+                ctx.fillRect(sx + refOffset, sy + 2, 3, 12);
+                break;
+            }
         }
     }
 
@@ -1054,6 +1151,224 @@ class RetroRenderer {
                 ctx.fillRect(sx + 5, sy - 10 + bob, 2, 13);
                 ctx.fillRect(sx + 5, sy - 12 + bob, 4, 2);
             }
+
+        // 4. CHRONO-GLITCHER (Reality/Time Anomaly with Temporal Tuning Blade)
+        } else if (char.charClass === 'CHRONO_GLITCHER') {
+            const coatDark = '#240046';
+            const coatLight = '#3c096c';
+            const glitchMagenta = '#ff007f';
+            const cyanAccent = '#00f0ff';
+            const bladeColor = '#e0aaff';
+            const skinColor = '#ffcc80';
+
+            // Micro-jitter glitch displacement when moving or phasing
+            const jitter = (char.phasingTimer > 0 || (char.vel && char.vel.length() > 5 && Math.random() < 0.2)) 
+                ? (Math.random() > 0.5 ? 1 : -1) : 0;
+            const csx = sx + jitter;
+
+            if (facing === 'DOWN') {
+                // Boots
+                ctx.fillStyle = '#10002b';
+                ctx.fillRect(csx - 3 + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
+                ctx.fillRect(csx + 1 + (walkCycle === 1 ? -1 : 0), sy + 4, 3, 2);
+
+                // Cyber-Trench Coat
+                ctx.fillStyle = coatLight;
+                ctx.fillRect(csx - 4, sy - 7 + bob, 8, 11);
+                ctx.fillStyle = glitchMagenta;
+                ctx.fillRect(csx - 1, sy - 6 + bob, 2, 9); // Central glitch seam
+                ctx.fillStyle = cyanAccent;
+                ctx.fillRect(csx - 3, sy - 5 + bob, 1, 3); // Reality static
+
+                // Temporal Hood & Face
+                ctx.fillStyle = coatDark;
+                ctx.fillRect(csx - 4, sy - 13 + bob, 8, 7);
+                ctx.fillStyle = skinColor;
+                ctx.fillRect(csx - 2, sy - 11 + bob, 4, 3);
+                // Glowing cyan chrono-visor
+                ctx.fillStyle = cyanAccent;
+                ctx.fillRect(csx - 2, sy - 10 + bob, 4, 1);
+
+                // Tuning Blade (Right Hand)
+                ctx.fillStyle = cyanAccent;
+                ctx.fillRect(csx + 5, sy - 12 + bob, 2, 16);
+                ctx.fillStyle = bladeColor;
+                ctx.fillRect(csx + 4, sy - 15 + bob, 4, 4);
+
+            } else if (facing === 'UP') {
+                // Boots
+                ctx.fillStyle = '#10002b';
+                ctx.fillRect(csx - 3 + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
+                ctx.fillRect(csx + 1 + (walkCycle === 1 ? -1 : 0), sy + 4, 3, 2);
+
+                // Coat Back with Tachyon Spine line
+                ctx.fillStyle = coatLight;
+                ctx.fillRect(csx - 4, sy - 7 + bob, 8, 11);
+                ctx.fillStyle = cyanAccent;
+                ctx.fillRect(csx - 1, sy - 6 + bob, 2, 8);
+                ctx.fillStyle = glitchMagenta;
+                ctx.fillRect(csx - 3, sy - 3 + bob, 1, 2);
+
+                // Hood back
+                ctx.fillStyle = coatDark;
+                ctx.fillRect(csx - 4, sy - 13 + bob, 8, 7);
+                ctx.fillRect(csx - 1, sy - 14 + bob, 2, 2);
+
+                // Tuning blade raised
+                ctx.fillStyle = cyanAccent;
+                ctx.fillRect(csx + 5, sy - 14 + bob, 2, 17);
+                ctx.fillStyle = bladeColor;
+                ctx.fillRect(csx + 4, sy - 16 + bob, 4, 3);
+
+            } else if (facing === 'LEFT') {
+                ctx.fillStyle = '#10002b';
+                ctx.fillRect(csx - 3 - (walkCycle === 1 ? 1 : 0), sy + 4, 3, 2);
+                ctx.fillRect(csx + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
+
+                ctx.fillStyle = coatLight;
+                ctx.fillRect(csx - 4, sy - 7 + bob, 7, 11);
+                ctx.fillStyle = glitchMagenta;
+                ctx.fillRect(csx - 2, sy - 4 + bob, 1, 5);
+
+                ctx.fillStyle = coatDark;
+                ctx.fillRect(csx - 4, sy - 13 + bob, 7, 7);
+                ctx.fillStyle = skinColor;
+                ctx.fillRect(csx - 4, sy - 11 + bob, 2, 3);
+                ctx.fillStyle = cyanAccent;
+                ctx.fillRect(csx - 4, sy - 10 + bob, 2, 1);
+
+                // Blade pointed left
+                ctx.fillStyle = cyanAccent;
+                ctx.fillRect(csx - 7, sy - 10 + bob, 2, 14);
+                ctx.fillStyle = bladeColor;
+                ctx.fillRect(csx - 9, sy - 13 + bob, 4, 3);
+
+            } else if (facing === 'RIGHT') {
+                ctx.fillStyle = '#10002b';
+                ctx.fillRect(csx - (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
+                ctx.fillRect(csx + 2 + (walkCycle === 1 ? 1 : 0), sy + 4, 3, 2);
+
+                ctx.fillStyle = coatLight;
+                ctx.fillRect(csx - 3, sy - 7 + bob, 7, 11);
+                ctx.fillStyle = glitchMagenta;
+                ctx.fillRect(csx + 1, sy - 4 + bob, 1, 5);
+
+                ctx.fillStyle = coatDark;
+                ctx.fillRect(csx - 3, sy - 13 + bob, 7, 7);
+                ctx.fillStyle = skinColor;
+                ctx.fillRect(csx + 2, sy - 11 + bob, 2, 3);
+                ctx.fillStyle = cyanAccent;
+                ctx.fillRect(csx + 2, sy - 10 + bob, 2, 1);
+
+                // Blade pointed right
+                ctx.fillStyle = cyanAccent;
+                ctx.fillRect(csx + 5, sy - 10 + bob, 2, 14);
+                ctx.fillStyle = bladeColor;
+                ctx.fillRect(csx + 5, sy - 13 + bob, 4, 3);
+            }
+
+        // 5. SOLARION-ARCHITECT (Hard-Light Photon Engineer)
+        } else if (char.charClass === 'SOLARION_ARCHITECT') {
+            const goldBronze = '#d97706';
+            const solarAmber = '#f59e0b';
+            const solarOrange = '#ff6f00';
+            const photonCyan = '#38bdf8';
+            const chassisWhite = '#ffffff';
+
+            if (facing === 'DOWN') {
+                // Boots
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(sx - 3 + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
+                ctx.fillRect(sx + 1 + (walkCycle === 1 ? -1 : 0), sy + 4, 3, 2);
+
+                // Solar Armor Cuirass
+                ctx.fillStyle = goldBronze;
+                ctx.fillRect(sx - 4, sy - 7 + bob, 8, 11);
+                // Hard-Light Photon Core in center
+                ctx.fillStyle = photonCyan;
+                ctx.fillRect(sx - 1, sy - 5 + bob, 2, 3);
+                ctx.fillStyle = solarOrange;
+                ctx.fillRect(sx - 5, sy - 6 + bob, 2, 5); // Pauldron L
+                ctx.fillRect(sx + 3, sy - 6 + bob, 2, 5); // Pauldron R
+
+                // Solar Helm & Optics
+                ctx.fillStyle = solarAmber;
+                ctx.fillRect(sx - 4, sy - 13 + bob, 8, 7);
+                ctx.fillStyle = chassisWhite;
+                ctx.fillRect(sx - 2, sy - 10 + bob, 4, 2); // Visor
+                ctx.fillStyle = solarOrange;
+                ctx.fillRect(sx - 1, sy - 15 + bob, 2, 3); // Solar Crest
+
+                // Hard-light wand / prism emitter
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(sx + 5, sy - 12 + bob, 2, 16);
+                ctx.fillStyle = photonCyan;
+                ctx.fillRect(sx + 4, sy - 15 + bob, 4, 4);
+
+            } else if (facing === 'UP') {
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(sx - 3 + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
+                ctx.fillRect(sx + 1 + (walkCycle === 1 ? -1 : 0), sy + 4, 3, 2);
+
+                // Cuirass back with solar radiators
+                ctx.fillStyle = goldBronze;
+                ctx.fillRect(sx - 4, sy - 7 + bob, 8, 11);
+                ctx.fillStyle = solarOrange;
+                ctx.fillRect(sx - 2, sy - 6 + bob, 4, 8); // Radiator vent
+                ctx.fillStyle = '#ffd54f';
+                ctx.fillRect(sx - 1, sy - 4 + bob, 2, 4);
+
+                // Helm back
+                ctx.fillStyle = solarAmber;
+                ctx.fillRect(sx - 4, sy - 13 + bob, 8, 7);
+                ctx.fillStyle = solarOrange;
+                ctx.fillRect(sx - 1, sy - 15 + bob, 2, 3);
+
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(sx + 5, sy - 13 + bob, 2, 16);
+                ctx.fillStyle = photonCyan;
+                ctx.fillRect(sx + 4, sy - 15 + bob, 4, 3);
+
+            } else if (facing === 'LEFT') {
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(sx - 3 - (walkCycle === 1 ? 1 : 0), sy + 4, 3, 2);
+                ctx.fillRect(sx + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
+
+                ctx.fillStyle = goldBronze;
+                ctx.fillRect(sx - 4, sy - 7 + bob, 7, 11);
+                ctx.fillStyle = solarOrange;
+                ctx.fillRect(sx - 3, sy - 6 + bob, 3, 5);
+
+                ctx.fillStyle = solarAmber;
+                ctx.fillRect(sx - 4, sy - 13 + bob, 7, 7);
+                ctx.fillStyle = chassisWhite;
+                ctx.fillRect(sx - 4, sy - 10 + bob, 3, 2);
+
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(sx - 7, sy - 10 + bob, 2, 14);
+                ctx.fillStyle = photonCyan;
+                ctx.fillRect(sx - 8, sy - 13 + bob, 4, 4);
+
+            } else if (facing === 'RIGHT') {
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(sx - (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
+                ctx.fillRect(sx + 2 + (walkCycle === 1 ? 1 : 0), sy + 4, 3, 2);
+
+                ctx.fillStyle = goldBronze;
+                ctx.fillRect(sx - 3, sy - 7 + bob, 7, 11);
+                ctx.fillStyle = solarOrange;
+                ctx.fillRect(sx, sy - 6 + bob, 3, 5);
+
+                ctx.fillStyle = solarAmber;
+                ctx.fillRect(sx - 3, sy - 13 + bob, 7, 7);
+                ctx.fillStyle = chassisWhite;
+                ctx.fillRect(sx + 1, sy - 10 + bob, 3, 2);
+
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(sx + 5, sy - 10 + bob, 2, 14);
+                ctx.fillStyle = photonCyan;
+                ctx.fillRect(sx + 4, sy - 13 + bob, 4, 4);
+            }
         }
 
         // Draw Dash Afterimages (Ghost trail)
@@ -1064,7 +1379,7 @@ class RetroRenderer {
                 ctx.globalAlpha = tr.alpha * 0.55;
                 const tx = Math.round(tr.x) - camX;
                 const ty = Math.round(tr.y) - camY;
-                ctx.fillStyle = (tr.charClass === 'SUPER_SOLDIER' ? '#ff6d00' : (tr.charClass === 'TECHNO_MAGE' ? '#00e5ff' : '#76ff03'));
+                ctx.fillStyle = (tr.charClass === 'SUPER_SOLDIER' ? '#ff6d00' : (tr.charClass === 'TECHNO_MAGE' ? '#00e5ff' : (tr.charClass === 'FARMER_GOD' ? '#76ff03' : (tr.charClass === 'CHRONO_GLITCHER' ? '#e040fb' : '#ffd700'))));
                 ctx.fillRect(tx - 6, ty - 8, 12, 16);
                 ctx.restore();
             }
@@ -1476,7 +1791,7 @@ class RetroRenderer {
         ctx.restore();
     }
 
-    renderResourceNodes(nodes, camX, camY, dt) {
+    renderGroundResourceNodes(nodes, camX, camY, dt) {
         const ctx = this.ctx;
         for (const node of nodes) {
             let sx = Math.round(node.x) - camX;
@@ -1489,89 +1804,32 @@ class RetroRenderer {
                 sx += Math.floor(Math.sin(node.shakeTimer * 50) * 3);
             }
 
-            // If harvested/depleted:
+            // If harvested/depleted: draw ground stump or broken rubble
             if (node.hp <= 0) {
                 if (node.type === 'PINE_TREE') {
+                    // Clean ground-level stump (5px high, walkable behind)
                     ctx.fillStyle = '#3e2723';
                     ctx.fillRect(sx - 4, sy + 2, 8, 5);
                     ctx.fillStyle = '#8d6e63';
                     ctx.fillRect(sx - 3, sy + 2, 6, 2);
-                } else if (node.type === 'FLINT_BOULDER') {
+                    ctx.fillStyle = '#4e342e';
+                    ctx.fillRect(sx - 1, sy + 2, 2, 1);
+                } else if (node.type === 'FLINT_BOULDER' || node.type === 'COPPER_VEIN' || node.type === 'SUNSTONE_NODE') {
                     ctx.fillStyle = '#455a64';
                     ctx.fillRect(sx - 5, sy + 4, 10, 3);
                     ctx.fillStyle = '#80deea';
+                    ctx.fillRect(sx - 2, sy + 3, 2, 2);
+                } else if (node.type === 'AETHER_CRYSTAL' || node.type === 'STAR_CRYSTAL') {
+                    ctx.fillStyle = '#311b92';
+                    ctx.fillRect(sx - 4, sy + 4, 8, 3);
+                    ctx.fillStyle = '#00e5ff';
                     ctx.fillRect(sx - 2, sy + 3, 2, 2);
                 }
                 continue;
             }
 
-            // Render live nodes
+            // Ground flora (non-occluding)
             switch (node.type) {
-                case 'PINE_TREE': {
-                    // Ground shadow
-                    ctx.fillStyle = 'rgba(0,0,0,0.3)';
-                    ctx.beginPath();
-                    ctx.ellipse(sx, sy + 7, 8, 4, 0, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    // Trunk
-                    ctx.fillStyle = '#4e342e';
-                    ctx.fillRect(sx - 3, sy - 2, 6, 9);
-                    ctx.fillStyle = '#2e1c14';
-                    ctx.fillRect(sx - 3, sy - 2, 2, 9);
-
-                    // Multi-tiered layered conifer canopy
-                    ctx.fillStyle = '#1b4332';
-                    ctx.beginPath();
-                    ctx.moveTo(sx, sy - 18);
-                    ctx.lineTo(sx + 13, sy - 3);
-                    ctx.lineTo(sx - 13, sy - 3);
-                    ctx.closePath();
-                    ctx.fill();
-
-                    ctx.fillStyle = '#2d6a4f';
-                    ctx.beginPath();
-                    ctx.moveTo(sx, sy - 25);
-                    ctx.lineTo(sx + 10, sy - 11);
-                    ctx.lineTo(sx - 10, sy - 11);
-                    ctx.closePath();
-                    ctx.fill();
-
-                    ctx.fillStyle = '#40916c';
-                    ctx.beginPath();
-                    ctx.moveTo(sx, sy - 32);
-                    ctx.lineTo(sx + 7, sy - 19);
-                    ctx.lineTo(sx - 7, sy - 19);
-                    ctx.closePath();
-                    ctx.fill();
-
-                    ctx.fillStyle = '#74c69d';
-                    ctx.fillRect(sx - 1, sy - 32, 2, 3);
-                    ctx.fillRect(sx + 2, sy - 22, 3, 2);
-                    ctx.fillRect(sx - 4, sy - 14, 3, 2);
-                    break;
-                }
-
-                case 'FLINT_BOULDER': {
-                    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-                    ctx.beginPath();
-                    ctx.ellipse(sx, sy + 5, 9, 4, 0, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    ctx.fillStyle = '#263238';
-                    ctx.fillRect(sx - 7, sy - 6, 14, 11);
-                    ctx.fillStyle = '#455a64';
-                    ctx.fillRect(sx - 6, sy - 5, 12, 9);
-                    ctx.fillStyle = '#607d8b';
-                    ctx.fillRect(sx - 4, sy - 5, 7, 5);
-
-                    ctx.fillStyle = '#00e5ff';
-                    ctx.fillRect(sx - 2, sy - 3, 3, 3);
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(sx - 1, sy - 2, 2, 2);
-                    break;
-                }
-
                 case 'WILD_CABBAGE': {
                     ctx.fillStyle = '#2e7d32';
                     ctx.fillRect(sx - 6, sy - 2, 12, 6);
@@ -1609,31 +1867,6 @@ class RetroRenderer {
                     break;
                 }
 
-                case 'RUNIC_TOTEM': {
-                    ctx.fillStyle = 'rgba(0,0,0,0.4)';
-                    ctx.beginPath();
-                    ctx.ellipse(sx, sy + 10, 12, 5, 0, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    ctx.fillStyle = '#1a222e';
-                    ctx.fillRect(sx - 8, sy - 34, 16, 42);
-                    ctx.fillStyle = '#2c3a4e';
-                    ctx.fillRect(sx - 7, sy - 33, 14, 40);
-
-                    ctx.fillStyle = '#131b26';
-                    ctx.fillRect(sx - 7, sy - 20, 14, 2);
-                    ctx.fillRect(sx - 7, sy - 7, 14, 2);
-
-                    const runeAlpha = 0.5 + 0.45 * Math.sin(Date.now() / 250);
-                    ctx.fillStyle = `rgba(0, 229, 255, ${runeAlpha})`;
-                    ctx.fillRect(sx - 3, sy - 28, 6, 2);
-                    ctx.fillRect(sx - 1, sy - 26, 2, 4);
-                    ctx.fillRect(sx - 3, sy - 15, 6, 2);
-                    ctx.fillRect(sx, sy - 13, 2, 3);
-                    ctx.fillRect(sx - 2, sy - 2, 4, 3);
-                    break;
-                }
-
                 case 'CAMPFIRE_SITE': {
                     ctx.fillStyle = '#37474f';
                     ctx.beginPath();
@@ -1655,26 +1888,449 @@ class RetroRenderer {
                     ctx.fillRect(sx - 1, sy - fHeight + 4, 2, fHeight - 4);
                     break;
                 }
+            }
+        }
+    }
 
-                case 'POWER_CONDUIT': {
-                    ctx.fillStyle = '#263238';
-                    ctx.fillRect(sx - 6, sy - 4, 12, 8);
-                    ctx.fillStyle = '#ff9800';
-                    ctx.fillRect(sx - 5, sy - 2, 10, 4);
-                    ctx.fillStyle = '#00e5ff';
-                    ctx.fillRect(sx - 5, sy - 1, 10, 2);
-                    break;
+    renderSingleStandingNode(node, camX, camY, dt, player) {
+        const ctx = this.ctx;
+        let sx = Math.round(node.x) - camX;
+        let sy = Math.round(node.y) - camY;
+
+        if (sx < -40 || sx > this.width + 40 || sy < -40 || sy > this.height + 40) return;
+
+        if (node.shakeTimer > 0) {
+            sx += Math.floor(Math.sin(node.shakeTimer * 50) * 3);
+        }
+
+        switch (node.type) {
+            case 'PINE_TREE': {
+                // Ground shadow at trunk base
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.beginPath();
+                ctx.ellipse(sx, sy + 7, 8, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Trunk
+                ctx.fillStyle = '#4e342e';
+                ctx.fillRect(sx - 3, sy - 2, 6, 9);
+                ctx.fillStyle = '#2e1c14';
+                ctx.fillRect(sx - 3, sy - 2, 2, 9);
+
+                // Check if player is standing behind this tree canopy
+                const isBehindCanopy = player && (Math.abs(player.pos.x - node.x) < 16 && player.pos.y < node.y && player.pos.y > node.y - 36);
+                if (isBehindCanopy) {
+                    ctx.save();
+                    ctx.globalAlpha = 0.65; // Translucent so player is fully visible behind tree!
                 }
 
-                case 'GLOWING_CRYSTAL': {
-                    ctx.fillStyle = '#4a148c';
-                    ctx.fillRect(sx - 5, sy - 8, 10, 12);
-                    ctx.fillStyle = '#ea80fc';
-                    ctx.fillRect(sx - 3, sy - 7, 6, 8);
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(sx - 1, sy - 6, 2, 4);
-                    break;
+                // Multi-tiered layered conifer canopy
+                ctx.fillStyle = '#1b4332';
+                ctx.beginPath();
+                ctx.moveTo(sx, sy - 18);
+                ctx.lineTo(sx + 13, sy - 3);
+                ctx.lineTo(sx - 13, sy - 3);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#2d6a4f';
+                ctx.beginPath();
+                ctx.moveTo(sx, sy - 25);
+                ctx.lineTo(sx + 10, sy - 11);
+                ctx.lineTo(sx - 10, sy - 11);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#40916c';
+                ctx.beginPath();
+                ctx.moveTo(sx, sy - 32);
+                ctx.lineTo(sx + 7, sy - 19);
+                ctx.lineTo(sx - 7, sy - 19);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#74c69d';
+                ctx.fillRect(sx - 1, sy - 32, 2, 3);
+                ctx.fillRect(sx + 2, sy - 22, 3, 2);
+                ctx.fillRect(sx - 4, sy - 14, 3, 2);
+
+                if (isBehindCanopy) {
+                    ctx.restore();
                 }
+                break;
+            }
+
+            case 'FLINT_BOULDER': {
+                ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                ctx.beginPath();
+                ctx.ellipse(sx, sy + 5, 9, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#263238';
+                ctx.fillRect(sx - 7, sy - 6, 14, 11);
+                ctx.fillStyle = '#455a64';
+                ctx.fillRect(sx - 6, sy - 5, 12, 9);
+                ctx.fillStyle = '#607d8b';
+                ctx.fillRect(sx - 4, sy - 5, 7, 5);
+
+                ctx.fillStyle = '#00e5ff';
+                ctx.fillRect(sx - 2, sy - 3, 3, 3);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx - 1, sy - 2, 2, 2);
+                break;
+            }
+
+            case 'COPPER_VEIN': {
+                ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                ctx.beginPath();
+                ctx.ellipse(sx, sy + 5, 8, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#4e342e';
+                ctx.fillRect(sx - 6, sy - 5, 12, 10);
+                ctx.fillStyle = '#b87333';
+                ctx.fillRect(sx - 5, sy - 4, 10, 8);
+                ctx.fillStyle = '#d7894a';
+                ctx.fillRect(sx - 3, sy - 3, 6, 4);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx - 1, sy - 2, 2, 2);
+                break;
+            }
+
+            case 'AETHER_CRYSTAL': {
+                ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                ctx.beginPath();
+                ctx.ellipse(sx, sy + 6, 8, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#006064';
+                ctx.fillRect(sx - 5, sy - 9, 10, 13);
+                ctx.fillStyle = '#00e5ff';
+                ctx.fillRect(sx - 4, sy - 8, 8, 10);
+                ctx.fillStyle = '#84ffff';
+                ctx.fillRect(sx - 2, sy - 6, 4, 6);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx - 1, sy - 4, 2, 2);
+                break;
+            }
+
+            case 'SUNSTONE_NODE': {
+                ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                ctx.beginPath();
+                ctx.ellipse(sx, sy + 6, 9, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#e65100';
+                ctx.fillRect(sx - 6, sy - 8, 12, 12);
+                ctx.fillStyle = '#ff9800';
+                ctx.fillRect(sx - 5, sy - 7, 10, 10);
+                ctx.fillStyle = '#ffd54f';
+                ctx.fillRect(sx - 3, sy - 5, 6, 6);
+                ctx.fillStyle = '#fff9c4';
+                ctx.fillRect(sx - 1, sy - 3, 2, 2);
+                break;
+            }
+
+            case 'STAR_CRYSTAL': {
+                ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                ctx.beginPath();
+                ctx.ellipse(sx, sy + 6, 9, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#311b92';
+                ctx.fillRect(sx - 6, sy - 10, 12, 14);
+                ctx.fillStyle = '#7c4dff';
+                ctx.fillRect(sx - 5, sy - 9, 10, 11);
+                ctx.fillStyle = '#b388ff';
+                ctx.fillRect(sx - 3, sy - 7, 6, 7);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx - 1, sy - 5, 2, 3);
+                break;
+            }
+
+            case 'RUNIC_TOTEM': {
+                ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                ctx.beginPath();
+                ctx.ellipse(sx, sy + 10, 12, 5, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#1a222e';
+                ctx.fillRect(sx - 8, sy - 34, 16, 42);
+                ctx.fillStyle = '#2c3a4e';
+                ctx.fillRect(sx - 7, sy - 33, 14, 40);
+
+                ctx.fillStyle = '#131b26';
+                ctx.fillRect(sx - 7, sy - 20, 14, 2);
+                ctx.fillRect(sx - 7, sy - 7, 14, 2);
+
+                const runeAlpha = 0.5 + 0.45 * Math.sin(Date.now() / 250);
+                ctx.fillStyle = `rgba(0, 229, 255, ${runeAlpha})`;
+                ctx.fillRect(sx - 3, sy - 28, 6, 2);
+                ctx.fillRect(sx - 1, sy - 26, 2, 4);
+                ctx.fillRect(sx - 3, sy - 15, 6, 2);
+                ctx.fillRect(sx, sy - 13, 2, 3);
+                ctx.fillRect(sx - 2, sy - 2, 4, 3);
+                break;
+            }
+
+            case 'POWER_CONDUIT': {
+                ctx.fillStyle = '#263238';
+                ctx.fillRect(sx - 6, sy - 4, 12, 8);
+                ctx.fillStyle = '#ff9800';
+                ctx.fillRect(sx - 5, sy - 2, 10, 4);
+                ctx.fillStyle = '#00e5ff';
+                ctx.fillRect(sx - 5, sy - 1, 10, 2);
+                break;
+            }
+
+            case 'GLOWING_CRYSTAL': {
+                ctx.fillStyle = '#4a148c';
+                ctx.fillRect(sx - 5, sy - 8, 10, 12);
+                ctx.fillStyle = '#ea80fc';
+                ctx.fillRect(sx - 3, sy - 7, 6, 8);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx - 1, sy - 6, 2, 4);
+                break;
+            }
+        }
+    }
+
+    renderResourceNodes(nodes, camX, camY, dt) {
+        this.renderGroundResourceNodes(nodes, camX, camY, dt);
+        for (const node of nodes) {
+            if (node.hp > 0 && node.type !== 'WILD_CABBAGE' && node.type !== 'BERRY_BUSH' && node.type !== 'MEDICINAL_HERB' && node.type !== 'CAMPFIRE_SITE') {
+                this.renderSingleStandingNode(node, camX, camY, dt, null);
+            }
+        }
+    }
+
+    renderSingleEnemy(enemy, pal, camX, camY) {
+        if (!enemy || enemy.hp <= 0) return;
+        const ctx = this.ctx;
+        const sx = Math.round(enemy.x) - camX;
+        const sy = Math.round(enemy.y) - camY;
+
+        if (sx < -40 || sx > this.width + 40 || sy < -40 || sy > this.height + 40) return;
+
+        // Shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+        ctx.beginPath();
+        ctx.ellipse(sx, sy + 5, enemy.isBoss ? 14 : 6, enemy.isBoss ? 6 : 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (enemy.isBoss) {
+            // Aegis Dreadnought Boss (Large 32x32)
+            ctx.fillStyle = pal[0];
+            ctx.fillRect(sx - 14, sy - 18, 28, 26);
+            ctx.fillStyle = (Math.floor(Date.now() / 150) % 2 === 0) ? '#ff1744' : '#d50000';
+            ctx.fillRect(sx - 5, sy - 10, 10, 7);
+            // Heavy armor vents
+            ctx.fillStyle = pal[7];
+            ctx.fillRect(sx - 12, sy - 6, 3, 10);
+            ctx.fillRect(sx + 9, sy - 6, 3, 10);
+
+            // Telegraph beam line if charging attack
+            if (enemy.telegraphTimer > 0) {
+                ctx.strokeStyle = '#ff1744';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(sx, sy);
+                ctx.lineTo(sx, sy + 80);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // Boss Health bar
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(sx - 18, sy - 26, 36, 5);
+            ctx.fillStyle = '#ff1744';
+            ctx.fillRect(sx - 17, sy - 25, 34 * Math.max(0, enemy.hp / enemy.maxHp), 3);
+        } else {
+            // Small Nanite Prowler / Scorpions / Wyverns
+            ctx.fillStyle = pal[1];
+            ctx.fillRect(sx - 6, sy - 6, 12, 10);
+            ctx.fillStyle = '#ff5252';
+            ctx.fillRect(sx - 3, sy - 4, 3, 3);
+            ctx.fillRect(sx + 1, sy - 4, 3, 3);
+        }
+    }
+
+    renderSinglePrism(prism, camX, camY, dt) {
+        const ctx = this.ctx;
+        const sx = Math.round(prism.x) - camX;
+        const sy = Math.round(prism.y) - camY;
+
+        // Ground shadow
+        ctx.fillStyle = 'rgba(0, 229, 255, 0.2)';
+        ctx.beginPath();
+        ctx.ellipse(sx, sy + 4, 7, 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Floating geometric prism core
+        const floatBob = Math.sin(Date.now() / 150) * 2;
+        ctx.save();
+        ctx.translate(sx, sy - 6 + floatBob);
+        ctx.rotate(Date.now() / 400);
+
+        // Diamond prism
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.moveTo(0, -6);
+        ctx.lineTo(6, 0);
+        ctx.lineTo(0, 6);
+        ctx.lineTo(-6, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#00e5ff';
+        ctx.beginPath();
+        ctx.moveTo(0, -4);
+        ctx.lineTo(4, 0);
+        ctx.lineTo(0, 4);
+        ctx.lineTo(-4, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-1, -1, 2, 2);
+        ctx.restore();
+
+        // Laser beam if firing
+        if (prism.beamTarget) {
+            const tx = Math.round(prism.beamTarget.x) - camX;
+            const ty = Math.round(prism.beamTarget.y) - camY;
+            ctx.strokeStyle = '#00e5ff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy - 6 + floatBob);
+            ctx.lineTo(tx, ty);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy - 6 + floatBob);
+            ctx.lineTo(tx, ty);
+            ctx.stroke();
+        }
+    }
+
+    renderSingleDecoy(decoy, camX, camY, dt) {
+        const ctx = this.ctx;
+        const sx = Math.round(decoy.x) - camX;
+        const sy = Math.round(decoy.y) - camY;
+
+        ctx.save();
+        ctx.globalAlpha = 0.55 + 0.3 * Math.sin(Date.now() / 80);
+        const jx = Math.random() > 0.5 ? 1 : -1;
+        ctx.fillStyle = '#ff007f';
+        ctx.fillRect(sx - 4 + jx, sy - 13, 8, 18);
+        ctx.fillStyle = '#00f0ff';
+        ctx.fillRect(sx - 4 - jx, sy - 13, 8, 18);
+        ctx.restore();
+    }
+
+    renderEntitiesYSorted(map, player, enemies, npcs, critters, dt, isNight) {
+        const camX = Math.round(this.camera.x);
+        const camY = Math.round(this.camera.y);
+        const renderList = [];
+
+        // 1. Standing Resource Nodes (living trees, boulders, totems, crystals)
+        if (map && map.resourceNodes) {
+            for (const node of map.resourceNodes) {
+                if (node.hp <= 0) continue; // Harvested stumps are drawn during ground pass!
+                if (node.type === 'WILD_CABBAGE' || node.type === 'BERRY_BUSH' || node.type === 'MEDICINAL_HERB' || node.type === 'CAMPFIRE_SITE') continue;
+                renderList.push({
+                    type: 'NODE',
+                    y: node.y + 4,
+                    ref: node
+                });
+            }
+        }
+
+        // 2. Player
+        if (player) {
+            renderList.push({
+                type: 'PLAYER',
+                y: player.pos.y + 6,
+                ref: player
+            });
+
+            // Active Class Summons
+            if (player.activePrisms && player.activePrisms.length > 0) {
+                for (const prism of player.activePrisms) {
+                    renderList.push({
+                        type: 'PRISM',
+                        y: prism.y + 4,
+                        ref: prism
+                    });
+                }
+            }
+            if (player.activeDecoy) {
+                renderList.push({
+                    type: 'DECOY',
+                    y: player.activeDecoy.y + 6,
+                    ref: player.activeDecoy
+                });
+            }
+        }
+
+        // 3. Enemies
+        if (enemies && enemies.length > 0) {
+            for (const enemy of enemies) {
+                if (enemy.hp <= 0) continue;
+                renderList.push({
+                    type: 'ENEMY',
+                    y: enemy.y + (enemy.isBoss ? 8 : 5),
+                    ref: enemy
+                });
+            }
+        }
+
+        // 4. NPCs
+        if (npcs && npcs.length > 0) {
+            for (const npc of npcs) {
+                renderList.push({
+                    type: 'NPC',
+                    y: npc.y + 6,
+                    ref: npc
+                });
+            }
+        }
+
+        // 5. Critters
+        if (critters && critters.critters && critters.critters.length > 0) {
+            for (const c of critters.critters) {
+                renderList.push({
+                    type: 'CRITTER',
+                    y: c.y + 2,
+                    ref: c
+                });
+            }
+        }
+
+        // Unified Y-sorting: entities with smaller Y (higher on screen) draw FIRST
+        renderList.sort((a, b) => a.y - b.y);
+
+        // Render sorted entities in precise depth order
+        for (const item of renderList) {
+            if (item.type === 'PLAYER') {
+                this.renderCharacter(player, map.palette.colors);
+            } else if (item.type === 'NODE') {
+                this.renderSingleStandingNode(item.ref, camX, camY, dt, player);
+            } else if (item.type === 'ENEMY') {
+                this.renderSingleEnemy(item.ref, map.palette.colors, camX, camY);
+            } else if (item.type === 'NPC') {
+                this.renderNpcs([item.ref], camX, camY, player.pos);
+            } else if (item.type === 'CRITTER') {
+                if (critters.renderSingle) {
+                    critters.renderSingle(this.ctx, item.ref, camX, camY, isNight);
+                }
+            } else if (item.type === 'PRISM') {
+                this.renderSinglePrism(item.ref, camX, camY, dt);
+            } else if (item.type === 'DECOY') {
+                this.renderSingleDecoy(item.ref, camX, camY, dt);
             }
         }
     }
@@ -1807,48 +2463,46 @@ class RetroRenderer {
         // ~80-second continuous celestial revolution through Dyson sphere aperture states (~20s per phase)
         const cycle = ((this.titleAnimTimer || 0) * 0.0125) % 1.0;
         
-        let skyTop, skyMid, skyBottom, starAlpha, phaseLabel, mountainTint;
         let lumX = w - 55;
         let lumY = 48;
         let lumRadius = 20;
 
-        if (cycle < 0.25) {
-            // Stage 1: Eclipse / Waxing Crescent (Lunar Mode)
-            const t = cycle / 0.25;
-            skyTop = '#02050e';
-            skyMid = '#091122';
-            skyBottom = '#142036';
-            starAlpha = 0.95 - t * 0.15;
-            phaseLabel = t < 0.5 ? 'ECLIPSE // SHUTTERS ENGAGED' : 'WAXING CRESCENT // LUNAR APERTURE';
-            mountainTint = '#0a101d';
-        } else if (cycle < 0.50) {
-            // Stage 2: Solar Dawn & Corona Awakening (Transition Mode)
-            const t = (cycle - 0.25) / 0.25;
-            skyTop = '#120d20';
-            skyMid = '#26162a';
-            skyBottom = '#3c202a';
-            starAlpha = 0.8 * (1.0 - t);
-            phaseLabel = 'SOLAR DAWN // APERTURE VENTING';
-            mountainTint = '#141424';
-        } else if (cycle < 0.75) {
-            // Stage 3: Radiant Solar Zenith (Sun Mode)
-            const t = (cycle - 0.50) / 0.25;
-            skyTop = '#0f233a';
-            skyMid = '#1c3652';
-            skyBottom = '#2d4b68';
-            starAlpha = 0.15;
-            phaseLabel = 'SOLAR ZENITH // THERMAL MAXIMUM';
-            mountainTint = '#1a2230';
-        } else {
-            // Stage 4: Red Giant / Magnetic Prominence Flare (Cooling Mode)
-            const t = (cycle - 0.75) / 0.25;
-            skyTop = '#220b18';
-            skyMid = '#1c0a22';
-            skyBottom = '#0e0b1c';
-            starAlpha = 0.2 + t * 0.75;
-            phaseLabel = 'RED GIANT // CORONAL SHIELDING';
-            mountainTint = '#170f1a';
-        }
+        // 4 Celestial Keyframes for continuous smooth cosine interpolation:
+        // Stage 1: ECLIPSE // SHUTTERS ENGAGED and WAXING CRESCENT // LUNAR APERTURE
+        // Stage 2: SOLAR DAWN // APERTURE VENTING
+        // Stage 3: SOLAR ZENITH // THERMAL MAXIMUM
+        // Stage 4: RED GIANT // CORONAL SHIELDING
+        const KEYFRAMES = [
+            // 0: Eclipse / Waxing Crescent (Lunar Mode)
+            { top: [2, 5, 14], mid: [9, 17, 34], bot: [20, 32, 54], mtn: [10, 16, 29], star: 0.95, rim: [0, 229, 255, 0.25], ring: [0, 229, 255, 0.22] },
+            // 1: Solar Dawn & Corona Awakening (Transition Mode)
+            { top: [18, 13, 32], mid: [38, 22, 42], bot: [60, 32, 42], mtn: [20, 20, 36], star: 0.55, rim: [255, 170, 0, 0.35], ring: [255, 183, 77, 0.24] },
+            // 2: Radiant Solar Zenith (Sun Mode)
+            { top: [15, 35, 58], mid: [28, 54, 82], bot: [45, 75, 104], mtn: [26, 34, 48], star: 0.12, rim: [255, 213, 79, 0.50], ring: [255, 213, 79, 0.28] },
+            // 3: Red Giant / Magnetic Prominence Flare (Cooling Mode)
+            { top: [34, 11, 24], mid: [28, 10, 34], bot: [14, 11, 28], mtn: [23, 15, 26], star: 0.40, rim: [255, 82, 82, 0.40], ring: [255, 82, 82, 0.28] }
+        ];
+
+        const phaseProgress = cycle * 4;
+        const currentPhase = Math.floor(phaseProgress);
+        const nextPhase = (currentPhase + 1) % 4;
+        const localT = phaseProgress - currentPhase;
+        // Smooth cosine curve: zero abrupt pop-in
+        const smoothT = 0.5 - 0.5 * Math.cos(localT * Math.PI);
+
+        const kfA = KEYFRAMES[currentPhase];
+        const kfB = KEYFRAMES[nextPhase];
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const lerpColor = (cA, cB, t) => `rgb(${Math.round(lerp(cA[0], cB[0], t))}, ${Math.round(lerp(cA[1], cB[1], t))}, ${Math.round(lerp(cA[2], cB[2], t))})`;
+        const lerpRgba = (cA, cB, t) => `rgba(${Math.round(lerp(cA[0], cB[0], t))}, ${Math.round(lerp(cA[1], cB[1], t))}, ${Math.round(lerp(cA[2], cB[2], t))}, ${lerp(cA[3], cB[3], t).toFixed(3)})`;
+
+        const skyTop = lerpColor(kfA.top, kfB.top, smoothT);
+        const skyMid = lerpColor(kfA.mid, kfB.mid, smoothT);
+        const skyBottom = lerpColor(kfA.bot, kfB.bot, smoothT);
+        const mountainTint = lerpColor(kfA.mtn, kfB.mtn, smoothT);
+        const starAlpha = lerp(kfA.star, kfB.star, smoothT);
+        const rimColor = lerpRgba(kfA.rim, kfB.rim, smoothT);
+        const ringColor = lerpRgba(kfA.ring, kfB.ring, smoothT);
 
         // Render dynamic sky gradient
         const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
@@ -1876,23 +2530,23 @@ class RetroRenderer {
         const rotAngle = this.titleAnimTimer * 0.10;
 
         // Concentric outer containment ring
-        ctx.strokeStyle = (cycle >= 0.25 && cycle < 0.75) ? 'rgba(255, 213, 79, 0.25)' : 'rgba(0, 229, 255, 0.22)';
+        ctx.strokeStyle = ringColor;
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.ellipse(0, 0, lumRadius + 14, lumRadius + 5, rotAngle * 0.5, 0, Math.PI * 2);
         ctx.stroke();
 
-        ctx.strokeStyle = (cycle >= 0.75) ? 'rgba(255, 82, 82, 0.28)' : 'rgba(128, 222, 234, 0.18)';
+        ctx.strokeStyle = ringColor;
         ctx.beginPath();
         ctx.ellipse(0, 0, lumRadius + 9, lumRadius + 15, -rotAngle * 0.7, 0, Math.PI * 2);
         ctx.stroke();
 
-        // 3. Render Solar Rays / Corona Flares during Sun Stages
-        if (cycle >= 0.20 && cycle < 0.85) {
-            const isZenith = (cycle >= 0.50 && cycle < 0.75);
-            const isRedGiant = (cycle >= 0.75);
+        // 3. Render Solar Rays / Corona Flares during Sun Stages with smooth fade
+        const sunWeight = Math.sin(cycle * Math.PI); // Peaks around 0.50 (Zenith), 0 at 0 and 1.0
+        if (sunWeight > 0.05) {
+            const isRedGiant = (cycle >= 0.70);
             const rayCount = 8;
-            const rayLength = isZenith ? 36 : (isRedGiant ? 28 : 22);
+            const rayLength = 22 + 14 * sunWeight;
             const rayPulse = 1.0 + 0.15 * Math.sin(this.titleAnimTimer * 4);
 
             for (let r = 0; r < rayCount; r++) {
@@ -1903,8 +2557,8 @@ class RetroRenderer {
                 const outerY = Math.sin(angle) * (lumRadius + rayLength * rayPulse);
 
                 ctx.strokeStyle = isRedGiant 
-                    ? `rgba(255, 87, 34, ${0.35 + 0.2 * Math.sin(angle * 2 + this.titleAnimTimer)})` 
-                    : `rgba(255, 215, 64, ${0.45 + 0.25 * Math.sin(angle * 2 + this.titleAnimTimer)})`;
+                    ? `rgba(255, 87, 34, ${(0.35 + 0.2 * Math.sin(angle * 2 + this.titleAnimTimer)) * sunWeight})` 
+                    : `rgba(255, 215, 64, ${(0.45 + 0.25 * Math.sin(angle * 2 + this.titleAnimTimer)) * sunWeight})`;
                 ctx.lineWidth = (r % 2 === 0) ? 2 : 1;
                 ctx.beginPath();
                 ctx.moveTo(innerX, innerY);
@@ -1915,12 +2569,12 @@ class RetroRenderer {
             // Broad outer atmospheric corona glow
             const coronaGlow = ctx.createRadialGradient(0, 0, lumRadius * 0.8, 0, 0, lumRadius * 2.8);
             if (isRedGiant) {
-                coronaGlow.addColorStop(0, 'rgba(255, 61, 0, 0.45)');
-                coronaGlow.addColorStop(0.6, 'rgba(213, 0, 0, 0.18)');
+                coronaGlow.addColorStop(0, `rgba(255, 61, 0, ${(0.45 * sunWeight).toFixed(2)})`);
+                coronaGlow.addColorStop(0.6, `rgba(213, 0, 0, ${(0.18 * sunWeight).toFixed(2)})`);
                 coronaGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
             } else {
-                coronaGlow.addColorStop(0, 'rgba(255, 235, 59, 0.55)');
-                coronaGlow.addColorStop(0.5, 'rgba(255, 152, 0, 0.22)');
+                coronaGlow.addColorStop(0, `rgba(255, 235, 59, ${(0.55 * sunWeight).toFixed(2)})`);
+                coronaGlow.addColorStop(0.5, `rgba(255, 152, 0, ${(0.22 * sunWeight).toFixed(2)})`);
                 coronaGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
             }
             ctx.fillStyle = coronaGlow;
@@ -1939,7 +2593,7 @@ class RetroRenderer {
             ctx.fill();
         }
 
-        // 4. Render the Core Dyson Luminary Orb Body
+        // 4. Render the Core Dyson Luminary Orb Body with smooth transitions
         if (cycle >= 0.50 && cycle < 0.75) {
             // High Solar Zenith: Radiant White/Gold Stellar Core
             ctx.fillStyle = '#ffffff';
@@ -2021,22 +2675,6 @@ class RetroRenderer {
         }
         ctx.restore();
 
-        // Compact indicator pill for Dyson Luminary Status (centered directly under the orb)
-        const shortLabels = ['ECLIPSE', 'SOLAR DAWN', 'SOLAR ZENITH', 'RED GIANT'];
-        const stageIdx = Math.floor(cycle * 4);
-        const stageName = `DYSON: ${shortLabels[stageIdx] || 'LUMINARY'}`;
-        
-        const badgeW = 90;
-        const badgeX = lumX - Math.floor(badgeW / 2);
-        const badgeY = lumY + lumRadius + 14;
-        ctx.fillStyle = 'rgba(4, 8, 18, 0.85)';
-        ctx.fillRect(badgeX, badgeY, badgeW, 11);
-        ctx.strokeStyle = (cycle >= 0.50 && cycle < 0.75) ? '#ffd54f' : ((cycle >= 0.75) ? '#ff5252' : '#00e5ff');
-        ctx.strokeRect(badgeX, badgeY, badgeW, 11);
-        ctx.fillStyle = (cycle >= 0.50 && cycle < 0.75) ? '#fff9c4' : ((cycle >= 0.75) ? '#ffab91' : '#e0f7fa');
-        ctx.font = '5px "Press Start 2P", monospace';
-        ctx.fillText(stageName, badgeX + 4, badgeY + 8);
-
         // 3. Mountain Ridge with Dynamic Illumination
         ctx.fillStyle = mountainTint;
         ctx.beginPath();
@@ -2050,10 +2688,8 @@ class RetroRenderer {
         ctx.closePath();
         ctx.fill();
 
-        // Mountain edge dynamic rim light
-        ctx.strokeStyle = (cycle >= 0.50 && cycle < 0.75) 
-            ? 'rgba(255, 213, 79, 0.45)' 
-            : ((cycle >= 0.75) ? 'rgba(255, 82, 82, 0.35)' : 'rgba(0, 229, 255, 0.25)');
+        // Mountain edge dynamic rim light (smoothly interpolated)
+        ctx.strokeStyle = rimColor;
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.moveTo(0, h * 0.65);

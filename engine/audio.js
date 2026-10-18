@@ -585,6 +585,74 @@ class ChiptuneSynth {
             55.00, 0, 65.41, 0,   73.42, 0, 0, 0
         ];
 
+        // 5. SOLARIUM DUNES (D Phrygian exotic shifting sands)
+        const DUNES_LEAD = [
+            146.83, 0, 155.56, 0,      185.00, 0, 220.00, 185.00, // D - Eb - F# - A
+            155.56, 0, 146.83, 0,      123.47, 0, 146.83, 0,
+            146.83, 0, 155.56, 0,      220.00, 0, 246.94, 0,
+            220.00, 0, 185.00, 0,      146.83, 0, 0, 0,
+            293.66, 0, 311.13, 0,      293.66, 0, 220.00, 0,
+            185.00, 0, 155.56, 0,      146.83, 0, 123.47, 0,
+            146.83, 0, 185.00, 0,      155.56, 0, 146.83, 0,
+            146.83, 0, 155.56, 0,      146.83, 0, 0, 0
+        ];
+
+        const DUNES_BASS = [
+            73.42, 0, 73.42, 0,   77.78, 0, 77.78, 0, // D2 -> Eb2
+            73.42, 0, 73.42, 0,   61.74, 0, 73.42, 0,
+            73.42, 0, 73.42, 0,   77.78, 0, 77.78, 0,
+            92.50, 0, 77.78, 0,   73.42, 0, 0, 0,
+            73.42, 0, 73.42, 0,   77.78, 0, 77.78, 0,
+            73.42, 0, 73.42, 0,   61.74, 0, 61.74, 0,
+            73.42, 0, 92.50, 0,   77.78, 0, 73.42, 0,
+            73.42, 0, 73.42, 0,   73.42, 0, 0, 0
+        ];
+
+        const DUNES_CHORDS = [
+            220.00, 0, 293.66, 0, 233.08, 0, 311.13, 0,
+            220.00, 0, 293.66, 0, 185.00, 0, 220.00, 0,
+            220.00, 0, 293.66, 0, 233.08, 0, 311.13, 0,
+            277.18, 0, 369.99, 0, 220.00, 0, 0, 0,
+            293.66, 0, 440.00, 0, 311.13, 0, 466.16, 0,
+            277.18, 0, 369.99, 0, 220.00, 0, 293.66, 0,
+            220.00, 0, 293.66, 0, 233.08, 0, 311.13, 0,
+            220.00, 0, 293.66, 0, 220.00, 0, 0, 0
+        ];
+
+        // 6. CELESTIAL ZENITH (F Lydian / C Major ethereal floating clouds)
+        const ZENITH_LEAD = [
+            349.23, 0, 440.00, 0,      523.25, 0, 659.25, 0, // F - A - C - E
+            587.33, 0, 523.25, 0,      440.00, 0, 349.23, 0,
+            392.00, 0, 493.88, 0,      587.33, 0, 698.46, 0, // G - B - D - F
+            659.25, 0, 587.33, 0,      523.25, 0, 0, 0,
+            698.46, 0, 659.25, 0,      587.33, 0, 523.25, 0,
+            523.25, 0, 440.00, 0,      392.00, 0, 349.23, 0,
+            349.23, 0, 440.00, 0,      523.25, 0, 587.33, 0,
+            523.25, 0, 440.00, 0,      349.23, 0, 0, 0
+        ];
+
+        const ZENITH_BASS = [
+            43.65, 0, 43.65, 0,   65.41, 0, 65.41, 0, // F1 -> C2
+            43.65, 0, 43.65, 0,   55.00, 0, 55.00, 0,
+            49.00, 0, 49.00, 0,   73.42, 0, 73.42, 0, // G1 -> D2
+            65.41, 0, 49.00, 0,   43.65, 0, 0, 0,
+            43.65, 0, 43.65, 0,   65.41, 0, 65.41, 0,
+            55.00, 0, 55.00, 0,   49.00, 0, 49.00, 0,
+            43.65, 0, 55.00, 0,   65.41, 0, 73.42, 0,
+            65.41, 0, 43.65, 0,   43.65, 0, 0, 0
+        ];
+
+        const ZENITH_CHORDS = [
+            349.23, 0, 523.25, 0, 440.00, 0, 659.25, 0,
+            349.23, 0, 523.25, 0, 261.63, 0, 440.00, 0,
+            392.00, 0, 587.33, 0, 493.88, 0, 698.46, 0,
+            329.63, 0, 523.25, 0, 261.63, 0, 0, 0,
+            349.23, 0, 523.25, 0, 440.00, 0, 659.25, 0,
+            261.63, 0, 440.00, 0, 293.66, 0, 493.88, 0,
+            349.23, 0, 523.25, 0, 392.00, 0, 587.33, 0,
+            349.23, 0, 523.25, 0, 349.23, 0, 0, 0
+        ];
+
         let leadTrack = OVERWORLD_LEAD;
         let bassTrack = OVERWORLD_BASS;
         let chordTrack = OVERWORLD_CHORDS;
@@ -605,6 +673,16 @@ class ChiptuneSynth {
             bassTrack = GROTTO_BASS;
             chordTrack = GROTTO_CHORDS;
             stepTimeMs = 205; // Placid, cavernous pacing
+        } else if (theme === 'SOLARIUM_DUNES') {
+            leadTrack = DUNES_LEAD;
+            bassTrack = DUNES_BASS;
+            chordTrack = DUNES_CHORDS;
+            stepTimeMs = 175; // Shifting desert tempo
+        } else if (theme === 'CELESTIAL_ZENITH') {
+            leadTrack = ZENITH_LEAD;
+            bassTrack = ZENITH_BASS;
+            chordTrack = ZENITH_CHORDS;
+            stepTimeMs = 210; // Floating starry ambiance
         }
 
         this.bgmTimer = setInterval(() => {
@@ -646,6 +724,24 @@ class ChiptuneSynth {
                     this.playRetroKick();
                 }
                 if (step % 4 === 2) {
+                    this.playSoftHiHat();
+                }
+            } else if (theme === 'SOLARIUM_DUNES') {
+                // Exotic desert percussion
+                if (step % 8 === 0) {
+                    this.playRetroKick();
+                }
+                if (step % 4 === 2) {
+                    this.playWarmNote(659.25, 'triangle', 0.04, 0.02, 2200); // Finger cymbal
+                }
+                if (step % 2 === 0) {
+                    this.playSoftHiHat();
+                }
+            } else if (theme === 'CELESTIAL_ZENITH') {
+                // Ethereal star chimes
+                if (step % 16 === 0) {
+                    this.playWarmNote(880, 'sine', 0.08, 0.025, 3600); // Star bell
+                } else if (step % 8 === 4) {
                     this.playSoftHiHat();
                 }
             } else {

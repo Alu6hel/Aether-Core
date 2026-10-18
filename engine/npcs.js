@@ -242,6 +242,38 @@ class NpcManager {
                         objective: "Venture North into Whispering Woods and find Lyra's ranger station."
                     }
                 };
+            } else if (cls === 'CHRONO_GLITCHER') {
+                return {
+                    speaker: npc.name,
+                    title: npc.title,
+                    portrait: npc.portrait,
+                    lines: [
+                        `"By the chronos stars... you walk between split seconds, ${callsign}."`,
+                        `"The tremors in Cinderwatch are not merely physical; they are tachyon shockwaves from the Sub-Core fracturing our timeline."`,
+                        `"Your temporal rewinds can bypass impossible hazards. Seek Wanderer Lyra in the Whispering Woods; she tracks the spacetime fissures."`
+                    ],
+                    questUpdate: {
+                        stage: STORY_CHAPTER.CH2_WOODS_RECON,
+                        title: "Paradox Stalker",
+                        objective: "Head North into Whispering Woods to track the timeline fracture."
+                    }
+                };
+            } else if (cls === 'SOLARION_ARCHITECT') {
+                return {
+                    speaker: npc.name,
+                    title: npc.title,
+                    portrait: npc.portrait,
+                    lines: [
+                        `"*Bows head in reverence*... A Master Architect of the Dyson Luminary walks among us."`,
+                        `"The grand sphere above is struggling to balance its diurnal solar transitions. The core mechanisms deep below have fallen into discord."`,
+                        `"Deploy your hard-light prisms and restore geometric balance to our world. Seek Wanderer Lyra in the Woods."`
+                    ],
+                    questUpdate: {
+                        stage: STORY_CHAPTER.CH2_WOODS_RECON,
+                        title: "Architect's Blueprint",
+                        objective: "Venture North into Whispering Woods to inspect the Dyson lattice pylons."
+                    }
+                };
             } else { // FARMER_GOD
                 return {
                     speaker: npc.name,
@@ -285,6 +317,28 @@ class NpcManager {
                         `"Mine the flint boulders out in the wild if you need spark catalysts for your field craft."`
                     ]
                 };
+            } else if (cls === 'CHRONO_GLITCHER') {
+                return {
+                    speaker: npc.name,
+                    title: npc.title,
+                    portrait: npc.portrait,
+                    lines: [
+                        `"Your blade... it's vibrating at a frequency that makes my anvil sing without me touching it!"`,
+                        `"A Temporal Tuning Blade. One swing and you cut not just steel, but the moment in time when the steel was forged."`,
+                        `"Keep your phase engine cooled. Reality doesn't like being cut into ribbons, traveler."`
+                    ]
+                };
+            } else if (cls === 'SOLARION_ARCHITECT') {
+                return {
+                    speaker: npc.name,
+                    title: npc.title,
+                    portrait: npc.portrait,
+                    lines: [
+                        `"Great stars above! Hard-light photon emitters?! I've only read of such metallurgy in the First Age archives!"`,
+                        `"You don't need a blacksmith when you can construct solid matter directly from sunlight and laser geometry."`,
+                        `"If you find Sunstone nodes out in the dunes, use their crystalline cores to focus your orbital beam arrays."`
+                    ]
+                };
             } else { // FARMER_GOD
                 return {
                     speaker: npc.name,
@@ -323,6 +377,28 @@ class NpcManager {
                         `"Combine grotto flora with your arcane catalyst to distill legendary restorative drafts."`
                     ]
                 };
+            } else if (cls === 'CHRONO_GLITCHER') {
+                return {
+                    speaker: npc.name,
+                    title: npc.title,
+                    portrait: npc.portrait,
+                    lines: [
+                        `"You flicker like a mirage, time-traveler! One moment you're here, the next you're three seconds ago."`,
+                        `"Drinking brewed medicinal teas helps anchor your consciousness in the present continuum."`,
+                        `"Don't lose yourself in the glitch. Take care of your mortal vessel."`
+                    ]
+                };
+            } else if (cls === 'SOLARION_ARCHITECT') {
+                return {
+                    speaker: npc.name,
+                    title: npc.title,
+                    portrait: npc.portrait,
+                    lines: [
+                        `"Architect! The solar radiance surrounding your power suit makes the herbs sprout in real time!"`,
+                        `"Plants adore hard-light photons. If you ever build a greenhouse, call me—we'll make the wasteland bloom."`,
+                        `"Stay hydrated out in the Solarium Dunes; the sun burns bright even for its architects."`
+                    ]
+                };
             } else { // FARMER_GOD
                 return {
                     speaker: npc.name,
@@ -357,6 +433,26 @@ class NpcManager {
                     lines: [
                         `"Arcanist! I saw strange holographic glints shimmering in the tall grass."`,
                         `"Step over those foraging sparkles—they discharge raw ALU matrix coins directly into your digital wallet!"`
+                    ]
+                };
+            } else if (cls === 'CHRONO_GLITCHER') {
+                return {
+                    speaker: npc.name,
+                    title: npc.title,
+                    portrait: npc.portrait,
+                    lines: [
+                        `"Whoa! Did you just phase through that wooden fence?! That's the best trick for looting locked vault rooms I've ever seen!"`,
+                        `"Keep an eye out for quantum chest anomalies—they appear in places where time runs backwards."`
+                    ]
+                };
+            } else if (cls === 'SOLARION_ARCHITECT') {
+                return {
+                    speaker: npc.name,
+                    title: npc.title,
+                    portrait: npc.portrait,
+                    lines: [
+                        `"Look at that golden gear! You look like you just walked off an orbital flagship."`,
+                        `"Out in the Solarium Dunes to the south, there are ancient solar condensers loaded with rare sunstone relics."`
                     ]
                 };
             } else { // FARMER_GOD
@@ -404,6 +500,38 @@ class NpcManager {
                         stage: STORY_CHAPTER.CH3_GROTTO_DESCENT,
                         title: "The Phosphor Trail",
                         objective: "Descend into the Sunken Grotto and trace the nanite coolant pipes."
+                    }
+                };
+            } else if (cls === 'CHRONO_GLITCHER') {
+                return {
+                    speaker: npc.name,
+                    title: npc.title,
+                    portrait: npc.portrait,
+                    lines: [
+                        `"You are a ghost in the timestream, Glitcher. The leylines are rippling in your wake."`,
+                        `"Ahead lies the Celestial Zenith bridge to the west, and the Sunken Grotto deep below."`,
+                        `"Use your temporal rewind if the Dreadnought's laser grid traps you. You can rewrite your position in spacetime."`
+                    ],
+                    questUpdate: {
+                        stage: STORY_CHAPTER.CH3_GROTTO_DESCENT,
+                        title: "Rewriting History",
+                        objective: "Breach the Grotto or follow the sky bridges to the Celestial Zenith."
+                    }
+                };
+            } else if (cls === 'SOLARION_ARCHITECT') {
+                return {
+                    speaker: npc.name,
+                    title: npc.title,
+                    portrait: npc.portrait,
+                    lines: [
+                        `"Architect! The stars above align to your presence."`,
+                        `"The sky portal leading to the Celestial Zenith is open to the west. Ancient Dyson observation platforms float in the clouds."`,
+                        `"Deploy your laser prisms to suppress the rogue security grid."`
+                    ],
+                    questUpdate: {
+                        stage: STORY_CHAPTER.CH3_GROTTO_DESCENT,
+                        title: "Zenith Alignment",
+                        objective: "Ascend toward the Celestial Zenith or descend into the Sub-Core reactor."
                     }
                 };
             } else { // FARMER_GOD
@@ -466,6 +594,28 @@ class NpcManager {
                         `"[VOICE SYNTHESIS]: High Psionic Resonance detected. Class: Quantum Weaver."`,
                         `"[ANALYSIS]: Spacetime flux at 94.2%. Dyson matrix stability critical."`,
                         `"[OVERRIDE]: Neutralize the rogue core governor to synchronize the temporal continuum."`
+                    ]
+                };
+            } else if (cls === 'CHRONO_GLITCHER') {
+                return {
+                    speaker: npc.name,
+                    title: npc.title,
+                    portrait: npc.portrait,
+                    lines: [
+                        `"[ANOMALY DETECTED]: Causality loop breach. Pioneer exists across multiple world-lines."`,
+                        `"[TACHYON TRACE]: Reality coefficient destabilizing at 88.4%."`,
+                        `"[OVERCLOCK AUTHORIZED]: Execute temporal rewinds to shatter the Dreadnought's temporal anchor."`
+                    ]
+                };
+            } else if (cls === 'SOLARION_ARCHITECT') {
+                return {
+                    speaker: npc.name,
+                    title: npc.title,
+                    portrait: npc.portrait,
+                    lines: [
+                        `"[RECOGNITION]: Master Architect credentials validated. Access level: ALPHA PRIME."`,
+                        `"[STATUS REPORT]: Dyson Sphere Luminary containment rings operating at 62% efficiency."`,
+                        `"[SUB-SYSTEM PURGE]: Commandeer orbital hard-light emitters. Overwrite the rogue Dreadnought subroutines."`
                     ]
                 };
             } else { // FARMER_GOD

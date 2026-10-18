@@ -147,7 +147,7 @@ console.log("\n--- TEST 3: EXP System & 3-Character Skill Trees ---");
 
     // Skill tree validation
     const warriorTree = CLASS_SKILL_TREES.SUPER_SOLDIER;
-    assert.strictEqual(warriorTree.length, 5, "Warrior tree has 5 distinct skills");
+    assert.strictEqual(warriorTree.length, 8, "Warrior tree has 8 distinct skills across 4 tiers");
 
     // Cannot unlock Tier 2 without prerequisite
     const tier2Unlocked = warrior.unlockSkill('warrior_kinetic_overdrive');

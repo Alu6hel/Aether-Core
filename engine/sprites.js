@@ -225,6 +225,51 @@ class SpriteSheet {
             ctx.fillRect(23, 10, 2, 16);
             ctx.fillStyle = '#76ff03';
             ctx.fillRect(23, 8, 6, 3);
+        } else if (charClass === 'CHRONO_GLITCHER') {
+            // Chrono-Glitcher: Reality/Time Anomaly
+            // Midnight violet cyber coat
+            ctx.fillStyle = '#3c096c';
+            ctx.fillRect(10, 13, 12, 13);
+            ctx.fillStyle = '#5a189a';
+            ctx.fillRect(12, 7, 8, 7);
+            // Glitching neon-cyan & magenta visor
+            ctx.fillStyle = '#00f0ff';
+            ctx.fillRect(13, 10, 6, 2);
+            ctx.fillStyle = '#ff007f';
+            ctx.fillRect(11, 15, 2, 8); // Glitch trail line
+            // Temporal Tuning Blade (Cyan/Violet)
+            ctx.fillStyle = '#00f0ff';
+            ctx.fillRect(24, 8, 2, 16);
+            ctx.fillStyle = '#e0aaff';
+            ctx.fillRect(22, 6, 6, 3);
+            // Boots
+            ctx.fillStyle = '#10002b';
+            ctx.fillRect(11, 26, 4, 3);
+            ctx.fillRect(17, 26, 4, 3);
+        } else if (charClass === 'SOLARION_ARCHITECT') {
+            // Solarion Architect: Hard-Light Photon Engineer
+            // Polished gold-bronze chassis
+            ctx.fillStyle = '#d97706';
+            ctx.fillRect(10, 14, 12, 11);
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(12, 8, 8, 6);
+            // Solar white crest & optics
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(13, 10, 6, 2);
+            ctx.fillStyle = '#ff6f00';
+            ctx.fillRect(14, 6, 4, 3);
+            // Prismatic Photon Core (Cyan/Gold)
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(14, 16, 4, 4);
+            // Hard-light emitter wand
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(24, 7, 2, 18);
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(23, 5, 4, 3);
+            // Boots
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(11, 25, 4, 4);
+            ctx.fillRect(17, 25, 4, 4);
         }
 
         return canvas;

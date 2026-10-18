@@ -19,7 +19,9 @@ if (typeof require !== 'undefined' && typeof window === 'undefined') {
 const CHARACTER_CLASS = {
     TECHNO_MAGE: 'TECHNO_MAGE',
     SUPER_SOLDIER: 'SUPER_SOLDIER',
-    FARMER_GOD: 'FARMER_GOD'
+    FARMER_GOD: 'FARMER_GOD',
+    CHRONO_GLITCHER: 'CHRONO_GLITCHER',
+    SOLARION_ARCHITECT: 'SOLARION_ARCHITECT'
 };
 
 const CLASS_SKILL_TREES = {
@@ -65,14 +67,44 @@ const CLASS_SKILL_TREES = {
             req: 'warrior_tungsten_bastion'
         },
         {
+            id: 'warrior_blood_transfusion',
+            name: 'Blood Transfusion',
+            desc: 'Siphons 15% of all physical damage dealt as restored health.',
+            tier: 3,
+            cost: 2,
+            icon: '🩸',
+            passive: true,
+            req: 'warrior_kinetic_overdrive'
+        },
+        {
+            id: 'warrior_tectonic_slam',
+            name: 'Tectonic Quake',
+            desc: 'Every 3rd attack fractures bedrock with a 45-damage shockwave.',
+            tier: 3,
+            cost: 2,
+            icon: '💥',
+            passive: true,
+            req: 'warrior_whirlwind_strike'
+        },
+        {
             id: 'warrior_juggernaut_stance',
             name: 'Juggernaut Stance',
             desc: 'Active Ultimate: Harden cyber-armor for 7s (+50% defense & poise).',
-            tier: 3,
+            tier: 4,
             cost: 2,
             icon: '🦾',
             passive: false,
-            req: 'warrior_whirlwind_strike'
+            req: 'warrior_blood_transfusion'
+        },
+        {
+            id: 'warrior_valkyrie_wrath',
+            name: 'Valkyrie Berserk',
+            desc: 'Grand Ultimate: Enter unstoppable berserk state with flaming shockwaves.',
+            tier: 4,
+            cost: 3,
+            icon: '🔥',
+            passive: false,
+            req: 'warrior_tectonic_slam'
         }
     ],
     TECHNO_MAGE: [
@@ -117,14 +149,44 @@ const CLASS_SKILL_TREES = {
             req: 'mage_quantum_flux'
         },
         {
+            id: 'mage_plasma_cascade',
+            name: 'Plasma Cascade',
+            desc: 'Projectiles fork into 3 sub-bolts upon impacting enemies.',
+            tier: 3,
+            cost: 2,
+            icon: '⚡',
+            passive: true,
+            req: 'mage_chrono_step'
+        },
+        {
+            id: 'mage_superconductor',
+            name: 'Superconductor',
+            desc: 'Consecutive spell hits reduce ability cooldowns by 1.0 second.',
+            tier: 3,
+            cost: 2,
+            icon: '🔋',
+            passive: true,
+            req: 'mage_graviton_singularity'
+        },
+        {
             id: 'mage_aegis_null_barrier',
             name: 'Aegis Null-Barrier',
             desc: 'Active Ultimate: Hexagonal photon shield absorbing 100 incoming damage.',
-            tier: 3,
+            tier: 4,
             cost: 2,
             icon: '🛡️',
             passive: false,
-            req: 'mage_graviton_singularity'
+            req: 'mage_plasma_cascade'
+        },
+        {
+            id: 'mage_supernova_cataclysm',
+            name: 'Supernova Cataclysm',
+            desc: 'Grand Ultimate: Detonates an all-directional Dyson plasma burst for 220 damage.',
+            tier: 4,
+            cost: 3,
+            icon: '🌟',
+            passive: false,
+            req: 'mage_superconductor'
         }
     ],
     FARMER_GOD: [
@@ -169,14 +231,208 @@ const CLASS_SKILL_TREES = {
             req: 'farmer_spacetime_tillage'
         },
         {
+            id: 'farmer_verdant_bloom',
+            name: 'Verdant Bloom',
+            desc: 'Steps blossom with flower trails granting +35% movement speed.',
+            tier: 3,
+            cost: 2,
+            icon: '🌺',
+            passive: true,
+            req: 'farmer_solar_prominence'
+        },
+        {
+            id: 'farmer_chlorophyll_overdrive',
+            name: 'Chlorophyll Surge',
+            desc: 'Under daylight & High Noon, all attacks deal double deific damage.',
+            tier: 3,
+            cost: 2,
+            icon: '🍃',
+            passive: true,
+            req: 'farmer_gaia_cataclysm'
+        },
+        {
             id: 'farmer_eternal_harvest',
             name: 'Eternal Harvest',
             desc: 'Active Ultimate: Fully restores HP & Energy with golden deific invincibility.',
-            tier: 3,
+            tier: 4,
             cost: 2,
             icon: '👑',
             passive: false,
-            req: 'farmer_gaia_cataclysm'
+            req: 'farmer_verdant_bloom'
+        },
+        {
+            id: 'farmer_genesis_eden',
+            name: 'Genesis Eden',
+            desc: 'Grand Ultimate: Summons an entire grove of living celestial trees dealing 300 damage.',
+            tier: 4,
+            cost: 3,
+            icon: '🌌',
+            passive: false,
+            req: 'farmer_chlorophyll_overdrive'
+        }
+    ],
+    CHRONO_GLITCHER: [
+        {
+            id: 'glitch_temporal_leak',
+            name: 'Temporal Leak',
+            desc: 'Attacks desynchronize enemy timelines, dealing 25 chrono bleed damage.',
+            tier: 1,
+            cost: 1,
+            icon: '⏱️',
+            passive: true,
+            req: null
+        },
+        {
+            id: 'glitch_quantum_tunnel',
+            name: 'Quantum Tunnel',
+            desc: 'Dash phases directly through solid walls, trees, and enemy bodies.',
+            tier: 1,
+            cost: 1,
+            icon: '🌌',
+            passive: true,
+            req: null
+        },
+        {
+            id: 'glitch_anomaly_burst',
+            name: 'Anomaly Burst',
+            desc: 'Defeated foes collapse into 4 volatile static glitch fragments.',
+            tier: 2,
+            cost: 1,
+            icon: '💥',
+            passive: true,
+            req: 'glitch_temporal_leak'
+        },
+        {
+            id: 'glitch_chronos_loop',
+            name: 'Chronos Loop',
+            desc: 'Active Ability: Rewinds position and HP to 3s ago, leaving a 130-damage decoy.',
+            tier: 2,
+            cost: 2,
+            icon: '🔄',
+            passive: false,
+            req: 'glitch_quantum_tunnel'
+        },
+        {
+            id: 'glitch_entropy_drain',
+            name: 'Entropy Drain',
+            desc: 'Phasing through enemies instantly siphons +35 Energy and heals 15 HP.',
+            tier: 3,
+            cost: 2,
+            icon: '🧬',
+            passive: true,
+            req: 'glitch_anomaly_burst'
+        },
+        {
+            id: 'glitch_time_dilation',
+            name: 'Time Dilation',
+            desc: '50% of all incoming damage is delayed and dissipated over 5 seconds.',
+            tier: 3,
+            cost: 2,
+            icon: '⏳',
+            passive: true,
+            req: 'glitch_chronos_loop'
+        },
+        {
+            id: 'glitch_singularity_matrix',
+            name: 'Glitch Matrix',
+            desc: 'Critical strikes freeze nearby enemies in place for 2.0 seconds.',
+            tier: 4,
+            cost: 2,
+            icon: '🧊',
+            passive: true,
+            req: 'glitch_entropy_drain'
+        },
+        {
+            id: 'glitch_reality_overclock',
+            name: 'Reality Overclock',
+            desc: 'Grand Ultimate: Freezes all hostiles on screen for 5s with 100% critical rate.',
+            tier: 4,
+            cost: 3,
+            icon: '⚡',
+            passive: false,
+            req: 'glitch_time_dilation'
+        }
+    ],
+    SOLARION_ARCHITECT: [
+        {
+            id: 'architect_photon_forge',
+            name: 'Photon Forge',
+            desc: 'Weapon emits a penetrating laser lance with +35% reach and line-cleave.',
+            tier: 1,
+            cost: 1,
+            icon: '🔦',
+            passive: true,
+            req: null
+        },
+        {
+            id: 'architect_prismatic_carapace',
+            name: 'Prismatic Carapace',
+            desc: 'Constructs a permanent +60 Hard-Light shield buffer that regenerates.',
+            tier: 1,
+            cost: 1,
+            icon: '💎',
+            passive: true,
+            req: null
+        },
+        {
+            id: 'architect_refraction_lens',
+            name: 'Refraction Lens',
+            desc: 'Lance attacks refract into 3 auto-aiming rainbow laser sub-beams.',
+            tier: 2,
+            cost: 1,
+            icon: '🌈',
+            passive: true,
+            req: 'architect_photon_forge'
+        },
+        {
+            id: 'architect_hardlight_prism',
+            name: 'Hard-Light Prism',
+            desc: 'Active Ability: Deploys an automated laser turret construct for 8 seconds.',
+            tier: 2,
+            cost: 2,
+            icon: '🔺',
+            passive: false,
+            req: 'architect_prismatic_carapace'
+        },
+        {
+            id: 'architect_conduit_charge',
+            name: 'Conduit Synergy',
+            desc: 'Energy regen is boosted by +120% when within 80px of a light construct.',
+            tier: 3,
+            cost: 2,
+            icon: '🔋',
+            passive: true,
+            req: 'architect_refraction_lens'
+        },
+        {
+            id: 'architect_overcharge_capacitors',
+            name: 'Thermal Incineration',
+            desc: 'Laser attacks ignite foes with ticking plasma burns (15 damage/sec).',
+            tier: 3,
+            cost: 2,
+            icon: '🔥',
+            passive: true,
+            req: 'architect_hardlight_prism'
+        },
+        {
+            id: 'architect_kinetic_absorption',
+            name: 'Kinetic Dynamo',
+            desc: 'Shield impacts immediately recharge 20 Energy and accelerate cooldowns.',
+            tier: 4,
+            cost: 2,
+            icon: '⚙️',
+            passive: true,
+            req: 'architect_conduit_charge'
+        },
+        {
+            id: 'architect_orbital_dyson_lance',
+            name: 'Orbital Dyson Lance',
+            desc: 'Grand Ultimate: Calls down a colossal vertical pillar of Dyson solar fire for 260 damage.',
+            tier: 4,
+            cost: 3,
+            icon: '🛰️',
+            passive: false,
+            req: 'architect_overcharge_capacitors'
         }
     ]
 };
@@ -226,6 +482,10 @@ class Character extends KinematicBody {
         this.activeVortices = [];
         this.crops = [];
         this.sparks = [];
+        this.hardlightPrisms = [];
+        this.timeHistory = [];
+        this.timeHistoryTimer = 0;
+        this.phaseTimer = 0;
 
         this.applyClassStats();
     }
@@ -255,6 +515,22 @@ class Character extends KinematicBody {
             this.energy = 999;
             this.name = "The Farmer";
             this.title = "Deific Harvester of Space-Time";
+        } else if (this.charClass === CHARACTER_CLASS.CHRONO_GLITCHER) {
+            this.maxSpeed = 140.0;
+            this.maxHp = 90;
+            this.hp = 90;
+            this.maxEnergy = 130;
+            this.energy = 130;
+            this.name = "Chrono-Glitcher";
+            this.title = "The Reality Anomaly";
+        } else if (this.charClass === CHARACTER_CLASS.SOLARION_ARCHITECT) {
+            this.maxSpeed = 110.0;
+            this.maxHp = 125;
+            this.hp = 125;
+            this.maxEnergy = 120;
+            this.energy = 120;
+            this.name = "Solarion Architect";
+            this.title = "Master of Hard-Light";
         }
     }
 
@@ -269,6 +545,51 @@ class Character extends KinematicBody {
 
         // Energy passive regen
         this.energy = Math.min(this.maxEnergy, this.energy + 18 * dt);
+
+        // Update Time History for Chrono-Glitcher
+        this.timeHistoryTimer = (this.timeHistoryTimer || 0) + dt;
+        if (this.timeHistoryTimer >= 0.2) {
+            this.timeHistoryTimer = 0;
+            this.timeHistory = this.timeHistory || [];
+            this.timeHistory.push({ x: this.pos.x, y: this.pos.y, hp: this.hp, energy: this.energy });
+            if (this.timeHistory.length > 15) this.timeHistory.shift();
+        }
+
+        // Update Phasing timer
+        if (this.phaseTimer > 0) {
+            this.phaseTimer -= dt;
+            if (this.phaseTimer <= 0) this.phasingThroughWalls = false;
+        }
+
+        // Update Hard-Light Prisms for Solarion Architect
+        if (this.hardlightPrisms && this.hardlightPrisms.length > 0) {
+            for (let i = this.hardlightPrisms.length - 1; i >= 0; i--) {
+                const prism = this.hardlightPrisms[i];
+                prism.life -= dt;
+                prism.fireTimer -= dt;
+                if (prism.fireTimer <= 0) {
+                    prism.fireTimer = 0.55;
+                    let nearest = null;
+                    let minDist = 110;
+                    for (const e of enemies) {
+                        if (e.hp <= 0) continue;
+                        const d = Math.hypot(e.x - prism.x, e.y - prism.y);
+                        if (d < minDist) {
+                            minDist = d;
+                            nearest = e;
+                        }
+                    }
+                    if (nearest) {
+                        nearest.hp -= (prism.damage || 35);
+                        this.addSpark(nearest.x, nearest.y, '#ffea00', 12);
+                        if (nearest.hp <= 0) this.onEnemyDefeated(nearest);
+                    }
+                }
+                if (prism.life <= 0) {
+                    this.hardlightPrisms.splice(i, 1);
+                }
+            }
+        }
 
         // State machine timers
         if (this.stateTimer > 0) {
@@ -603,6 +924,18 @@ class Character extends KinematicBody {
             sparkColor = '#76ff03';
             this.addSpark(this.pos.x, this.pos.y, sparkColor, 20);
             this.addSpark(this.pos.x, this.pos.y, '#ffd700', 12);
+        } else if (this.charClass === CHARACTER_CLASS.CHRONO_GLITCHER) {
+            dashSpeed = hasEnergy ? 490 : 390;
+            sparkColor = '#e040fb';
+            this.phasingThroughWalls = true;
+            this.phaseTimer = 0.35;
+            this.addSpark(this.pos.x, this.pos.y, sparkColor, 20);
+            this.addSpark(this.pos.x - dx * 8, this.pos.y - dy * 8, '#00e5ff', 12);
+        } else if (this.charClass === CHARACTER_CLASS.SOLARION_ARCHITECT) {
+            dashSpeed = hasEnergy ? 420 : 340;
+            sparkColor = '#ffea00';
+            this.addSpark(this.pos.x, this.pos.y, sparkColor, 18);
+            this.addSpark(this.pos.x - dx * 6, this.pos.y - dy * 6, '#ff9100', 10);
         }
 
         this.vel.set(dx * dashSpeed, dy * dashSpeed);
@@ -714,6 +1047,78 @@ class Character extends KinematicBody {
             }
             this.addSpark(this.pos.x, this.pos.y, '#ffd700', 30);
             return { type: 'GAIA', damage: rootDmg };
+
+        } else if (this.charClass === CHARACTER_CLASS.CHRONO_GLITCHER) {
+            // Chronos Loop (Temporal Rewind)
+            const cost = 28;
+            if (this.energy < cost) return false;
+            this.energy -= cost;
+            this.abilityCooldowns[0] = 4.0;
+            this.state = 'ATTACKING';
+            this.stateTimer = 0.30;
+
+            const decoyX = this.pos.x;
+            const decoyY = this.pos.y;
+            const baseDmg = this.hasSkill('glitch_chronos_loop') ? 130 : 80;
+
+            // Rewind to oldest stored time history state
+            if (this.timeHistory && this.timeHistory.length > 0) {
+                const rewindTarget = this.timeHistory[0];
+                this.pos.x = rewindTarget.x;
+                this.pos.y = rewindTarget.y;
+                this.hp = Math.max(this.hp, rewindTarget.hp);
+                this.timeHistory = [];
+            }
+
+            // Explode temporal static decoy at previous position
+            for (const enemy of enemies) {
+                if (enemy.hp <= 0) continue;
+                const d = Math.hypot(enemy.x - decoyX, enemy.y - decoyY);
+                if (d <= 75) {
+                    enemy.hp -= baseDmg;
+                    this.addSpark(enemy.x, enemy.y, '#e040fb', 22);
+                    if (enemy.hp <= 0) this.onEnemyDefeated(enemy);
+                }
+            }
+            this.addSpark(decoyX, decoyY, '#00e5ff', 25);
+            this.addSpark(this.pos.x, this.pos.y, '#e040fb', 30);
+            return { type: 'CHRONOS_REWIND', damage: baseDmg, decoyX, decoyY };
+
+        } else if (this.charClass === CHARACTER_CLASS.SOLARION_ARCHITECT) {
+            // Hard-Light Prism Deployable Laser Turret
+            const cost = 30;
+            if (this.energy < cost) return false;
+            this.energy -= cost;
+            this.abilityCooldowns[0] = 4.5;
+            this.state = 'ATTACKING';
+            this.stateTimer = 0.30;
+
+            const prismX = this.pos.x + dir.x * 32;
+            const prismY = this.pos.y + dir.y * 32;
+
+            this.hardlightPrisms = this.hardlightPrisms || [];
+            this.hardlightPrisms.push({
+                x: prismX,
+                y: prismY,
+                life: 8.0,
+                maxLife: 8.0,
+                fireTimer: 0.5,
+                damage: this.hasSkill('architect_hardlight_prism') ? 45 : 30
+            });
+
+            // Instant radial photon pulse
+            const pulseDmg = this.hasSkill('architect_hardlight_prism') ? 95 : 60;
+            for (const enemy of enemies) {
+                if (enemy.hp <= 0) continue;
+                const d = Math.hypot(enemy.x - prismX, enemy.y - prismY);
+                if (d <= 65) {
+                    enemy.hp -= pulseDmg;
+                    this.addSpark(enemy.x, enemy.y, '#ffea00', 18);
+                    if (enemy.hp <= 0) this.onEnemyDefeated(enemy);
+                }
+            }
+            this.addSpark(prismX, prismY, '#ffea00', 35);
+            return { type: 'HARDLIGHT_PRISM', x: prismX, y: prismY, damage: pulseDmg };
         }
 
         return false;
@@ -745,6 +1150,16 @@ class Character extends KinematicBody {
                 this.maxHp += 100;
                 this.hp = this.maxHp;
                 this.maxEnergy += 100;
+                this.energy = this.maxEnergy;
+            } else if (this.charClass === CHARACTER_CLASS.CHRONO_GLITCHER) {
+                this.maxHp += 14;
+                this.hp = this.maxHp;
+                this.maxEnergy += 18;
+                this.energy = this.maxEnergy;
+            } else if (this.charClass === CHARACTER_CLASS.SOLARION_ARCHITECT) {
+                this.maxHp += 22;
+                this.hp = this.maxHp;
+                this.maxEnergy += 14;
                 this.energy = this.maxEnergy;
             }
             this.addSpark(this.pos.x, this.pos.y, '#ffd700', 30);

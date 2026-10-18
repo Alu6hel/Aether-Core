@@ -210,10 +210,9 @@
                     </button>
                 </div>
 
-                <!-- Center Controls (Restart, Dev Skip, Menu) -->
+                <!-- Center Controls (Settings & Menu) -->
                 <div id="center-buttons">
-                    <button class="meta-btn" id="btn-restart" title="Instant Pioneer Reboot">🔄 REBOOT</button>
-                    <button class="meta-btn" id="btn-crafting-quick" title="Quick Survival Crafting">🔨 CRAFT</button>
+                    <button class="meta-btn" id="btn-touch-settings" title="Game & Controls Settings">⚙️ SETTINGS</button>
                     <button class="meta-btn" id="btn-start" title="Open In-Game Menu">☰ MENU</button>
                 </div>
             </div>
@@ -265,6 +264,22 @@
                             <div class="card-subtitle">The Cyber-Arcanist</div>
                             <div class="card-stats">HP: 90 | SPD: 155 | NRG: 150</div>
                             <div class="card-desc">Quantum nanite channeler. Unleashes telekinetic arcs and rapidly-regenerating kinetic barriers.</div>
+                        </div>
+
+                        <div class="class-card" data-class="CHRONO_GLITCHER" id="card-chrono">
+                            <canvas id="canvas-chrono" width="32" height="32" class="class-card-canvas"></canvas>
+                            <div class="card-title">CHRONO-GLITCHER</div>
+                            <div class="card-subtitle">The Temporal Anomaly</div>
+                            <div class="card-stats">HP: 110 | SPD: 175 | NRG: 130</div>
+                            <div class="card-desc">Master of causality and spacetime phasing. Deploys temporal rewinds and slips through solid walls and trees.</div>
+                        </div>
+
+                        <div class="class-card" data-class="SOLARION_ARCHITECT" id="card-architect">
+                            <canvas id="canvas-architect" width="32" height="32" class="class-card-canvas"></canvas>
+                            <div class="card-title">SOLARION ARCHITECT</div>
+                            <div class="card-subtitle">The Dyson Luminary</div>
+                            <div class="card-stats">HP: 125 | SPD: 140 | NRG: 160</div>
+                            <div class="card-desc">Hard-light photon engineer. Deploys auto-targeting laser prisms and channels radiant orbital solar arrays.</div>
                         </div>
 
                         <div class="class-card locked" data-class="FARMER_GOD" id="card-farmer">
@@ -524,32 +539,56 @@
                 </div>
             </div>
 
-            <!-- Sound & Audio Settings Modal -->
+            <!-- Game & Controls Settings Modal -->
             <div id="sound-modal" class="game-modal hidden">
-                <div class="modal-content">
+                <div class="modal-content settings-modal-content">
                     <div class="modal-header">
-                        <h3>🔊 SOUND & CHIPTUNE SYNTH SETTINGS</h3>
+                        <h3>⚙️ GAME & CONTROLS SETTINGS</h3>
                         <button class="modal-close" id="sound-close">✕</button>
                     </div>
-                    <div class="modal-body sound-settings-body">
-                        <div class="sound-toggle-row">
-                            <span>Master Audio Output:</span>
-                            <button id="toggle-audio-master" class="gba-btn-sm toggle-on">ENABLED (ON)</button>
+                    <div class="modal-body settings-body">
+                        <!-- 1. Touch Controls Sizing -->
+                        <div class="settings-section">
+                            <div class="settings-section-title">🕹️ VIRTUAL BUTTON SIZE (TOUCH SCALE)</div>
+                            <div class="settings-btn-group" id="btn-scale-options">
+                                <button class="scale-choice-btn" data-scale="0.85">COMPACT (85%)</button>
+                                <button class="scale-choice-btn active" data-scale="1.0">STANDARD (100%)</button>
+                                <button class="scale-choice-btn" data-scale="1.2">LARGE (120%)</button>
+                                <button class="scale-choice-btn" data-scale="1.4">EXTRA LARGE (140%)</button>
+                            </div>
                         </div>
-                        <div class="sound-toggle-row">
-                            <span>Background Chiptune BGM:</span>
-                            <button id="toggle-audio-bgm" class="gba-btn-sm toggle-on">ENABLED (ON)</button>
+
+                        <!-- 2. Typography & Readability -->
+                        <div class="settings-section">
+                            <div class="settings-section-title">📖 TEXT READABILITY & TYPOGRAPHY</div>
+                            <div class="settings-btn-group" id="font-scale-options">
+                                <button class="font-choice-btn active" data-font="standard">RETRO PIXEL (STANDARD)</button>
+                                <button class="font-choice-btn" data-font="large">CLEAR & LEGIBLE (LARGE)</button>
+                            </div>
                         </div>
-                        <div class="sound-toggle-row">
-                            <span>Combat & Tactical SFX:</span>
-                            <button id="toggle-audio-sfx" class="gba-btn-sm toggle-on">ENABLED (ON)</button>
-                        </div>
-                        <div class="sound-test-row">
-                            <span>Test Synthesizer Waves:</span>
-                            <div class="sound-test-buttons">
-                                <button id="btn-test-parry" class="gba-btn-sm">DEFLECT (Saw)</button>
-                                <button id="btn-test-coin" class="gba-btn-sm">COIN (Arp)</button>
-                                <button id="btn-test-hit" class="gba-btn-sm">STRIKE (Noise)</button>
+
+                        <!-- 3. Audio & Chiptune Synth -->
+                        <div class="settings-section">
+                            <div class="settings-section-title">🔊 AUDIO & CHIPTUNE SYNTHESIZER</div>
+                            <div class="sound-toggle-row">
+                                <span>Master Audio:</span>
+                                <button id="toggle-audio-master" class="gba-btn-sm toggle-on">ENABLED (ON)</button>
+                            </div>
+                            <div class="sound-toggle-row">
+                                <span>Background Chiptune BGM:</span>
+                                <button id="toggle-audio-bgm" class="gba-btn-sm toggle-on">ENABLED (ON)</button>
+                            </div>
+                            <div class="sound-toggle-row">
+                                <span>Combat & SFX:</span>
+                                <button id="toggle-audio-sfx" class="gba-btn-sm toggle-on">ENABLED (ON)</button>
+                            </div>
+                            <div class="sound-test-row">
+                                <span>Test Synthesizer Waves:</span>
+                                <div class="sound-test-buttons">
+                                    <button id="btn-test-parry" class="gba-btn-sm">DEFLECT (Saw)</button>
+                                    <button id="btn-test-coin" class="gba-btn-sm">COIN (Arp)</button>
+                                    <button id="btn-test-hit" class="gba-btn-sm">STRIKE (Noise)</button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -591,7 +630,7 @@
             </div>
         </main>
 
-        <!-- Player HUD Footer (Clean & Streamlined) -->
+        <!-- Player HUD Footer (Clean & Streamlined, with Settings button) -->
         <footer id="game-footer">
             <div class="player-bars">
                 <div class="bar-row">
@@ -612,10 +651,8 @@
                 <span class="pioneer-class-tag" id="pioneer-class-tag">WARRIOR</span>
             </div>
 
-            <div class="wallet-display" id="hud-wallet" title="Your Harvested ALU Coins">
-                <canvas id="canvas-coin" width="16" height="16" class="wallet-coin-canvas"></canvas>
-                <span id="wallet-coins">0</span>
-                <span class="wallet-unit">GOLD</span>
+            <div class="footer-actions">
+                <button id="btn-settings-footer" class="footer-settings-btn" title="Open Game & Controls Settings">⚙️ SETTINGS</button>
             </div>
         </footer>
     </div>
