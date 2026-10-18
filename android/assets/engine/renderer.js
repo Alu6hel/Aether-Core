@@ -2604,323 +2604,379 @@ class RetroRenderer {
         const ctx = this.ctx;
         const w = this.width;
         const h = this.height;
+        const t = this.titleAnimTimer;
 
-        // 1. Unified Dyson Luminary Celestial Engine (Sun & Moon as One)
-        // ~80-second continuous celestial revolution through Dyson sphere aperture states (~20s per phase)
-        const cycle = ((this.titleAnimTimer || 0) * 0.0125) % 1.0;
-        
-        let lumX = w - 55;
-        let lumY = 48;
-        let lumRadius = 20;
-
-        // 4 Celestial Keyframes for continuous smooth cosine interpolation:
-        // Stage 1: ECLIPSE // SHUTTERS ENGAGED and WAXING CRESCENT // LUNAR APERTURE
-        // Stage 2: SOLAR DAWN // APERTURE VENTING
-        // Stage 3: SOLAR ZENITH // THERMAL MAXIMUM
-        // Stage 4: RED GIANT // CORONAL SHIELDING
-        const KEYFRAMES = [
-            // 0: Eclipse / Waxing Crescent (Lunar Mode)
-            { top: [2, 5, 14], mid: [9, 17, 34], bot: [20, 32, 54], mtn: [10, 16, 29], star: 0.95, rim: [0, 229, 255, 0.25], ring: [0, 229, 255, 0.22] },
-            // 1: Solar Dawn & Corona Awakening (Transition Mode)
-            { top: [18, 13, 32], mid: [38, 22, 42], bot: [60, 32, 42], mtn: [20, 20, 36], star: 0.55, rim: [255, 170, 0, 0.35], ring: [255, 183, 77, 0.24] },
-            // 2: Radiant Solar Zenith (Sun Mode)
-            { top: [15, 35, 58], mid: [28, 54, 82], bot: [45, 75, 104], mtn: [26, 34, 48], star: 0.12, rim: [255, 213, 79, 0.50], ring: [255, 213, 79, 0.28] },
-            // 3: Red Giant / Magnetic Prominence Flare (Cooling Mode)
-            { top: [34, 11, 24], mid: [28, 10, 34], bot: [14, 11, 28], mtn: [23, 15, 26], star: 0.40, rim: [255, 82, 82, 0.40], ring: [255, 82, 82, 0.28] }
-        ];
-
-        const phaseProgress = cycle * 4;
-        const currentPhase = Math.floor(phaseProgress);
-        const nextPhase = (currentPhase + 1) % 4;
-        const localT = phaseProgress - currentPhase;
-        // Smooth cosine curve: zero abrupt pop-in
-        const smoothT = 0.5 - 0.5 * Math.cos(localT * Math.PI);
-
-        const kfA = KEYFRAMES[currentPhase];
-        const kfB = KEYFRAMES[nextPhase];
-        const lerp = (a, b, t) => a + (b - a) * t;
-        const lerpColor = (cA, cB, t) => `rgb(${Math.round(lerp(cA[0], cB[0], t))}, ${Math.round(lerp(cA[1], cB[1], t))}, ${Math.round(lerp(cA[2], cB[2], t))})`;
-        const lerpRgba = (cA, cB, t) => `rgba(${Math.round(lerp(cA[0], cB[0], t))}, ${Math.round(lerp(cA[1], cB[1], t))}, ${Math.round(lerp(cA[2], cB[2], t))}, ${lerp(cA[3], cB[3], t).toFixed(3)})`;
-
-        const skyTop = lerpColor(kfA.top, kfB.top, smoothT);
-        const skyMid = lerpColor(kfA.mid, kfB.mid, smoothT);
-        const skyBottom = lerpColor(kfA.bot, kfB.bot, smoothT);
-        const mountainTint = lerpColor(kfA.mtn, kfB.mtn, smoothT);
-        const starAlpha = lerp(kfA.star, kfB.star, smoothT);
-        const rimColor = lerpRgba(kfA.rim, kfB.rim, smoothT);
-        const ringColor = lerpRgba(kfA.ring, kfB.ring, smoothT);
-
-        // Render dynamic sky gradient
-        const skyGrad = ctx.createLinearGradient(0, 0, 0, h);
-        skyGrad.addColorStop(0, skyTop);
-        skyGrad.addColorStop(0.55, skyMid);
-        skyGrad.addColorStop(1, skyBottom);
-        ctx.fillStyle = skyGrad;
+        // 1. Dark ambient forest clearing background
+        ctx.fillStyle = '#0c160f';
         ctx.fillRect(0, 0, w, h);
 
-        // Render Starfield with dynamic phase-dependent alpha
-        ctx.fillStyle = '#ffffff';
-        for (let i = 0; i < 45; i++) {
-            const sx = (i * 59 + 17) % w;
-            const sy = (i * 37 + 11) % Math.floor(h * 0.65);
-            const twinkle = Math.sin(this.titleAnimTimer * 3 + i) > 0.3;
-            ctx.globalAlpha = (twinkle ? 0.9 : 0.35) * starAlpha;
-            ctx.fillRect(sx, sy, 1, 1);
-            if (i % 7 === 0) ctx.fillRect(sx - 1, sy, 3, 1);
-        }
-        ctx.globalAlpha = 1.0;
+        // 2. Isometric Forest Floor (Matching Image 4)
+        // Diamond rhombic grid projection
+        const tileW = 56;
+        const tileH = 28;
+        const originX = Math.floor(w / 2);
+        const originY = Math.floor(h * 0.44);
 
-        // 2. Render Dyson Sphere Megastructure Orbital Lattice Rings
-        ctx.save();
-        ctx.translate(lumX, lumY);
-        const rotAngle = this.titleAnimTimer * 0.10;
+        const cols = 15;
+        const rows = 15;
+        for (let r = -rows; r <= rows; r++) {
+            for (let c = -cols; c <= cols; c++) {
+                const ix = originX + (c - r) * (tileW / 2);
+                const iy = originY + (c + r) * (tileH / 2);
 
-        // Concentric outer containment ring
-        ctx.strokeStyle = ringColor;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, lumRadius + 14, lumRadius + 5, rotAngle * 0.5, 0, Math.PI * 2);
-        ctx.stroke();
+                if (ix < -tileW || ix > w + tileW || iy < -tileH || iy > h + tileH) continue;
 
-        ctx.strokeStyle = ringColor;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, lumRadius + 9, lumRadius + 15, -rotAngle * 0.7, 0, Math.PI * 2);
-        ctx.stroke();
+                // Diagonal stone/clearing path and alternating grass checkerboard
+                const isDiagPath = Math.abs(c - r) <= 1 || (c + r >= -1 && c + r <= 1);
+                const isCheck = (Math.abs(c + r)) % 2 === 0;
 
-        // 3. Render Solar Rays / Corona Flares during Sun Stages with smooth fade
-        const sunWeight = Math.sin(cycle * Math.PI); // Peaks around 0.50 (Zenith), 0 at 0 and 1.0
-        if (sunWeight > 0.05) {
-            const isRedGiant = (cycle >= 0.70);
-            const rayCount = 8;
-            const rayLength = 22 + 14 * sunWeight;
-            const rayPulse = 1.0 + 0.15 * Math.sin(this.titleAnimTimer * 4);
+                let tileColor;
+                if (isDiagPath) {
+                    tileColor = isCheck ? '#2b4430' : '#335039';
+                } else {
+                    tileColor = isCheck ? '#1a2e1d' : '#213a25';
+                }
 
-            for (let r = 0; r < rayCount; r++) {
-                const angle = rotAngle + (r * Math.PI * 2) / rayCount;
-                const innerX = Math.cos(angle) * (lumRadius + 2);
-                const innerY = Math.sin(angle) * (lumRadius + 2);
-                const outerX = Math.cos(angle) * (lumRadius + rayLength * rayPulse);
-                const outerY = Math.sin(angle) * (lumRadius + rayLength * rayPulse);
-
-                ctx.strokeStyle = isRedGiant 
-                    ? `rgba(255, 87, 34, ${(0.35 + 0.2 * Math.sin(angle * 2 + this.titleAnimTimer)) * sunWeight})` 
-                    : `rgba(255, 215, 64, ${(0.45 + 0.25 * Math.sin(angle * 2 + this.titleAnimTimer)) * sunWeight})`;
-                ctx.lineWidth = (r % 2 === 0) ? 2 : 1;
+                ctx.fillStyle = tileColor;
                 ctx.beginPath();
-                ctx.moveTo(innerX, innerY);
-                ctx.lineTo(outerX, outerY);
+                ctx.moveTo(ix, iy - tileH / 2);
+                ctx.lineTo(ix + tileW / 2, iy);
+                ctx.lineTo(ix, iy + tileH / 2);
+                ctx.lineTo(ix - tileW / 2, iy);
+                ctx.closePath();
+                ctx.fill();
+
+                // Isometric tile border line
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.28)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Wild grass tufts and forest blossoms
+                const seed = Math.abs(c * 23 + r * 37) % 100;
+                if (seed < 25 && !isDiagPath) {
+                    const sway = Math.sin(t * 2.5 + c * 0.5 + r * 0.7) * 1.5;
+                    ctx.fillStyle = '#388e3c';
+                    ctx.fillRect(ix - 2 + sway, iy - 4, 1, 4);
+                    ctx.fillRect(ix + 1 + sway, iy - 6, 1, 5);
+                    ctx.fillRect(ix - 4 + sway, iy - 3, 1, 3);
+                } else if (seed > 93) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(ix, iy - 2, 2, 2);
+                    ctx.fillStyle = '#ffd54f';
+                    ctx.fillRect(ix + 1, iy - 1, 1, 1);
+                }
+            }
+        }
+
+        // 3. Four 2x2 Stepping Stone Block Clusters (Image 4)
+        const clusters = [
+            { x: originX - 115, y: originY - 32 },
+            { x: originX + 115, y: originY - 32 },
+            { x: originX - 115, y: originY + 56 },
+            { x: originX + 115, y: originY + 56 },
+            { x: originX - 175, y: originY + 12 },
+            { x: originX + 175, y: originY + 12 }
+        ];
+
+        for (const cl of clusters) {
+            const offsets = [
+                { dx: -7, dy: -4 },
+                { dx: 7, dy: -4 },
+                { dx: -7, dy: 5 },
+                { dx: 7, dy: 5 }
+            ];
+            for (const off of offsets) {
+                const bx = cl.x + off.dx;
+                const by = cl.y + off.dy;
+
+                // 3D stone block top face
+                ctx.fillStyle = '#263238';
+                ctx.beginPath();
+                ctx.moveTo(bx, by - 4);
+                ctx.lineTo(bx + 6, by);
+                ctx.lineTo(bx, by + 4);
+                ctx.lineTo(bx - 6, by);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.strokeStyle = '#37474f';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // South/East shadow faces
+                ctx.fillStyle = '#101518';
+                ctx.beginPath();
+                ctx.moveTo(bx - 6, by);
+                ctx.lineTo(bx, by + 4);
+                ctx.lineTo(bx, by + 9);
+                ctx.lineTo(bx - 6, by + 5);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = '#182026';
+                ctx.beginPath();
+                ctx.moveTo(bx, by + 4);
+                ctx.lineTo(bx + 6, by);
+                ctx.lineTo(bx + 6, by + 5);
+                ctx.lineTo(bx, by + 9);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+
+        // 4. Surrounding Dense Isometric Conifer Pine Trees (Framing edges, Image 4)
+        const drawPineTree = (px, py, scale = 1.0) => {
+            const th = Math.round(52 * scale);
+            const tw = Math.round(36 * scale);
+
+            // Ground shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+            ctx.beginPath();
+            ctx.ellipse(px, py + 4, tw * 0.5, 8 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Trunk
+            ctx.fillStyle = '#271c14';
+            ctx.fillRect(px - Math.round(3 * scale), py - Math.round(8 * scale), Math.round(6 * scale), Math.round(10 * scale));
+
+            // Layered pine canopy (3 tiers of dark evergreen needles)
+            const tiers = [
+                { yOff: 8, w: tw * 0.95, h: th * 0.45 },
+                { yOff: 22, w: tw * 0.75, h: th * 0.42 },
+                { yOff: 36, w: tw * 0.52, h: th * 0.38 }
+            ];
+
+            for (const tier of tiers) {
+                const baseTierY = py - Math.round(tier.yOff * scale);
+                const halfW = Math.round(tier.w / 2);
+                const tierH = Math.round(tier.h * scale);
+
+                // Dark shaded needle side
+                ctx.fillStyle = '#0f2214';
+                ctx.beginPath();
+                ctx.moveTo(px, baseTierY - tierH);
+                ctx.lineTo(px, baseTierY);
+                ctx.lineTo(px - halfW, baseTierY);
+                ctx.closePath();
+                ctx.fill();
+
+                // Sunlit needle side
+                ctx.fillStyle = '#193320';
+                ctx.beginPath();
+                ctx.moveTo(px, baseTierY - tierH);
+                ctx.lineTo(px + halfW, baseTierY);
+                ctx.lineTo(px, baseTierY);
+                ctx.closePath();
+                ctx.fill();
+
+                // Needle ridge highlights
+                ctx.strokeStyle = '#2d5334';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(px, baseTierY - tierH);
+                ctx.lineTo(px + halfW * 0.6, baseTierY);
                 ctx.stroke();
             }
+        };
 
-            // Broad outer atmospheric corona glow
-            const coronaGlow = ctx.createRadialGradient(0, 0, lumRadius * 0.8, 0, 0, lumRadius * 2.8);
-            if (isRedGiant) {
-                coronaGlow.addColorStop(0, `rgba(255, 61, 0, ${(0.45 * sunWeight).toFixed(2)})`);
-                coronaGlow.addColorStop(0.6, `rgba(213, 0, 0, ${(0.18 * sunWeight).toFixed(2)})`);
-                coronaGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            } else {
-                coronaGlow.addColorStop(0, `rgba(255, 235, 59, ${(0.55 * sunWeight).toFixed(2)})`);
-                coronaGlow.addColorStop(0.5, `rgba(255, 152, 0, ${(0.22 * sunWeight).toFixed(2)})`);
-                coronaGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            }
-            ctx.fillStyle = coronaGlow;
-            ctx.beginPath();
-            ctx.arc(0, 0, lumRadius * 2.8, 0, Math.PI * 2);
-            ctx.fill();
-        } else {
-            // Lunar cool glow
-            const moonGlow = ctx.createRadialGradient(0, 0, lumRadius * 0.5, 0, 0, lumRadius * 2.2);
-            moonGlow.addColorStop(0, 'rgba(128, 222, 234, 0.35)');
-            moonGlow.addColorStop(0.7, 'rgba(2, 136, 209, 0.10)');
-            moonGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            ctx.fillStyle = moonGlow;
-            ctx.beginPath();
-            ctx.arc(0, 0, lumRadius * 2.2, 0, Math.PI * 2);
-            ctx.fill();
+        // Perimeter Trees
+        const perimeterTrees = [
+            // Left flank
+            { x: originX - 220, y: originY - 50, s: 1.15 },
+            { x: originX - 195, y: originY + 20, s: 1.25 },
+            { x: originX - 235, y: originY + 90, s: 1.35 },
+            { x: originX - 180, y: originY + 120, s: 1.30 },
+            { x: originX - 250, y: originY - 110, s: 1.10 },
+            // Right flank
+            { x: originX + 220, y: originY - 50, s: 1.15 },
+            { x: originX + 195, y: originY + 20, s: 1.25 },
+            { x: originX + 235, y: originY + 90, s: 1.35 },
+            { x: originX + 180, y: originY + 120, s: 1.30 },
+            { x: originX + 250, y: originY - 110, s: 1.10 },
+            // Top background perimeter
+            { x: originX - 130, y: originY - 105, s: 0.95 },
+            { x: originX - 70, y: originY - 120, s: 0.90 },
+            { x: originX + 70, y: originY - 120, s: 0.90 },
+            { x: originX + 130, y: originY - 105, s: 0.95 }
+        ];
+
+        for (const pt of perimeterTrees) {
+            drawPineTree(pt.x, pt.y, pt.s);
         }
 
-        // 4. Render the Core Dyson Luminary Orb Body with smooth transitions
-        if (cycle >= 0.50 && cycle < 0.75) {
-            // High Solar Zenith: Radiant White/Gold Stellar Core
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.arc(0, 0, lumRadius, 0, Math.PI * 2);
-            ctx.fill();
+        // 5. Central Ancient Stone Runic Totem / Monolith (Image 4 Exact Archetype)
+        const mx = originX;
+        const my = originY + 22;
 
-            // Inner intense plasma core
-            ctx.fillStyle = '#fff9c4';
-            ctx.beginPath();
-            ctx.arc(0, 0, lumRadius - 3, 0, Math.PI * 2);
-            ctx.fill();
-        } else if (cycle >= 0.75) {
-            // Red Giant Phase: Amber-Crimson Stellar Flare Core
-            ctx.fillStyle = '#ff3d00';
-            ctx.beginPath();
-            ctx.arc(0, 0, lumRadius, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#ff9100';
-            ctx.beginPath();
-            ctx.arc(0, 0, lumRadius - 4, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Advancing dark shutter shadow (waning back to lunar/eclipse)
-            const t = (cycle - 0.75) / 0.25;
-            ctx.fillStyle = skyTop;
-            ctx.beginPath();
-            ctx.arc(-lumRadius * (1.6 - t * 1.8), 0, lumRadius, 0, Math.PI * 2);
-            ctx.fill();
-        } else if (cycle >= 0.25 && cycle < 0.50) {
-            // Solar Dawn Phase: Warm Amber Core waking up
-            ctx.fillStyle = '#ffa726';
-            ctx.beginPath();
-            ctx.arc(0, 0, lumRadius, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#ffe082';
-            ctx.beginPath();
-            ctx.arc(0, 0, lumRadius - 3, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Retracting dark shutter shadow
-            const t = (cycle - 0.25) / 0.25;
-            ctx.fillStyle = skyTop;
-            ctx.beginPath();
-            ctx.arc(lumRadius * (0.2 + t * 1.6), 0, lumRadius + 1, 0, Math.PI * 2);
-            ctx.fill();
-        } else {
-            // Lunar Phase: Obsidian sphere with silver-cyan waxing crescent
-            ctx.fillStyle = '#0a101a';
-            ctx.beginPath();
-            ctx.arc(0, 0, lumRadius, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Internal reactor grid lines visible in the dark core
-            ctx.strokeStyle = 'rgba(0, 229, 255, 0.35)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(-lumRadius * 0.6, 0);
-            ctx.lineTo(lumRadius * 0.6, 0);
-            ctx.moveTo(0, -lumRadius * 0.6);
-            ctx.lineTo(0, lumRadius * 0.6);
-            ctx.stroke();
-
-            // Radiant silver crescent rim
-            ctx.fillStyle = '#e1f5fe';
-            ctx.beginPath();
-            ctx.arc(0, 0, lumRadius, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Occluding sphere shadow defining moon phase
-            const t = cycle / 0.25;
-            const shadowShift = lumRadius * (0.2 + t * 1.2);
-            ctx.fillStyle = '#050a12';
-            ctx.beginPath();
-            ctx.arc(shadowShift, -2, lumRadius * 0.95, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        ctx.restore();
-
-        // 3. Mountain Ridge with Dynamic Illumination
-        ctx.fillStyle = mountainTint;
+        // Base ground shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
         ctx.beginPath();
-        ctx.moveTo(0, h * 0.65);
-        ctx.lineTo(w * 0.25, h * 0.52);
-        ctx.lineTo(w * 0.55, h * 0.60);
-        ctx.lineTo(w * 0.8, h * 0.48);
-        ctx.lineTo(w, h * 0.58);
-        ctx.lineTo(w, h);
-        ctx.lineTo(0, h);
+        ctx.ellipse(mx, my + 14, 42, 16, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Surrounding white stone teeth / staves at totem base (Image 4)
+        const toothCount = 14;
+        for (let i = 0; i < toothCount; i++) {
+            const angle = (i * Math.PI * 2) / toothCount;
+            const tx = mx + Math.cos(angle) * 34;
+            const ty = my + 12 + Math.sin(angle) * 11;
+            const toothH = 14 + (i % 3) * 4;
+
+            ctx.fillStyle = '#b0bec5';
+            ctx.beginPath();
+            ctx.moveTo(tx - 3, ty);
+            ctx.lineTo(tx, ty - toothH);
+            ctx.lineTo(tx + 3, ty);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = '#455a64';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        // Pedestal base block
+        ctx.fillStyle = '#1c2430';
+        ctx.fillRect(mx - 22, my - 2, 44, 16);
+        ctx.fillStyle = '#263238';
+        ctx.fillRect(mx - 20, my - 4, 40, 6);
+
+        // Stacked megalithic stone blocks (4 tiers high, ~110px tall)
+        // Block 1: Bottom megalith
+        ctx.fillStyle = '#263238';
+        ctx.beginPath();
+        ctx.moveTo(mx - 18, my - 2);
+        ctx.lineTo(mx - 15, my - 30);
+        ctx.lineTo(mx + 15, my - 30);
+        ctx.lineTo(mx + 18, my - 2);
         ctx.closePath();
         ctx.fill();
 
-        // Mountain edge dynamic rim light (smoothly interpolated)
-        ctx.strokeStyle = rimColor;
-        ctx.lineWidth = 1.5;
+        // Shaded side
+        ctx.fillStyle = '#151c20';
         ctx.beginPath();
-        ctx.moveTo(0, h * 0.65);
-        ctx.lineTo(w * 0.25, h * 0.52);
-        ctx.lineTo(w * 0.55, h * 0.60);
-        ctx.lineTo(w * 0.8, h * 0.48);
-        ctx.lineTo(w, h * 0.58);
-        ctx.stroke();
-
-        // Silhouette Conifer Pines
-        ctx.fillStyle = '#070b14';
-        const treeSpacing = 28;
-        for (let x = 0; x <= w + treeSpacing; x += treeSpacing) {
-            const th = 38 + ((x * 13) % 24);
-            const ty = Math.floor(h * 0.72);
-            ctx.beginPath();
-            ctx.moveTo(x, ty - th);
-            ctx.lineTo(x + 14, ty);
-            ctx.lineTo(x - 14, ty);
-            ctx.closePath();
-            ctx.fill();
-        }
-
-        // 4. Grassy Clearing
-        ctx.fillStyle = '#101926';
-        ctx.fillRect(0, Math.floor(h * 0.70), w, Math.floor(h * 0.30));
-        ctx.fillStyle = '#1c293d';
-        ctx.fillRect(0, Math.floor(h * 0.70), w, 4);
-
-        // 5. Central Ancient Runic Monolith / Totem
-        const mx = Math.floor(w / 2);
-        const my = Math.floor(h * 0.68);
-
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.beginPath();
-        ctx.ellipse(mx, my + 6, 26, 8, 0, 0, Math.PI * 2);
+        ctx.moveTo(mx - 18, my - 2);
+        ctx.lineTo(mx - 15, my - 30);
+        ctx.lineTo(mx, my - 30);
+        ctx.lineTo(mx, my - 2);
+        ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = '#151e2b';
-        ctx.fillRect(mx - 14, my - 85, 28, 90);
-        ctx.fillStyle = '#223044';
-        ctx.fillRect(mx - 12, my - 83, 24, 86);
+        // Block 2: Middle megalith
+        ctx.fillStyle = '#37474f';
+        ctx.beginPath();
+        ctx.moveTo(mx - 16, my - 32);
+        ctx.lineTo(mx - 19, my - 62);
+        ctx.lineTo(mx + 13, my - 62);
+        ctx.lineTo(mx + 16, my - 32);
+        ctx.closePath();
+        ctx.fill();
 
-        ctx.fillStyle = '#111722';
-        ctx.fillRect(mx - 12, my - 60, 24, 3);
-        ctx.fillRect(mx - 12, my - 32, 24, 3);
+        ctx.fillStyle = '#1e272c';
+        ctx.beginPath();
+        ctx.moveTo(mx - 16, my - 32);
+        ctx.lineTo(mx - 19, my - 62);
+        ctx.lineTo(mx - 2, my - 62);
+        ctx.lineTo(mx - 2, my - 32);
+        ctx.closePath();
+        ctx.fill();
 
-        const glowPulse = 0.5 + 0.45 * Math.sin(this.titleAnimTimer * 2.5);
-        ctx.fillStyle = `rgba(0, 229, 255, ${glowPulse})`;
-        ctx.fillRect(mx - 6, my - 75, 12, 3);
-        ctx.fillRect(mx - 6, my - 72, 3, 6);
-        ctx.fillRect(mx - 6, my - 66, 12, 3);
-        ctx.fillRect(mx + 3, my - 63, 3, 5);
-        ctx.fillRect(mx - 5, my - 48, 10, 3);
-        ctx.fillRect(mx - 1, my - 45, 3, 10);
-        ctx.fillRect(mx - 7, my - 40, 14, 2);
-        ctx.fillRect(mx - 4, my - 22, 8, 3);
-        ctx.fillRect(mx - 2, my - 19, 4, 8);
+        // Block 3: Upper megalith
+        ctx.fillStyle = '#455a64';
+        ctx.beginPath();
+        ctx.moveTo(mx - 17, my - 64);
+        ctx.lineTo(mx - 13, my - 92);
+        ctx.lineTo(mx + 15, my - 92);
+        ctx.lineTo(mx + 14, my - 64);
+        ctx.closePath();
+        ctx.fill();
 
-        // 6. Braziers with Fire
-        const braziers = [mx - 52, mx + 52];
-        for (const bx of braziers) {
-            ctx.fillStyle = '#1c2636';
-            ctx.fillRect(bx - 6, my - 12, 12, 14);
-            ctx.fillStyle = '#2e3d54';
-            ctx.fillRect(bx - 5, my - 11, 10, 4);
+        ctx.fillStyle = '#263238';
+        ctx.beginPath();
+        ctx.moveTo(mx - 17, my - 64);
+        ctx.lineTo(mx - 13, my - 92);
+        ctx.lineTo(mx - 1, my - 92);
+        ctx.lineTo(mx - 1, my - 64);
+        ctx.closePath();
+        ctx.fill();
 
-            const fTick = Math.floor(this.titleAnimTimer * 12 + bx) % 3;
-            const fH = (fTick === 0 ? 10 : (fTick === 1 ? 14 : 12));
-            ctx.fillStyle = '#d50000';
-            ctx.fillRect(bx - 4, my - 12 - fH, 8, fH);
-            ctx.fillStyle = '#ff9800';
-            ctx.fillRect(bx - 3, my - 10 - fH, 6, fH - 2);
-            ctx.fillStyle = '#ffd54f';
-            ctx.fillRect(bx - 1, my - 8 - fH, 2, fH - 4);
-        }
+        // Block 4: Summit stone with curved peak
+        ctx.fillStyle = '#546e7a';
+        ctx.beginPath();
+        ctx.moveTo(mx - 12, my - 94);
+        ctx.lineTo(mx - 4, my - 116);
+        ctx.lineTo(mx + 10, my - 116);
+        ctx.lineTo(mx + 14, my - 94);
+        ctx.closePath();
+        ctx.fill();
 
-        // 7. Rising Fireflies
-        for (let i = 0; i < 16; i++) {
-            const seed = (i * 73) % 997;
-            const fx = (mx - 90 + ((seed + Math.floor(this.titleAnimTimer * 15)) % 180));
-            const fy = my + 10 - ((seed * 11 + Math.floor(this.titleAnimTimer * 28)) % 140);
-            const fAlpha = 0.4 + 0.5 * Math.sin(this.titleAnimTimer * 4 + i);
-            ctx.fillStyle = (i % 2 === 0) ? `rgba(0, 229, 255, ${fAlpha})` : `rgba(255, 213, 79, ${fAlpha})`;
-            ctx.fillRect(fx, fy, 2, 2);
+        // Stone fracture cracks
+        ctx.strokeStyle = '#101518';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(mx - 14, my - 46);
+        ctx.lineTo(mx + 2, my - 48);
+        ctx.lineTo(mx + 8, my - 42);
+        ctx.moveTo(mx - 6, my - 78);
+        ctx.lineTo(mx + 10, my - 74);
+        ctx.stroke();
+
+        // Glowing Engraved Runes (Image 4):
+        // Pulsing ancient wind spiral, waves, eye, and chevrons
+        const runeGlow = 0.55 + 0.40 * Math.sin(t * 2.8);
+        ctx.save();
+        ctx.shadowColor = '#00e5ff';
+        ctx.shadowBlur = 8;
+        ctx.strokeStyle = `rgba(0, 229, 255, ${runeGlow})`;
+        ctx.lineWidth = 2;
+
+        // Spiral Wind Rune on Top Block
+        ctx.beginPath();
+        ctx.arc(mx + 2, my - 104, 5, 0, Math.PI * 1.6);
+        ctx.stroke();
+
+        // Triple Wave Runes on Block 3
+        ctx.beginPath();
+        ctx.moveTo(mx - 8, my - 82);
+        ctx.quadraticCurveTo(mx - 2, my - 86, mx + 6, my - 82);
+        ctx.moveTo(mx - 7, my - 76);
+        ctx.quadraticCurveTo(mx - 1, my - 80, mx + 7, my - 76);
+        ctx.stroke();
+
+        // Ancient Eye / Diamond Rune on Block 2
+        ctx.beginPath();
+        ctx.moveTo(mx - 8, my - 48);
+        ctx.lineTo(mx, my - 54);
+        ctx.lineTo(mx + 8, my - 48);
+        ctx.lineTo(mx, my - 42);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fillStyle = `rgba(0, 229, 255, ${runeGlow * 0.9})`;
+        ctx.beginPath();
+        ctx.arc(mx, my - 48, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Double Chevron Rune on Bottom Block
+        ctx.beginPath();
+        ctx.moveTo(mx - 7, my - 20);
+        ctx.lineTo(mx, my - 14);
+        ctx.lineTo(mx + 7, my - 20);
+        ctx.moveTo(mx - 7, my - 12);
+        ctx.lineTo(mx, my - 6);
+        ctx.lineTo(mx + 7, my - 12);
+        ctx.stroke();
+
+        ctx.restore();
+
+        // 6. Atmospheric Drifting Mystical Sparks / Spores (Rising from Totem)
+        for (let i = 0; i < 22; i++) {
+            const seed = (i * 97) % 1009;
+            const px = (mx - 130 + ((seed * 7 + Math.floor(t * 20)) % 260));
+            const py = (my + 30 - ((seed * 13 + Math.floor(t * 35)) % 200));
+            const alpha = 0.35 + 0.55 * Math.sin(t * 3.5 + i);
+
+            ctx.fillStyle = (i % 3 === 0) ? `rgba(0, 229, 255, ${alpha})` : ((i % 3 === 1) ? `rgba(128, 222, 234, ${alpha})` : `rgba(255, 215, 64, ${alpha})`);
+            ctx.fillRect(px, py, 2, 2);
         }
     }
 

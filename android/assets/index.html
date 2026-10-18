@@ -138,7 +138,7 @@
                     </div>
                 </header>
 
-                <!-- Centerpiece: GAME START with Runic Brackets -->
+                <!-- Centerpiece: GAME START with Runic Brackets (Image 4) -->
                 <div class="start-center-hub">
                     <div class="title-branding">
                         <h1 class="start-game-title">AETHER-CORE</h1>
@@ -146,29 +146,49 @@
                     </div>
 
                     <button id="btn-game-start" class="runic-start-btn">
-                        <span class="runic-bracket left">⟦</span>
+                        <span class="runic-bracket left">[~|</span>
                         <span class="runic-btn-text">GAME START</span>
-                        <span class="runic-bracket right">⟧</span>
+                        <span class="runic-bracket right">|~]</span>
                     </button>
                 </div>
 
-                <!-- Bottom Navigation Icons Bar (Image 3) -->
+                <!-- Right Floating Attendance Shield (Image 4) -->
+                <button id="btn-attendance" class="start-attendance-shield" title="7-Day Daily Attendance & Rewards">
+                    <div class="shield-crest">🛡️</div>
+                    <span class="shield-label">ATTENDANCE</span>
+                    <span class="shield-badge" id="attendance-streak-badge">DAY 1</span>
+                </button>
+
+                <!-- Bottom-Left Medals & Pioneer Crest (Image 4) -->
+                <div class="start-medals-banner" title="Pioneer Medals & Tier Rank">
+                    <span class="medal-icon">🎖️</span>
+                    <div class="medal-info">
+                        <span class="medal-title">PIONEER</span>
+                        <span class="medal-rank" id="start-pioneer-rank">RANK I</span>
+                    </div>
+                </div>
+
+                <!-- Bottom Navigation Icons Bar (6 Carved Stone Buttons, Image 4) -->
                 <nav class="start-bottom-nav">
                     <button class="start-nav-btn" id="start-tab-roster">
                         <div class="nav-icon-frame">👤</div>
                         <span class="nav-label">CHARACTER</span>
                     </button>
-                    <button class="start-nav-btn" id="start-tab-worldgen">
-                        <div class="nav-icon-frame">🌍</div>
-                        <span class="nav-label">WORLD GEN</span>
+                    <button class="start-nav-btn" id="start-tab-remains">
+                        <div class="nav-icon-frame">⚱️</div>
+                        <span class="nav-label">OPEN REMAINS</span>
                     </button>
-                    <button class="start-nav-btn" id="start-tab-skills">
-                        <div class="nav-icon-frame">⚡</div>
-                        <span class="nav-label">SKILLS</span>
+                    <button class="start-nav-btn" id="start-tab-shop">
+                        <div class="nav-icon-frame">🏪</div>
+                        <span class="nav-label">SHOP</span>
+                    </button>
+                    <button class="start-nav-btn" id="start-tab-achievements">
+                        <div class="nav-icon-frame">🏆</div>
+                        <span class="nav-label">ACHIEVEMENTS</span>
                     </button>
                     <button class="start-nav-btn" id="start-tab-records">
                         <div class="nav-icon-frame">📜</div>
-                        <span class="nav-label">RECORDS</span>
+                        <span class="nav-label">SURVIVAL RECORD</span>
                     </button>
                     <button class="start-nav-btn" id="start-tab-settings">
                         <div class="nav-icon-frame">⚙️</div>
@@ -431,6 +451,114 @@
                             <span class="rec-label">GENESIS CORES EXTRACTED:</span>
                             <span class="rec-val" id="rec-cores-val">0</span>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Open Remains Modal (Ancient Reliquary Unboxing, Image 4) -->
+            <div id="remains-modal" class="game-modal hidden">
+                <div class="modal-content remains-modal-content">
+                    <div class="modal-header">
+                        <h3>⚱️ ANCIENT REMAINS & RELIQUARIES</h3>
+                        <button class="modal-close" id="remains-close">✕</button>
+                    </div>
+                    <div class="remains-top-bar">
+                        <div class="remains-keys-pill">
+                            <span class="key-icon">🗝️</span>
+                            <span>AVAILABLE KEYS: <strong id="remains-keys-display">15/15</strong></span>
+                        </div>
+                        <div class="remains-status-tip">Unbox ancient relics to claim ALU gold, Dyson cores, and rare crafting plans.</div>
+                    </div>
+                    <div class="relic-chests-grid">
+                        <div class="relic-chest-card" data-tier="common">
+                            <div class="chest-art-frame">🏺</div>
+                            <div class="chest-title">WEATHERED URN</div>
+                            <div class="chest-cost">🗝️ 1 KEY</div>
+                            <div class="chest-desc">Common matrix container with gold and basic survival rations.</div>
+                            <button class="relic-open-btn" data-chest="common">OPEN (1 KEY)</button>
+                        </div>
+                        <div class="relic-chest-card featured" data-tier="runic">
+                            <div class="chest-art-frame">⚱️</div>
+                            <div class="chest-title">RUNIC COFFER</div>
+                            <div class="chest-cost">🗝️ 2 KEYS</div>
+                            <div class="chest-desc">Ancient Dyson reliquary with rich gold, elixirs, and core chance.</div>
+                            <button class="relic-open-btn" data-chest="runic">OPEN (2 KEYS)</button>
+                        </div>
+                        <div class="relic-chest-card legendary" data-tier="celestial">
+                            <div class="chest-art-frame">👑</div>
+                            <div class="chest-title">CELESTIAL VAULT</div>
+                            <div class="chest-cost">🗝️ 3 KEYS</div>
+                            <div class="chest-desc">High-tier Dyson vault granting guaranteed Dyson Cores and Star Tokens.</div>
+                            <button class="relic-open-btn" data-chest="celestial">OPEN (3 KEYS)</button>
+                        </div>
+                    </div>
+                    <div id="remains-reward-display" class="remains-reward-display hidden">
+                        <div class="reward-title">✨ RELIC UNBOXED ✨</div>
+                        <div id="remains-reward-items" class="reward-items-grid"></div>
+                        <button id="btn-claim-remains" class="gba-btn-sm primary">CLAIM ALL LOOT</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shop Modal (Star Matrix Bazaar & Outpost, Image 4) -->
+            <div id="shop-modal" class="game-modal hidden">
+                <div class="modal-content shop-modal-content">
+                    <div class="modal-header">
+                        <h3>🏪 STAR MATRIX BAZAAR & OUTPOST</h3>
+                        <button class="modal-close" id="shop-close">✕</button>
+                    </div>
+                    <div class="shop-currency-banner">
+                        <div class="shop-cur-chip">
+                            <span class="cur-icon">🪙</span>
+                            <span>GOLD: <strong id="shop-coins-val">0</strong></span>
+                        </div>
+                        <div class="shop-cur-chip">
+                            <span class="cur-icon">☥</span>
+                            <span>CORES: <strong id="shop-cores-val">0</strong></span>
+                        </div>
+                        <div class="shop-cur-chip">
+                            <span class="cur-icon">✡</span>
+                            <span>STAR TOKENS: <strong id="shop-tokens-val">0</strong></span>
+                        </div>
+                    </div>
+                    <div class="shop-items-grid" id="shop-items-container">
+                        <!-- Populated dynamically with shop items -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance Modal (7-Day Login Streak, Image 4) -->
+            <div id="attendance-modal" class="game-modal hidden">
+                <div class="modal-content attendance-modal-content">
+                    <div class="modal-header">
+                        <h3>🛡️ 7-DAY ATTENDANCE REWARDS</h3>
+                        <button class="modal-close" id="attendance-close">✕</button>
+                    </div>
+                    <div class="attendance-banner">
+                        <div class="att-header-icon">✨</div>
+                        <div>
+                            <strong>PIONEER LOGIN STREAK</strong>
+                            <div class="att-streak-desc">Log in every day to claim rare Dyson Matrix supplies and relics!</div>
+                        </div>
+                    </div>
+                    <div class="attendance-grid" id="attendance-days-grid">
+                        <!-- Populated dynamically with 7 day cards -->
+                    </div>
+                    <div class="attendance-actions">
+                        <button id="btn-claim-attendance" class="gba-btn-sm primary attendance-claim-btn">CLAIM TODAY'S REWARD (DAY 1)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Achievements Modal (Image 4) -->
+            <div id="achievements-modal" class="game-modal hidden">
+                <div class="modal-content achievements-modal-content">
+                    <div class="modal-header">
+                        <h3>🏆 MILESTONES & ACHIEVEMENTS</h3>
+                        <button class="modal-close" id="achievements-close">✕</button>
+                    </div>
+                    <div class="achievements-list" id="achievements-list-container">
+                        <!-- Populated dynamically with achievements -->
                     </div>
                 </div>
             </div>

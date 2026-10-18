@@ -348,8 +348,9 @@ class WorldMap {
             }
         }
 
-        // North Road leading to Whispering Woods
+        // North Road leading to Whispering Woods (preserving wooden stairs at y = 8)
         for (let y = 1; y < 20; y++) {
+            if (y === 8) continue;
             this.set(27, y, TILE.PATH_COBBLE);
             this.set(28, y, TILE.PATH_COBBLE);
             this.set(29, y, TILE.PATH_COBBLE);

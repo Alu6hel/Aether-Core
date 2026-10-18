@@ -42,6 +42,19 @@ class GameApp {
         this.bossSlainCount = 0;
         this.coresExtractedCount = 0;
 
+        // Image 4 Runic Hub & Meta Progression State
+        this.relicKeys = 15;
+        this.starTokens = 0;
+        this.attendanceStreak = 1;
+        this.attendanceClaimedDay = 0;
+        this.achievementsClaimed = {};
+        this.elevationJumpsCount = 0;
+        this.combatParriesCount = 0;
+        this.craftedItemsCount = 0;
+        this.remainsOpenedCount = 0;
+        this.discoveredBiomes = new Set(['CINDERWATCH_HAMLET']);
+        this.discoveredBiomesCount = 1;
+
         // Living world & NPCs
         this.critters = new CritterManager();
         this.npcs = new NpcManager();
@@ -69,6 +82,23 @@ class GameApp {
             if (saved.hasInitializedProfile) {
                 this.hasInitializedProfile = true;
             }
+        }
+
+        try {
+            const savedKeys = localStorage.getItem('aether_relic_keys');
+            if (savedKeys !== null) this.relicKeys = parseInt(savedKeys, 10);
+            const savedTokens = localStorage.getItem('aether_star_tokens');
+            if (savedTokens !== null) this.starTokens = parseInt(savedTokens, 10);
+            const savedAttStreak = localStorage.getItem('aether_attendance_streak');
+            if (savedAttStreak !== null) this.attendanceStreak = parseInt(savedAttStreak, 10);
+            const savedAttDay = localStorage.getItem('aether_attendance_claimed_day');
+            if (savedAttDay !== null) this.attendanceClaimedDay = parseInt(savedAttDay, 10);
+            const savedAch = localStorage.getItem('aether_achievements_claimed');
+            if (savedAch) this.achievementsClaimed = JSON.parse(savedAch);
+            const savedRemains = localStorage.getItem('aether_remains_opened');
+            if (savedRemains !== null) this.remainsOpenedCount = parseInt(savedRemains, 10);
+        } catch (e) {
+            console.warn("Could not load hub storage:", e);
         }
 
         // 2. Setup Fullscreen Viewport & Canvas Scaling (Edge-to-Edge)
@@ -307,12 +337,7 @@ class GameApp {
             const dlgModal = document.getElementById('dialogue-box-modal');
             if (dlgModal) dlgModal.classList.add('hidden');
 
-            const keysVal = document.getElementById('start-keys-val');
-            const coresVal = document.getElementById('start-cores-val');
-            const tokensVal = document.getElementById('start-tokens-val');
-            if (keysVal) keysVal.innerText = '15/15';
-            if (coresVal) coresVal.innerText = `${this.coresExtractedCount || 0}`;
-            if (tokensVal) tokensVal.innerText = `${this.player ? this.player.coinsCollected : 0}`;
+            this.updateStartCurrencies();
 
             if (this.renderer && this.renderer.audio && this.bgmEnabled) {
                 this.renderer.audio.stopBgm();
@@ -335,6 +360,43 @@ class GameApp {
                 this.renderer.audio.startBgm(track);
             }
         }
+    }
+
+    updateStartCurrencies() {
+        const keysVal = document.getElementById('start-keys-val');
+        const coresVal = document.getElementById('start-cores-val');
+        const tokensVal = document.getElementById('start-tokens-val');
+        const streakBadge = document.getElementById('attendance-streak-badge');
+        const pioneerRank = document.getElementById('start-pioneer-rank');
+        const remainsKeys = document.getElementById('remains-keys-display');
+        const shopCoins = document.getElementById('shop-coins-val');
+        const shopCores = document.getElementById('shop-cores-val');
+        const shopTokens = document.getElementById('shop-tokens-val');
+
+        const curKeys = this.relicKeys !== undefined ? this.relicKeys : 15;
+        const curCores = this.coresExtractedCount || 0;
+        const curTokens = this.starTokens || (this.player ? Math.floor(this.player.coinsCollected / 100) : 0);
+        const curCoins = this.player ? this.player.coinsCollected : 0;
+
+        if (keysVal) keysVal.innerText = `${curKeys}/15`;
+        if (coresVal) coresVal.innerText = `${curCores}`;
+        if (tokensVal) tokensVal.innerText = `${curTokens}`;
+        if (streakBadge) streakBadge.innerText = `DAY ${this.attendanceStreak || 1}`;
+        if (pioneerRank) pioneerRank.innerText = `RANK ${Math.min(5, 1 + Math.floor(curCores / 2))}`;
+        if (remainsKeys) remainsKeys.innerText = `${curKeys}/15`;
+        if (shopCoins) shopCoins.innerText = `${curCoins}`;
+        if (shopCores) shopCores.innerText = `${curCores}`;
+        if (shopTokens) shopTokens.innerText = `${curTokens}`;
+    }
+
+    addCoins(amt) {
+        if (!this.player) {
+            this.player = { coinsCollected: 0 };
+        }
+        this.player.coinsCollected = (this.player.coinsCollected || 0) + amt;
+        const wallet = document.getElementById('wallet-coins');
+        if (wallet) wallet.innerText = `${this.player.coinsCollected}`;
+        this.updateStartCurrencies();
     }
 
     setupStartScreen() {
@@ -361,23 +423,26 @@ class GameApp {
             });
         }
 
-        const tabWorldGen = document.getElementById('start-tab-worldgen');
-        if (tabWorldGen) {
-            this.bindTap(tabWorldGen, () => {
-                const seedInput = document.getElementById('worldgen-seed-input');
-                if (seedInput) {
-                    seedInput.value = '0x' + (this.currentSeed >>> 0).toString(16).toUpperCase();
-                }
-                const modal = document.getElementById('worldgen-modal');
-                if (modal) modal.classList.remove('hidden');
+        const tabRemains = document.getElementById('start-tab-remains');
+        if (tabRemains) {
+            this.bindTap(tabRemains, () => {
+                this.openRemainsModal();
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
             });
         }
 
-        const tabSkills = document.getElementById('start-tab-skills') || document.getElementById('start-tab-market');
-        if (tabSkills) {
-            this.bindTap(tabSkills, () => {
-                this.openSkillTreeModal();
+        const tabShop = document.getElementById('start-tab-shop');
+        if (tabShop) {
+            this.bindTap(tabShop, () => {
+                this.openShopModal();
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
+            });
+        }
+
+        const tabAchievements = document.getElementById('start-tab-achievements');
+        if (tabAchievements) {
+            this.bindTap(tabAchievements, () => {
+                this.openAchievementsModal();
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
             });
         }
@@ -396,6 +461,563 @@ class GameApp {
                 this.toggleSoundModal();
             });
         }
+
+        const btnAttendance = document.getElementById('btn-attendance');
+        if (btnAttendance) {
+            this.bindTap(btnAttendance, () => {
+                this.openAttendanceModal();
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
+            });
+        }
+
+        // Modal Close Handlers
+        const closeRemains = document.getElementById('remains-close');
+        if (closeRemains) {
+            this.bindTap(closeRemains, () => {
+                const modal = document.getElementById('remains-modal');
+                if (modal) modal.classList.add('hidden');
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
+            });
+        }
+
+        const closeShop = document.getElementById('shop-close');
+        if (closeShop) {
+            this.bindTap(closeShop, () => {
+                const modal = document.getElementById('shop-modal');
+                if (modal) modal.classList.add('hidden');
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
+            });
+        }
+
+        const closeAttendance = document.getElementById('attendance-close');
+        if (closeAttendance) {
+            this.bindTap(closeAttendance, () => {
+                const modal = document.getElementById('attendance-modal');
+                if (modal) modal.classList.add('hidden');
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
+            });
+        }
+
+        const closeAchievements = document.getElementById('achievements-close');
+        if (closeAchievements) {
+            this.bindTap(closeAchievements, () => {
+                const modal = document.getElementById('achievements-modal');
+                if (modal) modal.classList.add('hidden');
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
+            });
+        }
+
+        // Wire Relic Chest Open Buttons
+        document.querySelectorAll('.relic-open-btn').forEach(btn => {
+            this.bindTap(btn, () => {
+                const tier = btn.getAttribute('data-chest');
+                this.handleOpenRemains(tier);
+            });
+        });
+
+        // Wire Claim Remains Loot
+        const btnClaimRemains = document.getElementById('btn-claim-remains');
+        if (btnClaimRemains) {
+            this.bindTap(btnClaimRemains, () => {
+                this.claimRemainsLoot();
+            });
+        }
+
+        // Wire Claim Attendance
+        const btnClaimAttendance = document.getElementById('btn-claim-attendance');
+        if (btnClaimAttendance) {
+            this.bindTap(btnClaimAttendance, () => {
+                this.claimAttendanceReward();
+            });
+        }
+
+        this.updateStartCurrencies();
+    }
+
+    /* ==========================================================================
+       OPEN REMAINS / RELIQUARY UNBOXING (IMAGE 4)
+       ========================================================================== */
+    openRemainsModal() {
+        const modal = document.getElementById('remains-modal');
+        if (!modal) return;
+        const rewardDisplay = document.getElementById('remains-reward-display');
+        if (rewardDisplay) rewardDisplay.classList.add('hidden');
+        this.updateStartCurrencies();
+        modal.classList.remove('hidden');
+    }
+
+    handleOpenRemains(tier) {
+        const costs = { common: 1, runic: 2, celestial: 3 };
+        const cost = costs[tier] || 1;
+        if (this.relicKeys < cost) {
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(130, 'sawtooth', 0.2, 0.1);
+            alert(`Not enough keys! Need ${cost} 🗝️ keys.`);
+            return;
+        }
+
+        this.relicKeys -= cost;
+        this.remainsOpenedCount = (this.remainsOpenedCount || 0) + 1;
+        try {
+            localStorage.setItem('aether_relic_keys', this.relicKeys);
+            localStorage.setItem('aether_remains_opened', this.remainsOpenedCount);
+        } catch (e) {}
+
+        // Roll Rewards
+        const loot = [];
+        if (tier === 'common') {
+            const coins = 25 + Math.floor(Math.random() * 25);
+            loot.push({ type: 'coins', name: 'ALU Coins', icon: '🪙', qty: coins });
+            loot.push({ type: 'item', id: 'BREAD', name: 'Field Bread', icon: '🍞', qty: 2 });
+            loot.push({ type: 'item', id: 'COPPER_ORE', name: 'Copper Shards', icon: '🪨', qty: 3 });
+        } else if (tier === 'runic') {
+            const coins = 80 + Math.floor(Math.random() * 60);
+            loot.push({ type: 'coins', name: 'ALU Coins', icon: '🪙', qty: coins });
+            loot.push({ type: 'item', id: 'ENERGY_SALVE', name: 'Energy Salve', icon: '🧪', qty: 2 });
+            loot.push({ type: 'item', id: 'ANCIENT_CONDUIT', name: 'Matrix Conduits', icon: '⚡', qty: 2 });
+            if (Math.random() < 0.45) {
+                loot.push({ type: 'cores', name: 'Dyson Core', icon: '☥', qty: 1 });
+            }
+        } else { // celestial
+            const coins = 200 + Math.floor(Math.random() * 120);
+            loot.push({ type: 'coins', name: 'ALU Coins', icon: '🪙', qty: coins });
+            loot.push({ type: 'cores', name: 'Ancient Dyson Core', icon: '☥', qty: 1 });
+            loot.push({ type: 'tokens', name: 'Star Matrix Token', icon: '✡', qty: 1 });
+            loot.push({ type: 'item', id: 'SUPER_SALVE', name: 'Master Elixir', icon: '✨', qty: 1 });
+        }
+
+        this.pendingRemainsLoot = loot;
+
+        // Render Rewards
+        const container = document.getElementById('remains-reward-items');
+        if (container) {
+            container.innerHTML = '';
+            for (const item of loot) {
+                const card = document.createElement('div');
+                card.className = 'reward-item-card';
+                card.innerHTML = `
+                    <div class="rw-icon">${item.icon}</div>
+                    <div class="rw-name">${item.name}</div>
+                    <div class="rw-qty">+${item.qty}</div>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        const rewardDisplay = document.getElementById('remains-reward-display');
+        if (rewardDisplay) rewardDisplay.classList.remove('hidden');
+
+        if (this.soundEnabled && this.sfxEnabled) {
+            this.renderer.audio.playCoinCollect();
+        }
+        this.updateStartCurrencies();
+    }
+
+    claimRemainsLoot() {
+        if (!this.pendingRemainsLoot) return;
+        for (const item of this.pendingRemainsLoot) {
+            if (item.type === 'coins') {
+                this.addCoins(item.qty);
+            } else if (item.type === 'cores') {
+                this.coresExtractedCount = (this.coresExtractedCount || 0) + item.qty;
+            } else if (item.type === 'tokens') {
+                this.starTokens = (this.starTokens || 0) + item.qty;
+                try { localStorage.setItem('aether_star_tokens', this.starTokens); } catch (e) {}
+            } else if (item.type === 'item') {
+                if (this.player && this.player.inventory) {
+                    this.player.inventory.addItem(item.id, item.qty);
+                }
+            }
+        }
+        this.pendingRemainsLoot = null;
+        const rewardDisplay = document.getElementById('remains-reward-display');
+        if (rewardDisplay) rewardDisplay.classList.add('hidden');
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playItemObtained();
+        this.updateStartCurrencies();
+    }
+
+    /* ==========================================================================
+       STAR MATRIX BAZAAR & OUTPOST SHOP (IMAGE 4)
+       ========================================================================== */
+    openShopModal() {
+        const modal = document.getElementById('shop-modal');
+        if (!modal) return;
+        this.renderShopItems();
+        this.updateStartCurrencies();
+        modal.classList.remove('hidden');
+    }
+
+    getShopCatalog() {
+        return [
+            { key: 'provisions', name: 'Field Provisions (x3)', desc: 'Maeve\'s fresh baked bread. Restores 60 HP.', icon: '🍞', costCoins: 25 },
+            { key: 'energy_salve', name: 'Energy Salve (x2)', desc: 'Synthesized herbal ointment. Restores 70 Energy.', icon: '🧪', costCoins: 40 },
+            { key: 'torches', name: 'Illumination Torches (x5)', desc: 'Phosphor sticks to light dark subterranean grottos.', icon: '🔥', costCoins: 30 },
+            { key: 'deflect_charm', name: 'Nine Sols Deflector', desc: 'Permanent boon: Increases parry window by 25%.', icon: '🛡️', costCoins: 120 },
+            { key: 'dash_booster', name: 'Kinetic Dash Booster', desc: 'Permanent boon: Reduces dash cooldown by 25%.', icon: '⚡', costCoins: 150 },
+            { key: 'dyson_core', name: 'Ancient Dyson Core', desc: 'Quantum cell needed for high-tier relic activation.', icon: '☥', costCoins: 250 },
+            { key: 'star_token', name: 'Star Matrix Token', desc: 'Transcendence currency for deific character boons.', icon: '✡', costCoins: 500 },
+            { key: 'vitality_boon', name: 'Vitality Matrix Boon', desc: 'Permanent blessing: +25 Max Health.', icon: '💖', costTokens: 2 },
+            { key: 'aether_surge', name: 'Aether Surge Boon', desc: 'Permanent blessing: +20 Max Energy.', icon: '🌀', costTokens: 2 }
+        ];
+    }
+
+    renderShopItems() {
+        const container = document.getElementById('shop-items-container');
+        if (!container) return;
+        container.innerHTML = '';
+        const catalog = this.getShopCatalog();
+
+        for (const item of catalog) {
+            const card = document.createElement('div');
+            card.className = 'shop-item-card';
+            const costStr = item.costTokens ? `${item.costTokens} ✡` : `${item.costCoins} 🪙`;
+
+            card.innerHTML = `
+                <div class="shop-item-left">
+                    <div class="shop-item-icon">${item.icon}</div>
+                    <div class="shop-item-details">
+                        <div class="shop-item-name">${item.name}</div>
+                        <div class="shop-item-desc">${item.desc}</div>
+                    </div>
+                </div>
+                <button class="shop-item-buy-btn" data-key="${item.key}">BUY (${costStr})</button>
+            `;
+            container.appendChild(card);
+        }
+
+        container.querySelectorAll('.shop-item-buy-btn').forEach(btn => {
+            this.bindTap(btn, () => {
+                const key = btn.getAttribute('data-key');
+                this.buyShopItem(key);
+            });
+        });
+    }
+
+    buyShopItem(key) {
+        const catalog = this.getShopCatalog();
+        const item = catalog.find(i => i.key === key);
+        if (!item) return;
+
+        const playerCoins = this.player ? this.player.coinsCollected : 0;
+        const playerTokens = this.starTokens || 0;
+
+        if (item.costCoins) {
+            if (playerCoins < item.costCoins) {
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(130, 'sawtooth', 0.15, 0.1);
+                alert(`Insufficient Gold! Need ${item.costCoins} 🪙.`);
+                return;
+            }
+            this.player.coinsCollected -= item.costCoins;
+        } else if (item.costTokens) {
+            if (playerTokens < item.costTokens) {
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(130, 'sawtooth', 0.15, 0.1);
+                alert(`Insufficient Star Tokens! Need ${item.costTokens} ✡.`);
+                return;
+            }
+            this.starTokens -= item.costTokens;
+            try { localStorage.setItem('aether_star_tokens', this.starTokens); } catch (e) {}
+        }
+
+        // Apply item purchase
+        if (key === 'provisions' && this.player && this.player.inventory) {
+            this.player.inventory.addItem('BREAD', 3);
+        } else if (key === 'energy_salve' && this.player && this.player.inventory) {
+            this.player.inventory.addItem('ENERGY_SALVE', 2);
+        } else if (key === 'torches' && this.player && this.player.inventory) {
+            this.player.inventory.addItem('TORCH', 5);
+        } else if (key === 'deflect_charm') {
+            if (this.player) this.player.parryWindowMultiplier = 1.25;
+        } else if (key === 'dash_booster') {
+            if (this.player) this.player.dashCooldownMultiplier = 0.75;
+        } else if (key === 'dyson_core') {
+            this.coresExtractedCount = (this.coresExtractedCount || 0) + 1;
+        } else if (key === 'star_token') {
+            this.starTokens = (this.starTokens || 0) + 1;
+            try { localStorage.setItem('aether_star_tokens', this.starTokens); } catch (e) {}
+        } else if (key === 'vitality_boon') {
+            if (this.player) {
+                this.player.maxHp += 25;
+                this.player.hp += 25;
+            }
+        } else if (key === 'aether_surge') {
+            if (this.player) {
+                this.player.maxEnergy += 20;
+                this.player.energy += 20;
+            }
+        }
+
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCoinCollect();
+        this.updateStartCurrencies();
+        this.renderShopItems();
+    }
+
+    /* ==========================================================================
+       7-DAY ATTENDANCE REWARDS (IMAGE 4)
+       ========================================================================== */
+    openAttendanceModal() {
+        const modal = document.getElementById('attendance-modal');
+        if (!modal) return;
+        this.renderAttendanceDays();
+        this.updateStartCurrencies();
+        modal.classList.remove('hidden');
+    }
+
+    renderAttendanceDays() {
+        const grid = document.getElementById('attendance-days-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        const days = [
+            { day: 1, name: '50 Gold', icon: '🪙' },
+            { day: 2, name: '1 Dyson Core', icon: '☥' },
+            { day: 3, name: '3 Keys', icon: '🗝️' },
+            { day: 4, name: '120 Gold', icon: '🪙' },
+            { day: 5, name: '2 Tokens', icon: '✡' },
+            { day: 6, name: 'Master Salve', icon: '🧪' },
+            { day: 7, name: 'Matrix Coffer', icon: '👑' }
+        ];
+
+        const streak = this.attendanceStreak || 1;
+        const claimedDay = this.attendanceClaimedDay || 0;
+
+        for (const d of days) {
+            const card = document.createElement('div');
+            let statusClass = 'locked';
+            let statusText = 'LOCKED';
+
+            if (d.day < streak || (d.day === streak && claimedDay >= streak)) {
+                statusClass = 'claimed';
+                statusText = 'CLAIMED ✓';
+            } else if (d.day === streak && claimedDay < streak) {
+                statusClass = 'active-day';
+                statusText = 'READY!';
+            }
+
+            card.className = `att-day-card ${statusClass}`;
+            card.innerHTML = `
+                <div class="att-day-title">DAY ${d.day}</div>
+                <div class="att-day-icon">${d.icon}</div>
+                <div class="att-day-reward">${d.name}</div>
+                <div class="att-day-status">${statusText}</div>
+            `;
+            grid.appendChild(card);
+        }
+
+        const claimBtn = document.getElementById('btn-claim-attendance');
+        if (claimBtn) {
+            if (claimedDay >= streak) {
+                claimBtn.innerText = 'REWARD CLAIMED (COME BACK TOMORROW)';
+                claimBtn.disabled = true;
+                claimBtn.style.opacity = '0.6';
+            } else {
+                claimBtn.innerText = `CLAIM TODAY'S REWARD (DAY ${streak})`;
+                claimBtn.disabled = false;
+                claimBtn.style.opacity = '1';
+            }
+        }
+    }
+
+    claimAttendanceReward() {
+        const streak = this.attendanceStreak || 1;
+        if (this.attendanceClaimedDay >= streak) return;
+
+        if (streak === 1) this.addCoins(50);
+        else if (streak === 2) this.coresExtractedCount = (this.coresExtractedCount || 0) + 1;
+        else if (streak === 3) {
+            this.relicKeys = Math.min(15, (this.relicKeys || 15) + 3);
+            try { localStorage.setItem('aether_relic_keys', this.relicKeys); } catch (e) {}
+        }
+        else if (streak === 4) this.addCoins(120);
+        else if (streak === 5) {
+            this.starTokens = (this.starTokens || 0) + 2;
+            try { localStorage.setItem('aether_star_tokens', this.starTokens); } catch (e) {}
+        }
+        else if (streak === 6) {
+            if (this.player && this.player.inventory) this.player.inventory.addItem('SUPER_SALVE', 1);
+        }
+        else if (streak === 7) {
+            this.addCoins(300);
+            this.coresExtractedCount = (this.coresExtractedCount || 0) + 2;
+            this.starTokens = (this.starTokens || 0) + 1;
+            try { localStorage.setItem('aether_star_tokens', this.starTokens); } catch (e) {}
+        }
+
+        this.attendanceClaimedDay = streak;
+        try {
+            localStorage.setItem('aether_attendance_claimed_day', this.attendanceClaimedDay);
+            localStorage.setItem('aether_attendance_streak', this.attendanceStreak);
+        } catch (e) {}
+
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playItemObtained();
+        this.renderAttendanceDays();
+        this.updateStartCurrencies();
+    }
+
+    /* ==========================================================================
+       MILESTONES & ACHIEVEMENTS (IMAGE 4)
+       ========================================================================== */
+    getAchievementsList() {
+        return [
+            {
+                id: 'pioneer_awaken',
+                title: 'Pioneer Awakening',
+                desc: 'Deploy into the Aether-Core network and establish neural link.',
+                icon: '⚡',
+                target: 1,
+                current: () => (this.player ? 1 : 0),
+                rewardText: '+50 Gold',
+                reward: () => this.addCoins(50)
+            },
+            {
+                id: 'elevation_pathfinder',
+                title: 'Elevation Pathfinder',
+                desc: 'Leap across elevation tiers using [JMP] / [SPACE].',
+                icon: '🧗',
+                target: 3,
+                current: () => (this.elevationJumpsCount || 0),
+                rewardText: '+100 Gold, 1 Core',
+                reward: () => { this.addCoins(100); this.coresExtractedCount = (this.coresExtractedCount || 0) + 1; }
+            },
+            {
+                id: 'nine_sols_master',
+                title: 'Nine Sols Deflector',
+                desc: 'Execute precision deflects with [B] parry timing.',
+                icon: '🛡️',
+                target: 3,
+                current: () => (this.combatParriesCount || 0),
+                rewardText: '+150 Gold, 1 Token',
+                reward: () => { this.addCoins(150); this.starTokens = (this.starTokens || 0) + 1; try { localStorage.setItem('aether_star_tokens', this.starTokens); } catch (e) {} }
+            },
+            {
+                id: 'master_artisan',
+                title: 'Master Artisan',
+                desc: 'Craft survival tools or elixirs at the anvil workbench.',
+                icon: '🔨',
+                target: 3,
+                current: () => (this.craftedItemsCount || 0),
+                rewardText: '+80 Gold',
+                reward: () => this.addCoins(80)
+            },
+            {
+                id: 'relic_hunter',
+                title: 'Relic Archaeologist',
+                desc: 'Unbox an Ancient Reliquary at the Runic Monolith.',
+                icon: '⚱️',
+                target: 1,
+                current: () => (this.remainsOpenedCount || 0),
+                rewardText: '+100 Gold, 1 Core',
+                reward: () => { this.addCoins(100); this.coresExtractedCount = (this.coresExtractedCount || 0) + 1; }
+            },
+            {
+                id: 'world_cartographer',
+                title: 'World Cartographer',
+                desc: 'Discover multiple biomes across the procedural planet.',
+                icon: '🗺️',
+                target: 2,
+                current: () => (this.discoveredBiomesCount || 1),
+                rewardText: '+120 Gold',
+                reward: () => this.addCoins(120)
+            },
+            {
+                id: 'dyson_capitalist',
+                title: 'Dyson Capitalist',
+                desc: 'Accumulate 300+ ALU Coins in your Pioneer wallet.',
+                icon: '🪙',
+                target: 300,
+                current: () => (this.player ? this.player.coinsCollected : 0),
+                rewardText: '+200 Gold, 2 Tokens',
+                reward: () => { this.addCoins(200); this.starTokens = (this.starTokens || 0) + 2; try { localStorage.setItem('aether_star_tokens', this.starTokens); } catch (e) {} }
+            },
+            {
+                id: 'apex_dreadnought',
+                title: 'Apex Dreadnought',
+                desc: 'Vanquish an Aegis Boss or elite biome guardian.',
+                icon: '👾',
+                target: 1,
+                current: () => (this.bossSlainCount || 0),
+                rewardText: '+300 Gold, 3 Tokens',
+                reward: () => { this.addCoins(300); this.starTokens = (this.starTokens || 0) + 3; try { localStorage.setItem('aether_star_tokens', this.starTokens); } catch (e) {} }
+            }
+        ];
+    }
+
+    openAchievementsModal() {
+        const modal = document.getElementById('achievements-modal');
+        if (!modal) return;
+        this.renderAchievements();
+        modal.classList.remove('hidden');
+    }
+
+    renderAchievements() {
+        const container = document.getElementById('achievements-list-container');
+        if (!container) return;
+        container.innerHTML = '';
+        const list = this.getAchievementsList();
+
+        for (const ach of list) {
+            const card = document.createElement('div');
+            const curVal = ach.current();
+            const pct = Math.min(100, Math.floor((curVal / ach.target) * 100));
+            const isClaimed = !!this.achievementsClaimed[ach.id];
+            const isCompleted = curVal >= ach.target;
+
+            let cardClass = 'achievement-card';
+            if (isClaimed) cardClass += ' claimed';
+            else if (isCompleted) cardClass += ' completed';
+
+            let btnHtml = '';
+            if (isClaimed) {
+                btnHtml = `<button class="ach-claim-btn" disabled>CLAIMED ✓</button>`;
+            } else if (isCompleted) {
+                btnHtml = `<button class="ach-claim-btn" data-ach="${ach.id}">CLAIM</button>`;
+            } else {
+                btnHtml = `<button class="ach-claim-btn" disabled>${curVal}/${ach.target}</button>`;
+            }
+
+            card.className = cardClass;
+            card.innerHTML = `
+                <div class="ach-left">
+                    <div class="ach-icon-frame">${ach.icon}</div>
+                    <div class="ach-info">
+                        <div class="ach-title">${ach.title}</div>
+                        <div class="ach-desc">${ach.desc}</div>
+                        <div class="ach-progress-row">
+                            <div class="ach-progress-track">
+                                <div class="ach-progress-fill" style="width: ${pct}%;"></div>
+                            </div>
+                            <span class="ach-progress-text">${curVal}/${ach.target}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="ach-right" style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+                    <span class="ach-reward-badge">${ach.rewardText}</span>
+                    ${btnHtml}
+                </div>
+            `;
+            container.appendChild(card);
+        }
+
+        container.querySelectorAll('.ach-claim-btn[data-ach]').forEach(btn => {
+            this.bindTap(btn, () => {
+                const id = btn.getAttribute('data-ach');
+                this.claimAchievement(id);
+            });
+        });
+    }
+
+    claimAchievement(achId) {
+        const list = this.getAchievementsList();
+        const ach = list.find(a => a.id === achId);
+        if (!ach || this.achievementsClaimed[achId]) return;
+
+        ach.reward();
+        this.achievementsClaimed[achId] = true;
+        try {
+            localStorage.setItem('aether_achievements_claimed', JSON.stringify(this.achievementsClaimed));
+        } catch (e) {}
+
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playItemObtained();
+        this.renderAchievements();
+        this.updateStartCurrencies();
     }
 
     loadSaveSlots() {
@@ -620,6 +1242,7 @@ class GameApp {
             this.bindTap(btn, () => {
                 const res = this.player.inventory.craftItem(recipe.id, this.player);
                 if (res.success) {
+                    this.craftedItemsCount = (this.craftedItemsCount || 0) + 1;
                     if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playItemObtained();
                     this.renderer.addFloatingText(`+${recipe.resultCount || 1} ${recipe.name}`, this.player.pos.x, this.player.pos.y - 14, '#81c784');
                     if (infoPanel) infoPanel.innerText = `Crafted ${recipe.name}! ${recipe.desc}`;
@@ -782,6 +1405,10 @@ class GameApp {
         this.currentAreaId = newAreaId;
         this.currentMap = this.areaMaps[newAreaId];
         this.currentLayer = (newAreaId === 'SUB_BEDROCK_CORE' || newAreaId === 'SUNKEN_GROTTO') ? 'SUB_CORE' : 'SURFACE';
+
+        if (!this.discoveredBiomes) this.discoveredBiomes = new Set();
+        this.discoveredBiomes.add(newAreaId);
+        this.discoveredBiomesCount = this.discoveredBiomes.size;
 
         // Spawn critters and NPCs
         this.critters.initForArea(newAreaId, this.currentMap.width, this.currentMap.height);
@@ -2170,8 +2797,11 @@ class GameApp {
     handleJump() {
         if (!this.player) return;
         const didJump = this.player.jump();
-        if (didJump && this.soundEnabled && this.sfxEnabled && this.renderer && this.renderer.audio) {
-            this.renderer.audio.playJump();
+        if (didJump) {
+            this.elevationJumpsCount = (this.elevationJumpsCount || 0) + 1;
+            if (this.soundEnabled && this.sfxEnabled && this.renderer && this.renderer.audio) {
+                this.renderer.audio.playJump();
+            }
         }
     }
 
@@ -2679,6 +3309,7 @@ class GameApp {
 
                 const res = player.takeDamage(enemy.attackDamage, true);
                 if (res.parried && this.soundEnabled && this.sfxEnabled) {
+                    this.combatParriesCount = (this.combatParriesCount || 0) + 1;
                     this.renderer.audio.playParry();
                     // Knock enemy back on successful parry
                     enemy.x -= (player.facing.x) * 32;

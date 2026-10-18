@@ -145,6 +145,50 @@ const BASE_ITEMS = {
         name: 'Genesis Core Relic',
         type: ITEM_TYPE.KEY_ITEM,
         desc: 'Encrypted storage crystal containing the master seed of the planetary core.'
+    },
+
+    // Hub & Provisions Items
+    BREAD: {
+        id: 'BREAD',
+        name: 'Field Bread',
+        type: ITEM_TYPE.FOOD,
+        healAmount: 25,
+        energyAmount: 35,
+        desc: 'Fresh baked hamlet bread. Restores 25 HP and 35 Energy.'
+    },
+    ENERGY_SALVE: {
+        id: 'ENERGY_SALVE',
+        name: 'Energy Salve',
+        type: ITEM_TYPE.CONSUMABLE,
+        healAmount: 20,
+        energyAmount: 50,
+        desc: 'Restores 50 Energy and 20 HP.'
+    },
+    SUPER_SALVE: {
+        id: 'SUPER_SALVE',
+        name: 'Master Restorative Salve',
+        type: ITEM_TYPE.CONSUMABLE,
+        healAmount: 100,
+        energyAmount: 100,
+        desc: 'Concentrated deific salve. Restores 100 HP and 100 Energy.'
+    },
+    TORCH: {
+        id: 'TORCH',
+        name: 'Phosphor Torch',
+        type: ITEM_TYPE.TOOL,
+        desc: 'Crackling phosphor torch. Disperses shadows and lights caverns.'
+    },
+    COPPER_ORE: {
+        id: 'COPPER_ORE',
+        name: 'Copper Shards',
+        type: ITEM_TYPE.MATERIAL,
+        desc: 'Raw copper mineral shards used for advanced gear forging.'
+    },
+    ANCIENT_CONDUIT: {
+        id: 'ANCIENT_CONDUIT',
+        name: 'Matrix Conduit',
+        type: ITEM_TYPE.MATERIAL,
+        desc: 'High-density quantum wire line extracted from Dyson vault plates.'
     }
 };
 
@@ -219,13 +263,17 @@ class Inventory {
 
     addItem(item, count = 1) {
         if (!item) return false;
-        const existing = this.slots.find(s => s.item.id === item.id);
+        let itemObj = item;
+        if (typeof item === 'string') {
+            itemObj = BASE_ITEMS[item] || { id: item, name: item, type: ITEM_TYPE.CONSUMABLE };
+        }
+        const existing = this.slots.find(s => s.item.id === itemObj.id);
         if (existing) {
             existing.count += count;
             return true;
         }
         if (this.slots.length < this.maxSlots) {
-            this.slots.push({ item, count });
+            this.slots.push({ item: itemObj, count });
             return true;
         }
         return false; // Inventory full
