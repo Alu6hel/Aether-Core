@@ -118,20 +118,42 @@
                 </div>
             </div>
 
+            <!-- Alumungandr Company Loading / Splash Screen (4-second sequence) -->
+            <div id="splash-screen-container" class="splash-screen">
+                <div class="splash-content">
+                    <div class="splash-logo-frame">
+                        <img src="assets/logo.svg" alt="Alumungandr Logo" class="splash-logo" />
+                        <div class="splash-logo-glow"></div>
+                    </div>
+                    <div class="splash-brand-title">ALUMUNGANDR</div>
+                    <div class="splash-brand-subtitle">INTERACTIVE STUDIOS</div>
+                    
+                    <div class="splash-progress-wrapper">
+                        <div class="splash-progress-bar">
+                            <div class="splash-progress-fill" id="splash-progress-fill"></div>
+                            <div class="splash-progress-glow"></div>
+                        </div>
+                        <div class="splash-status-text" id="splash-status-text">INITIALIZING LIVING MATRIX ENGINE...</div>
+                        <div class="splash-percent-text" id="splash-percent-text">0%</div>
+                    </div>
+                    <div class="splash-hint-text">TAP SCREEN TO FAST-FORWARD ▶</div>
+                </div>
+            </div>
+
             <!-- Start Screen / Main Title Hub ("The Wild Darkness" styled) -->
             <div id="start-screen-container" class="start-screen">
                 <!-- Top Currencies & Keys status bar (Image 3) -->
                 <header class="start-header-bar">
-                    <div class="start-stat-chip">
+                    <div class="start-stat-chip clickable-chip" id="start-keys-chip" title="Tap to inspect Keys of Awakening">
                         <span class="stat-icon">🗝️</span>
                         <span class="stat-val" id="start-keys-val">15/15</span>
                     </div>
                     <div class="start-header-right">
-                        <div class="start-stat-chip" title="Ancient Dyson Cores">
+                        <div class="start-stat-chip clickable-chip" id="start-cores-chip" title="Tap to inspect Ancient Dyson Cores">
                             <span class="stat-icon">☥</span>
                             <span class="stat-val" id="start-cores-val">0</span>
                         </div>
-                        <div class="start-stat-chip" title="ALU Star Matrix Tokens">
+                        <div class="start-stat-chip clickable-chip" id="start-tokens-chip" title="Tap to inspect ALU Star Matrix Tokens">
                             <span class="stat-icon">✡</span>
                             <span class="stat-val" id="start-tokens-val">0</span>
                         </div>
@@ -160,7 +182,7 @@
                 </button>
 
                 <!-- Bottom-Left Medals & Pioneer Crest (Image 4) -->
-                <div class="start-medals-banner" title="Pioneer Medals & Tier Rank">
+                <div class="start-medals-banner clickable-chip" id="start-pioneer-chip" title="Tap to inspect Pioneer Medals & Rank Perks">
                     <span class="medal-icon">🎖️</span>
                     <div class="medal-info">
                         <span class="medal-title">PIONEER</span>
@@ -168,29 +190,25 @@
                     </div>
                 </div>
 
-                <!-- Bottom Navigation Icons Bar (6 Carved Stone Buttons, Image 4) -->
+                <!-- Bottom Navigation Icons Bar (5 Carved Stone Buttons, Character moved into Game Start flow) -->
                 <nav class="start-bottom-nav">
-                    <button class="start-nav-btn" id="start-tab-roster">
-                        <div class="nav-icon-frame">👤</div>
-                        <span class="nav-label">CHARACTER</span>
-                    </button>
-                    <button class="start-nav-btn" id="start-tab-remains">
+                    <button class="start-nav-btn" id="start-tab-remains" title="Unbox Ancient Reliquary Remains">
                         <div class="nav-icon-frame">⚱️</div>
                         <span class="nav-label">OPEN REMAINS</span>
                     </button>
-                    <button class="start-nav-btn" id="start-tab-shop">
+                    <button class="start-nav-btn" id="start-tab-shop" title="Star Matrix Bazaar & Outpost Store">
                         <div class="nav-icon-frame">🏪</div>
                         <span class="nav-label">SHOP</span>
                     </button>
-                    <button class="start-nav-btn" id="start-tab-achievements">
+                    <button class="start-nav-btn" id="start-tab-achievements" title="Milestones, Quests & Star Token Rewards">
                         <div class="nav-icon-frame">🏆</div>
                         <span class="nav-label">ACHIEVEMENTS</span>
                     </button>
-                    <button class="start-nav-btn" id="start-tab-records">
+                    <button class="start-nav-btn" id="start-tab-records" title="Lifetime Expedition Survival Statistics">
                         <div class="nav-icon-frame">📜</div>
                         <span class="nav-label">SURVIVAL RECORD</span>
                     </button>
-                    <button class="start-nav-btn" id="start-tab-settings">
+                    <button class="start-nav-btn" id="start-tab-settings" title="Game Controls, Button Sizes & Audio">
                         <div class="nav-icon-frame">⚙️</div>
                         <span class="nav-label">SETTINGS</span>
                     </button>
@@ -757,6 +775,28 @@
                     <div class="modal-body">
                         <div id="inventory-grid" class="inventory-grid"></div>
                         <div id="item-details" class="item-details">Select an item to inspect or use.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Currency / System Info Modal (Title Screen Badges) -->
+            <div id="currency-info-modal" class="game-modal hidden">
+                <div class="modal-content currency-info-content">
+                    <div class="modal-header">
+                        <h3 id="currency-info-title">🗝️ KEYS OF AWAKENING</h3>
+                        <button class="modal-close" id="currency-info-close">✕</button>
+                    </div>
+                    <div class="modal-body currency-info-body">
+                        <div class="info-icon-large" id="currency-info-icon">🗝️</div>
+                        <div class="info-headline" id="currency-info-headline">Runic Keys for Reliquary Remains</div>
+                        <div class="info-description" id="currency-info-desc">
+                            Sacred runic keys used to unbox ancient remains in the Open Remains vault.
+                            1 key regenerates naturally every 20 minutes (up to 15 max), or can be earned through daily attendance and dungeon exploration.
+                        </div>
+                        <div class="info-perk-box">
+                            <span class="perk-label" id="currency-info-label">CURRENT BALANCE:</span>
+                            <span class="perk-val" id="currency-info-val">15 / 15</span>
+                        </div>
                     </div>
                 </div>
             </div>

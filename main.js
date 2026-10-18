@@ -118,8 +118,8 @@ class GameApp {
         this.setupModals();
         this.initSettings();
 
-        // 5. Initial State: Always Boot Directly to Atmospheric Start Screen (No Gameplay Blur)
-        this.setGameState('START_SCREEN');
+        // 5. Initial State: Boot into 4-Second Alumungandr Splash Screen
+        this.initSplashScreen();
 
         // 6. Render Pixel Art Canvases & Update UI Visibility
         this.renderUIPixelCanvases();
@@ -314,17 +314,129 @@ class GameApp {
         }
     }
 
+    initSplashScreen() {
+        this.gameState = 'SPLASH';
+        if (this.screens) {
+            this.screens.currentScreen = 'TITLE';
+        }
+        const splashContainer = document.getElementById('splash-screen-container');
+        const startScreen = document.getElementById('start-screen-container');
+        const header = document.getElementById('game-header');
+        const footer = document.getElementById('game-footer');
+        const touchControls = document.getElementById('touch-controls');
+        const gbaMenu = document.getElementById('gba-start-menu');
+        const rusticHud = document.getElementById('rustic-hud-overlay');
+
+        if (startScreen) startScreen.classList.add('hidden');
+        if (header) header.classList.add('hidden');
+        if (footer) footer.classList.add('hidden');
+        if (touchControls) touchControls.classList.add('controls-hidden');
+        if (gbaMenu) gbaMenu.classList.add('hidden');
+        if (rusticHud) rusticHud.classList.add('hidden');
+        document.querySelectorAll('.game-modal').forEach(m => m.classList.add('hidden'));
+
+        if (!splashContainer) {
+            this.setGameState('START_SCREEN');
+            return;
+        }
+
+        splashContainer.classList.remove('hidden', 'fade-out');
+        const fillBar = document.getElementById('splash-progress-fill');
+        const statusText = document.getElementById('splash-status-text');
+        const percentText = document.getElementById('splash-percent-text');
+
+        const startTime = performance.now();
+        const DURATION = 4000; // 4 seconds exactly as requested
+
+        const stages = [
+            { t: 0.0, msg: 'INITIALIZING LIVING MATRIX ENGINE...' },
+            { t: 0.25, msg: 'CALIBRATING RUNIC TOTEM HARMONICS...' },
+            { t: 0.55, msg: 'CONNECTING TO CELESTIAL DYSON VAULT...' },
+            { t: 0.85, msg: 'SYNCHRONIZING PIONEER PROTOCOLS... [OK]' }
+        ];
+
+        let finished = false;
+        const finishSplash = () => {
+            if (finished) return;
+            finished = true;
+            if (fillBar) fillBar.style.width = '100%';
+            if (percentText) percentText.textContent = '100%';
+            if (statusText) statusText.textContent = 'SYSTEM READY [OK]';
+
+            if (this.soundEnabled && this.sfxEnabled && this.renderer && this.renderer.audio) {
+                this.renderer.audio.playItemObtained();
+            }
+
+            splashContainer.classList.add('fade-out');
+            setTimeout(() => {
+                splashContainer.classList.add('hidden');
+                this.setGameState('START_SCREEN');
+            }, 650);
+        };
+
+        const updateFrame = (now) => {
+            if (finished) return;
+            const elapsed = now - startTime;
+            const progress = Math.min(1.0, elapsed / DURATION);
+
+            if (fillBar) fillBar.style.width = `${Math.round(progress * 100)}%`;
+            if (percentText) percentText.textContent = `${Math.round(progress * 100)}%`;
+
+            for (let i = stages.length - 1; i >= 0; i--) {
+                if (progress >= stages[i].t) {
+                    if (statusText && statusText.textContent !== stages[i].msg) {
+                        statusText.textContent = stages[i].msg;
+                    }
+                    break;
+                }
+            }
+
+            if (progress >= 1.0) {
+                finishSplash();
+            } else {
+                requestAnimationFrame(updateFrame);
+            }
+        };
+
+        requestAnimationFrame(updateFrame);
+
+        // Fast-forward on tap after 1.2s
+        const tapHandler = () => {
+            if (performance.now() - startTime > 1200) {
+                finishSplash();
+                splashContainer.removeEventListener('click', tapHandler);
+                splashContainer.removeEventListener('touchstart', tapHandler);
+            }
+        };
+        splashContainer.addEventListener('click', tapHandler);
+        splashContainer.addEventListener('touchstart', tapHandler, { passive: true });
+    }
+
     setGameState(state) {
         this.gameState = state;
         if (this.screens) {
-            this.screens.currentScreen = (state === 'START_SCREEN' ? 'TITLE' : 'GAMEPLAY');
+            this.screens.currentScreen = (state === 'START_SCREEN' || state === 'SPLASH' ? 'TITLE' : 'GAMEPLAY');
         }
         const startScreen = document.getElementById('start-screen-container');
         const header = document.getElementById('game-header');
         const footer = document.getElementById('game-footer');
         const touchControls = document.getElementById('touch-controls');
 
-        if (state === 'START_SCREEN') {
+        if (state === 'SPLASH') {
+            const splashScreen = document.getElementById('splash-screen-container');
+            if (splashScreen) splashScreen.classList.remove('hidden', 'fade-out');
+            if (startScreen) startScreen.classList.add('hidden');
+            if (header) header.classList.add('hidden');
+            if (footer) footer.classList.add('hidden');
+            if (touchControls) touchControls.classList.add('controls-hidden');
+            const gbaMenu = document.getElementById('gba-start-menu');
+            if (gbaMenu) gbaMenu.classList.add('hidden');
+            const rusticHud = document.getElementById('rustic-hud-overlay');
+            if (rusticHud) rusticHud.classList.add('hidden');
+            document.querySelectorAll('.game-modal').forEach(m => m.classList.add('hidden'));
+        } else if (state === 'START_SCREEN') {
+            const splashScreen = document.getElementById('splash-screen-container');
+            if (splashScreen) splashScreen.classList.add('hidden');
             if (startScreen) startScreen.classList.remove('hidden');
             if (header) header.classList.add('hidden');
             if (footer) footer.classList.add('hidden');
@@ -343,6 +455,8 @@ class GameApp {
                 this.renderer.audio.stopBgm();
             }
         } else if (state === 'GAMEPLAY') {
+            const splashScreen = document.getElementById('splash-screen-container');
+            if (splashScreen) splashScreen.classList.add('hidden');
             if (startScreen) startScreen.classList.add('hidden');
             if (header) header.classList.remove('hidden');
             if (footer) footer.classList.remove('hidden');
@@ -407,18 +521,32 @@ class GameApp {
             });
         }
 
-        const tabRoster = document.getElementById('start-tab-roster');
-        if (tabRoster) {
-            this.bindTap(tabRoster, () => {
-                this.pendingSlotIndex = null;
-                const setupModal = document.getElementById('setup-modal');
-                if (setupModal) setupModal.classList.remove('hidden');
-                const confirmBtn = document.getElementById('btn-confirm-setup');
-                if (confirmBtn) {
-                    confirmBtn.innerText = 'ENTER SYSTEM MENU ▶';
-                }
-                this.screens.currentScreen = 'SETUP';
-                this.updateTouchControlsVisibility();
+        // Top currency info chips
+        const keysChip = document.getElementById('start-keys-chip');
+        if (keysChip) {
+            this.bindTap(keysChip, () => this.openCurrencyInfo('KEYS'));
+        }
+
+        const coresChip = document.getElementById('start-cores-chip');
+        if (coresChip) {
+            this.bindTap(coresChip, () => this.openCurrencyInfo('CORES'));
+        }
+
+        const tokensChip = document.getElementById('start-tokens-chip');
+        if (tokensChip) {
+            this.bindTap(tokensChip, () => this.openCurrencyInfo('TOKENS'));
+        }
+
+        const pioneerChip = document.getElementById('start-pioneer-chip');
+        if (pioneerChip) {
+            this.bindTap(pioneerChip, () => this.openCurrencyInfo('PIONEER'));
+        }
+
+        const closeCurrencyInfo = document.getElementById('currency-info-close');
+        if (closeCurrencyInfo) {
+            this.bindTap(closeCurrencyInfo, () => {
+                const modal = document.getElementById('currency-info-modal');
+                if (modal) modal.classList.add('hidden');
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
             });
         }
@@ -532,6 +660,58 @@ class GameApp {
         }
 
         this.updateStartCurrencies();
+    }
+
+    /* ==========================================================================
+       CURRENCY & SYSTEM INFO MODAL (TITLE SCREEN BADGES)
+       ========================================================================== */
+    openCurrencyInfo(type) {
+        const modal = document.getElementById('currency-info-modal');
+        if (!modal) return;
+        const titleEl = document.getElementById('currency-info-title');
+        const iconEl = document.getElementById('currency-info-icon');
+        const headlineEl = document.getElementById('currency-info-headline');
+        const descEl = document.getElementById('currency-info-desc');
+        const labelEl = document.getElementById('currency-info-label');
+        const valEl = document.getElementById('currency-info-val');
+
+        const curKeys = this.relicKeys !== undefined ? this.relicKeys : 15;
+        const curCores = this.coresExtractedCount || 0;
+        const curTokens = this.starTokens || (this.player ? Math.floor(this.player.coinsCollected / 100) : 0);
+
+        if (type === 'KEYS') {
+            if (titleEl) titleEl.innerText = '🗝️ KEYS OF AWAKENING';
+            if (iconEl) iconEl.innerText = '🗝️';
+            if (headlineEl) headlineEl.innerText = 'Sacred Reliquary Keystones';
+            if (descEl) descEl.innerText = 'Used to unlock Weathered Urns, Runic Coffers, and Celestial Vaults in the Open Remains vault. Keys replenish naturally (1 every 20 mins, max 15) or drop from dungeon exploration and daily attendance.';
+            if (labelEl) labelEl.innerText = 'CURRENT KEYS:';
+            if (valEl) valEl.innerText = `${curKeys} / 15`;
+        } else if (type === 'CORES') {
+            if (titleEl) titleEl.innerText = '☥ ANCIENT DYSON CORES';
+            if (iconEl) iconEl.innerText = '☥';
+            if (headlineEl) headlineEl.innerText = 'Sub-Bedrock Stellar Power Sources';
+            if (descEl) descEl.innerText = 'High-density quantum batteries extracted from the Sub-Bedrock Core reactor. Used to forge legendary end-game artifacts and unlock permanent pioneer awakenings.';
+            if (labelEl) labelEl.innerText = 'CORES HARVESTED:';
+            if (valEl) valEl.innerText = `${curCores}`;
+        } else if (type === 'TOKENS') {
+            if (titleEl) titleEl.innerText = '✡ STAR MATRIX TOKENS';
+            if (iconEl) iconEl.innerText = '✡';
+            if (headlineEl) headlineEl.innerText = 'Astral Bazaar Currency';
+            if (descEl) descEl.innerText = 'Rare astral currency earned by completing Milestones and claiming 7-Day Attendance rewards. Spend them in the Star Matrix Bazaar for permanent character passives and boons.';
+            if (labelEl) labelEl.innerText = 'STAR TOKENS:';
+            if (valEl) valEl.innerText = `${curTokens}`;
+        } else if (type === 'PIONEER') {
+            const rank = Math.min(5, 1 + Math.floor(curCores / 2));
+            if (titleEl) titleEl.innerText = `🎖️ PIONEER RANK ${rank}`;
+            if (iconEl) iconEl.innerText = '🎖️';
+            if (headlineEl) headlineEl.innerText = 'Expeditionary Honor & Tier Perks';
+            if (descEl) descEl.innerText = `Rank ${rank} Pioneer Status. Grants permanent passive enhancements: Rank I (+5% coin yield), Rank II (+15 Max HP), Rank III (+25% parry window), Rank IV (+10% move speed), Rank V (Ascended Godhood). Earn higher ranks by surviving more days and extracting Genesis Cores!`;
+            if (labelEl) labelEl.innerText = 'PIONEER TIER:';
+            if (valEl) valEl.innerText = `RANK ${rank} (EXPEDITION LEVEL ${rank * 3})`;
+        }
+
+        modal.classList.remove('hidden');
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
     }
 
     /* ==========================================================================
@@ -1512,6 +1692,11 @@ class GameApp {
                 return;
             }
 
+            // Do not handle gameplay action keys on Splash or Start Screen
+            if (this.gameState === 'START_SCREEN' || this.gameState === 'SPLASH') {
+                return;
+            }
+
             // Gameplay Action keys
             if (key === ' ' || key === 'x') { // Jump / Leap
                 e.preventDefault();
@@ -2145,6 +2330,17 @@ class GameApp {
     }
 
     handleBackOrEscape() {
+        if (this.gameState === 'START_SCREEN' || this.gameState === 'SPLASH') {
+            const openModals = Array.from(document.querySelectorAll('.game-modal:not(.hidden)'));
+            if (openModals.length > 0) {
+                openModals.forEach(m => m.classList.add('hidden'));
+                if (this.screens) this.screens.currentScreen = 'TITLE';
+                this.updateTouchControlsVisibility();
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+            }
+            return;
+        }
+
         // 1. Close dialogue capsule if open
         const dialogue = document.getElementById('gba-dialogue-capsule');
         if (dialogue && !dialogue.classList.contains('hidden')) {
@@ -2168,6 +2364,7 @@ class GameApp {
     }
 
     toggleGbaMenu() {
+        if (this.gameState === 'START_SCREEN' || this.gameState === 'SPLASH') return;
         const menu = document.getElementById('gba-start-menu');
         if (!menu) return;
         const isHidden = menu.classList.contains('hidden');

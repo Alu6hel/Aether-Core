@@ -2606,16 +2606,210 @@ class RetroRenderer {
         const h = this.height;
         const t = this.titleAnimTimer;
 
-        // 1. Dark ambient forest clearing background
-        ctx.fillStyle = '#0c160f';
+        // 1. Dynamic Celestial Sky & Horizon (Dyson Luminary & Mountain Backdrop)
+        const cycleDuration = 32.0; // 32 seconds full celestial cycle
+        const cycle = ((t * 0.1) % cycleDuration) / cycleDuration;
+
+        const KEYFRAMES = [
+            // 0: Eclipse / Waxing Crescent (Lunar Mode)
+            { top: [2, 5, 14], mid: [9, 17, 34], bot: [20, 32, 54], mtn: [10, 16, 29], star: 0.95, rim: [0, 229, 255, 0.35], ring: [0, 229, 255, 0.25] },
+            // 1: Solar Dawn (Transition Mode)
+            { top: [18, 13, 32], mid: [38, 22, 42], bot: [60, 32, 42], mtn: [20, 20, 36], star: 0.55, rim: [255, 170, 0, 0.45], ring: [255, 183, 77, 0.30] },
+            // 2: Radiant Solar Zenith (Sun Mode)
+            { top: [15, 35, 58], mid: [28, 54, 82], bot: [45, 75, 104], mtn: [26, 34, 48], star: 0.15, rim: [255, 213, 79, 0.60], ring: [255, 213, 79, 0.35] },
+            // 3: Red Giant (Cooling Flare Mode)
+            { top: [34, 11, 24], mid: [28, 10, 34], bot: [14, 11, 28], mtn: [23, 15, 26], star: 0.45, rim: [255, 82, 82, 0.50], ring: [255, 82, 82, 0.35] }
+        ];
+
+        const phaseProgress = cycle * 4;
+        const currentPhase = Math.floor(phaseProgress);
+        const nextPhase = (currentPhase + 1) % 4;
+        const localT = phaseProgress - currentPhase;
+        const smoothT = 0.5 - 0.5 * Math.cos(localT * Math.PI);
+
+        const kfA = KEYFRAMES[currentPhase];
+        const kfB = KEYFRAMES[nextPhase];
+        const lerp = (a, b, factor) => a + (b - a) * factor;
+        const lerpColor = (cA, cB, factor) => `rgb(${Math.round(lerp(cA[0], cB[0], factor))}, ${Math.round(lerp(cA[1], cB[1], factor))}, ${Math.round(lerp(cA[2], cB[2], factor))})`;
+        const lerpRgba = (cA, cB, factor) => `rgba(${Math.round(lerp(cA[0], cB[0], factor))}, ${Math.round(lerp(cA[1], cB[1], factor))}, ${Math.round(lerp(cA[2], cB[2], factor))}, ${lerp(cA[3], cB[3], factor).toFixed(3)})`;
+
+        const skyTop = lerpColor(kfA.top, kfB.top, smoothT);
+        const skyMid = lerpColor(kfA.mid, kfB.mid, smoothT);
+        const skyBottom = lerpColor(kfA.bot, kfB.bot, smoothT);
+        const mountainTint = lerpColor(kfA.mtn, kfB.mtn, smoothT);
+        const starAlpha = lerp(kfA.star, kfB.star, smoothT);
+        const rimColor = lerpRgba(kfA.rim, kfB.rim, smoothT);
+        const ringColor = lerpRgba(kfA.ring, kfB.ring, smoothT);
+
+        // Render dynamic celestial sky gradient
+        const skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.55);
+        skyGrad.addColorStop(0, skyTop);
+        skyGrad.addColorStop(0.5, skyMid);
+        skyGrad.addColorStop(1, skyBottom);
+        ctx.fillStyle = skyGrad;
         ctx.fillRect(0, 0, w, h);
 
-        // 2. Isometric Forest Floor (Matching Image 4)
+        // Twinkling stars in the upper sky
+        if (starAlpha > 0.05) {
+            for (let i = 0; i < 45; i++) {
+                const seed = (i * 137) % 1000;
+                const sx = (seed * 9.7) % w;
+                const sy = (seed * 3.3) % (h * 0.48);
+                const twinkle = Math.sin(t * 3.0 + i) * 0.5 + 0.5;
+                const alpha = starAlpha * (0.3 + 0.7 * twinkle);
+                ctx.fillStyle = (i % 5 === 0) ? `rgba(128, 222, 234, ${alpha})` : `rgba(255, 255, 255, ${alpha})`;
+                const size = (i % 7 === 0) ? 2 : 1;
+                ctx.fillRect(Math.floor(sx), Math.floor(sy), size, size);
+            }
+        }
+
+        // Render Dyson Luminary Orb (Image 3/4)
+        const lumX = Math.round(w * 0.80);
+        const lumY = Math.round(h * 0.18);
+        const lumRadius = 24;
+
+        ctx.save();
+        ctx.translate(lumX, lumY);
+        const rotAngle = t * 0.15;
+
+        // Concentric outer containment rings
+        ctx.strokeStyle = ringColor;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, lumRadius + 14, lumRadius + 6, rotAngle * 0.5, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.ellipse(0, 0, lumRadius + 9, lumRadius + 16, -rotAngle * 0.7, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Solar rays and corona flares
+        const sunWeight = Math.sin(cycle * Math.PI);
+        if (sunWeight > 0.05) {
+            const isRedGiant = (cycle >= 0.70);
+            const rayCount = 8;
+            const rayLength = 18 + 14 * sunWeight;
+            const rayPulse = 1.0 + 0.15 * Math.sin(t * 4);
+
+            for (let r = 0; r < rayCount; r++) {
+                const angle = (r * Math.PI * 2) / rayCount + rotAngle * 0.3;
+                const innerX = Math.cos(angle) * (lumRadius + 2);
+                const innerY = Math.sin(angle) * (lumRadius + 2);
+                const outerX = Math.cos(angle) * (lumRadius + rayLength * rayPulse);
+                const outerY = Math.sin(angle) * (lumRadius + rayLength * rayPulse);
+
+                ctx.strokeStyle = isRedGiant 
+                    ? `rgba(255, 87, 34, ${(0.35 + 0.2 * Math.sin(angle * 2 + t)) * sunWeight})` 
+                    : `rgba(255, 215, 64, ${(0.45 + 0.25 * Math.sin(angle * 2 + t)) * sunWeight})`;
+                ctx.lineWidth = (r % 2 === 0) ? 2 : 1;
+                ctx.beginPath();
+                ctx.moveTo(innerX, innerY);
+                ctx.lineTo(outerX, outerY);
+                ctx.stroke();
+            }
+
+            // Corona glow
+            const coronaGlow = ctx.createRadialGradient(0, 0, lumRadius * 0.8, 0, 0, lumRadius * 2.6);
+            if (isRedGiant) {
+                coronaGlow.addColorStop(0, `rgba(255, 61, 0, ${(0.45 * sunWeight).toFixed(2)})`);
+                coronaGlow.addColorStop(0.6, `rgba(213, 0, 0, ${(0.18 * sunWeight).toFixed(2)})`);
+                coronaGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            } else {
+                coronaGlow.addColorStop(0, `rgba(255, 235, 59, ${(0.55 * sunWeight).toFixed(2)})`);
+                coronaGlow.addColorStop(0.5, `rgba(255, 152, 0, ${(0.22 * sunWeight).toFixed(2)})`);
+                coronaGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            }
+            ctx.fillStyle = coronaGlow;
+            ctx.beginPath();
+            ctx.arc(0, 0, lumRadius * 2.6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Core Dyson Luminary Orb Body
+        if (cycle >= 0.50 && cycle < 0.75) {
+            // High Solar Zenith
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(0, 0, lumRadius, 0, Math.PI * 2);
+            ctx.fill();
+            const grad = ctx.createRadialGradient(0, 0, 4, 0, 0, lumRadius);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(0.4, '#fff59d');
+            grad.addColorStop(0.8, '#ffb300');
+            grad.addColorStop(1, '#ff6f00');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(0, 0, lumRadius, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (cycle >= 0.75) {
+            // Red Giant
+            ctx.fillStyle = '#ff3d00';
+            ctx.beginPath();
+            ctx.arc(0, 0, lumRadius, 0, Math.PI * 2);
+            ctx.fill();
+            const grad = ctx.createRadialGradient(-4, -4, 3, 0, 0, lumRadius);
+            grad.addColorStop(0, '#ff6e40');
+            grad.addColorStop(0.6, '#dd2c00');
+            grad.addColorStop(1, '#880e4f');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(0, 0, lumRadius, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // Eclipse / Silver Moon
+            ctx.fillStyle = '#101624';
+            ctx.beginPath();
+            ctx.arc(0, 0, lumRadius, 0, Math.PI * 2);
+            ctx.fill();
+            const crescentGrad = ctx.createLinearGradient(-lumRadius, -lumRadius, lumRadius, lumRadius);
+            crescentGrad.addColorStop(0, '#e0f7fa');
+            crescentGrad.addColorStop(0.3, '#80deea');
+            crescentGrad.addColorStop(0.6, '#00acc1');
+            crescentGrad.addColorStop(1, '#006064');
+            ctx.fillStyle = crescentGrad;
+            ctx.beginPath();
+            ctx.arc(0, 0, lumRadius, -Math.PI * 0.45, Math.PI * 0.55);
+            ctx.arc(lumRadius * 0.38, 0, lumRadius * 0.88, Math.PI * 0.55, -Math.PI * 0.45, true);
+            ctx.closePath();
+            ctx.fill();
+        }
+        ctx.restore();
+
+        // Mountain Ridge Silhouette across horizon
+        const mtnBaseY = Math.round(h * 0.38);
+        ctx.fillStyle = mountainTint;
+        ctx.beginPath();
+        ctx.moveTo(0, mtnBaseY + 8);
+        ctx.lineTo(w * 0.16, mtnBaseY - 22);
+        ctx.lineTo(w * 0.32, mtnBaseY - 4);
+        ctx.lineTo(w * 0.50, mtnBaseY - 26);
+        ctx.lineTo(w * 0.68, mtnBaseY - 8);
+        ctx.lineTo(w * 0.82, mtnBaseY - 28);
+        ctx.lineTo(w, mtnBaseY - 6);
+        ctx.lineTo(w, h);
+        ctx.lineTo(0, h);
+        ctx.closePath();
+        ctx.fill();
+
+        // Mountain edge rim light
+        ctx.strokeStyle = rimColor;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, mtnBaseY + 8);
+        ctx.lineTo(w * 0.16, mtnBaseY - 22);
+        ctx.lineTo(w * 0.32, mtnBaseY - 4);
+        ctx.lineTo(w * 0.50, mtnBaseY - 26);
+        ctx.lineTo(w * 0.68, mtnBaseY - 8);
+        ctx.lineTo(w * 0.82, mtnBaseY - 28);
+        ctx.lineTo(w, mtnBaseY - 6);
+        ctx.stroke();
+
+        // 2. Isometric Forest Floor (Matching Image 4 & 5)
         // Diamond rhombic grid projection
         const tileW = 56;
         const tileH = 28;
         const originX = Math.floor(w / 2);
-        const originY = Math.floor(h * 0.44);
+        const originY = Math.floor(h * 0.46);
 
         const cols = 15;
         const rows = 15;
@@ -2624,7 +2818,7 @@ class RetroRenderer {
                 const ix = originX + (c - r) * (tileW / 2);
                 const iy = originY + (c + r) * (tileH / 2);
 
-                if (ix < -tileW || ix > w + tileW || iy < -tileH || iy > h + tileH) continue;
+                if (ix < -tileW || ix > w + tileW || iy < mtnBaseY - 2 || iy > h + tileH) continue;
 
                 // Diagonal stone/clearing path and alternating grass checkerboard
                 const isDiagPath = Math.abs(c - r) <= 1 || (c + r >= -1 && c + r <= 1);
@@ -2782,22 +2976,20 @@ class RetroRenderer {
         // Perimeter Trees
         const perimeterTrees = [
             // Left flank
-            { x: originX - 220, y: originY - 50, s: 1.15 },
-            { x: originX - 195, y: originY + 20, s: 1.25 },
-            { x: originX - 235, y: originY + 90, s: 1.35 },
-            { x: originX - 180, y: originY + 120, s: 1.30 },
-            { x: originX - 250, y: originY - 110, s: 1.10 },
-            // Right flank
-            { x: originX + 220, y: originY - 50, s: 1.15 },
-            { x: originX + 195, y: originY + 20, s: 1.25 },
-            { x: originX + 235, y: originY + 90, s: 1.35 },
-            { x: originX + 180, y: originY + 120, s: 1.30 },
-            { x: originX + 250, y: originY - 110, s: 1.10 },
-            // Top background perimeter
-            { x: originX - 130, y: originY - 105, s: 0.95 },
-            { x: originX - 70, y: originY - 120, s: 0.90 },
-            { x: originX + 70, y: originY - 120, s: 0.90 },
-            { x: originX + 130, y: originY - 105, s: 0.95 }
+            { x: originX - 220, y: originY - 10, s: 1.15 },
+            { x: originX - 195, y: originY + 40, s: 1.25 },
+            { x: originX - 235, y: originY + 95, s: 1.35 },
+            { x: originX - 180, y: originY + 125, s: 1.30 },
+            { x: originX - 245, y: originY - 30, s: 1.05 },
+            // Right flank (framed away from Dyson Luminary Orb at x: 384, y: 58)
+            { x: originX + 225, y: originY + 15, s: 1.15 },
+            { x: originX + 195, y: originY + 55, s: 1.25 },
+            { x: originX + 235, y: originY + 95, s: 1.35 },
+            { x: originX + 180, y: originY + 125, s: 1.30 },
+            // Mountain foothills tree line
+            { x: originX - 145, y: mtnBaseY + 16, s: 0.85 },
+            { x: originX - 85, y: mtnBaseY + 12, s: 0.80 },
+            { x: originX + 75, y: mtnBaseY + 12, s: 0.80 }
         ];
 
         for (const pt of perimeterTrees) {
@@ -2968,7 +3160,80 @@ class RetroRenderer {
 
         ctx.restore();
 
-        // 6. Atmospheric Drifting Mystical Sparks / Spores (Rising from Totem)
+        // 6. Stone Brazier Torches Flanking the Totem (Image 3/4)
+        const torches = [
+            { x: mx - 80, y: my + 14 },
+            { x: mx + 80, y: my + 14 }
+        ];
+
+        for (const torch of torches) {
+            // Ground shadow
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+            ctx.beginPath();
+            ctx.ellipse(torch.x, torch.y + 6, 12, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Stone Pedestal Stand
+            ctx.fillStyle = '#1c2430';
+            ctx.fillRect(torch.x - 5, torch.y - 14, 10, 18);
+            ctx.fillStyle = '#263238';
+            ctx.fillRect(torch.x - 7, torch.y - 18, 14, 6);
+            ctx.fillStyle = '#37474f';
+            ctx.fillRect(torch.x - 8, torch.y - 20, 16, 4);
+
+            // Ambient warm fire glow on ground
+            const fireGlow = ctx.createRadialGradient(torch.x, torch.y - 20, 4, torch.x, torch.y - 20, 38);
+            fireGlow.addColorStop(0, 'rgba(255, 179, 0, 0.28)');
+            fireGlow.addColorStop(0.6, 'rgba(255, 87, 34, 0.12)');
+            fireGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = fireGlow;
+            ctx.beginPath();
+            ctx.arc(torch.x, torch.y - 20, 38, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Animated pixel flame tongues
+            const f1 = Math.sin(t * 12 + torch.x) * 2;
+            const f2 = Math.cos(t * 15 + torch.y) * 1.5;
+
+            // Outer flame (Red/Orange)
+            ctx.fillStyle = '#ff5722';
+            ctx.beginPath();
+            ctx.moveTo(torch.x - 5, torch.y - 20);
+            ctx.lineTo(torch.x, torch.y - 32 + f1);
+            ctx.lineTo(torch.x + 5, torch.y - 20);
+            ctx.closePath();
+            ctx.fill();
+
+            // Mid flame (Bright Amber)
+            ctx.fillStyle = '#ffb300';
+            ctx.beginPath();
+            ctx.moveTo(torch.x - 3, torch.y - 20);
+            ctx.lineTo(torch.x + f2, torch.y - 29);
+            ctx.lineTo(torch.x + 3, torch.y - 20);
+            ctx.closePath();
+            ctx.fill();
+
+            // Core flame (White hot)
+            ctx.fillStyle = '#fff9c4';
+            ctx.beginPath();
+            ctx.moveTo(torch.x - 2, torch.y - 20);
+            ctx.lineTo(torch.x, torch.y - 25);
+            ctx.lineTo(torch.x + 2, torch.y - 20);
+            ctx.closePath();
+            ctx.fill();
+
+            // Drifting smoke & sparks
+            for (let s = 0; s < 3; s++) {
+                const sparkSeed = (s * 31 + Math.floor(t * 18)) % 25;
+                const spX = torch.x + Math.sin(t * 4 + s) * 4;
+                const spY = torch.y - 24 - sparkSeed;
+                const spAlpha = 1.0 - (sparkSeed / 25);
+                ctx.fillStyle = `rgba(255, 213, 79, ${spAlpha})`;
+                ctx.fillRect(spX, spY, 1.5, 1.5);
+            }
+        }
+
+        // 7. Atmospheric Drifting Mystical Sparks / Spores (Rising from Totem)
         for (let i = 0; i < 22; i++) {
             const seed = (i * 97) % 1009;
             const px = (mx - 130 + ((seed * 7 + Math.floor(t * 20)) % 260));

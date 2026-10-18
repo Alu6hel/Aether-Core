@@ -205,11 +205,23 @@ body, html {
     background: #141b24;
     border: 3px solid #ff9800;
     border-radius: 8px;
-    width: 90%;
-    max-width: 520px;
-    padding: 16px;
+    width: 92%;
+    max-width: 580px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    padding: 14px;
     box-shadow: inset 2px 2px 0px rgba(255,255,255,0.15), inset -2px -2px 0px rgba(0,0,0,0.7), 0 10px 40px rgba(0, 0, 0, 0.95);
     font-size: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.modal-body {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    padding-right: 4px;
 }
 
 .modal-header {
@@ -1206,6 +1218,158 @@ body, html {
 }
 
 /* ==========================================================================
+   ALUMUNGANDR COMPANY LOADING / SPLASH SCREEN
+   ========================================================================== */
+.splash-screen {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, #0a1120 0%, #03060c 80%, #000000 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    transition: opacity 0.8s ease-out, visibility 0.8s ease-out;
+    pointer-events: auto;
+    overflow: hidden;
+}
+
+.splash-screen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.splash-screen.hidden {
+    display: none !important;
+}
+
+.splash-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 90%;
+    max-width: 480px;
+    animation: splashFadeIn 0.8s ease-out;
+}
+
+@keyframes splashFadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.splash-logo-frame {
+    position: relative;
+    width: 140px;
+    height: 110px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.splash-logo {
+    width: 130px;
+    height: 100px;
+    filter: drop-shadow(0 0 15px rgba(0, 229, 255, 0.75)) drop-shadow(0 0 30px rgba(255, 213, 79, 0.4));
+    animation: splashLogoPulse 3s ease-in-out infinite;
+    z-index: 2;
+}
+
+.splash-logo-glow {
+    position: absolute;
+    width: 160px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(0, 229, 255, 0.25) 0%, rgba(255, 213, 79, 0.15) 45%, transparent 70%);
+    border-radius: 50%;
+    animation: splashGlowPulse 2.5s ease-in-out infinite alternate;
+}
+
+.splash-brand-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    letter-spacing: 4px;
+    color: #ffffff;
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.8), 0 0 20px rgba(0, 229, 255, 0.5), 2px 2px 0px #000;
+    margin-bottom: 6px;
+}
+
+.splash-brand-subtitle {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    letter-spacing: 2.5px;
+    color: #ffd54f;
+    text-shadow: 0 0 6px rgba(255, 213, 79, 0.6);
+    margin-bottom: 24px;
+}
+
+.splash-progress-wrapper {
+    width: 100%;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.splash-progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #0d1522;
+    border: 1px solid #00e5ff;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.8), 0 0 10px rgba(0, 229, 255, 0.3);
+}
+
+.splash-progress-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #00b0ff 0%, #00e5ff 60%, #ffd54f 100%);
+    box-shadow: 0 0 12px #00e5ff;
+    transition: width 0.1s linear;
+}
+
+.splash-status-text {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6.5px;
+    color: #80deea;
+    letter-spacing: 0.8px;
+    min-height: 12px;
+}
+
+.splash-percent-text {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: #ffd54f;
+}
+
+.splash-hint-text {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 5.5px;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 1px;
+    margin-top: 14px;
+    animation: splashBlink 1.5s infinite;
+}
+
+@keyframes splashLogoPulse {
+    0% { transform: scale(0.96); filter: drop-shadow(0 0 12px rgba(0, 229, 255, 0.6)); }
+    50% { transform: scale(1.02); filter: drop-shadow(0 0 22px rgba(0, 229, 255, 0.9)) drop-shadow(0 0 35px rgba(255, 213, 79, 0.5)); }
+    100% { transform: scale(0.96); filter: drop-shadow(0 0 12px rgba(0, 229, 255, 0.6)); }
+}
+
+@keyframes splashGlowPulse {
+    0% { transform: scale(0.85); opacity: 0.4; }
+    100% { transform: scale(1.15); opacity: 0.8; }
+}
+
+@keyframes splashBlink {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.7; }
+}
+
+/* ==========================================================================
    START SCREEN / MAIN TITLE HUB ("THE WILD DARKNESS" STYLE)
    ========================================================================== */
 
@@ -1380,7 +1544,7 @@ body, html {
     position: absolute;
     left: 20px;
     bottom: 68px;
-    background: rgba(18, 25, 36, 0.85);
+    background: rgba(18, 25, 36, 0.88);
     border: 2px solid #37474f;
     border-radius: 6px;
     padding: 6px 10px;
@@ -1388,8 +1552,36 @@ body, html {
     align-items: center;
     gap: 8px;
     box-shadow: 0 3px 8px rgba(0,0,0,0.6);
-    pointer-events: none;
+    pointer-events: auto;
+    cursor: pointer;
     z-index: 91;
+    transition: transform 0.1s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.start-medals-banner:hover {
+    border-color: #00e5ff;
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+.start-medals-banner:active {
+    transform: translateY(1px);
+}
+
+.clickable-chip {
+    cursor: pointer;
+    pointer-events: auto;
+    transition: transform 0.1s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.clickable-chip:hover {
+    border-color: #00e5ff;
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+    transform: translateY(-1px);
+}
+
+.clickable-chip:active {
+    transform: translateY(1px);
 }
 
 .start-medals-banner .medal-icon {
@@ -1416,7 +1608,7 @@ body, html {
 .start-bottom-nav {
     display: flex;
     justify-content: center;
-    gap: 8px;
+    gap: 10px;
     width: 100%;
     flex-wrap: wrap;
     z-index: 92;
@@ -1426,7 +1618,7 @@ body, html {
     background: #141c28;
     border: 2px solid #37474f;
     border-radius: 8px;
-    padding: 6px 6px;
+    padding: 8px 10px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1436,15 +1628,16 @@ body, html {
     color: #b0bec5;
     box-shadow: inset 1px 1px 0px rgba(255,255,255,0.1), inset -1px -1px 0px rgba(0,0,0,0.6), 0 4px 8px rgba(0,0,0,0.5);
     transition: transform 0.06s, border-color 0.1s, color 0.1s;
-    min-width: 52px;
-    flex: 1 1 50px;
-    max-width: 80px;
+    min-width: 68px;
+    flex: 1 1 65px;
+    max-width: 96px;
 }
 
 .start-nav-btn:hover {
     border-color: #00e5ff;
     color: #ffffff;
     background: #1e293a;
+    transform: translateY(-2px);
 }
 
 .start-nav-btn:active {
@@ -1454,14 +1647,81 @@ body, html {
 }
 
 .nav-icon-frame {
-    font-size: 14px;
+    font-size: 15px;
 }
 
 .nav-label {
-    font-size: 5.5px;
+    font-size: 6px;
     letter-spacing: 0.3px;
     text-align: center;
     line-height: 1.2;
+}
+
+/* ==========================================================================
+   CURRENCY & SYSTEM INFO MODAL
+   ========================================================================== */
+.currency-info-content {
+    max-width: 440px;
+    width: 90%;
+}
+
+.currency-info-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    padding: 10px 6px;
+}
+
+.info-icon-large {
+    font-size: 36px;
+    filter: drop-shadow(0 0 12px rgba(255, 213, 79, 0.6));
+    animation: pulseIcon 2s ease-in-out infinite;
+}
+
+@keyframes pulseIcon {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.info-headline {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8.5px;
+    color: #ffd54f;
+    line-height: 1.4;
+}
+
+.info-description {
+    font-size: 7.5px;
+    color: #cfd8dc;
+    line-height: 1.6;
+    background: #111822;
+    border: 1px solid #283747;
+    border-radius: 6px;
+    padding: 10px 12px;
+}
+
+.info-perk-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    background: #172230;
+    border: 1px solid #00e5ff;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7.5px;
+}
+
+.info-perk-box .perk-label {
+    color: #80deea;
+}
+
+.info-perk-box .perk-val {
+    color: #ffd54f;
 }
 
 /* ==========================================================================
@@ -2895,6 +3155,104 @@ body.font-mode-large #rustic-area-title {
 body.font-mode-large .quest-title,
 body.font-mode-large .quest-obj {
     font-size: 9px !important;
+}
+
+/* ==========================================================================
+   LANDSCAPE VIEWPORT OPTIMIZATIONS FOR MODALS & MENUS
+   ========================================================================== */
+.records-body {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.record-stat-box {
+    background: #10161f;
+    border: 1px solid #283747;
+    border-radius: 6px;
+    padding: 8px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+@media (orientation: landscape) {
+    .modal-content {
+        max-height: 90vh;
+        width: 90%;
+        max-width: 640px;
+        padding: 10px 14px;
+    }
+
+    .modal-header {
+        margin-bottom: 6px;
+        padding-bottom: 6px;
+    }
+
+    .modal-header h3 {
+        font-size: 8px;
+    }
+
+    .shop-modal-content {
+        max-width: 680px;
+    }
+
+    .shop-items-grid {
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important;
+        max-height: 58vh;
+        gap: 6px;
+    }
+
+    .attendance-modal-content {
+        max-width: 620px;
+    }
+
+    .attendance-grid {
+        grid-template-columns: repeat(7, 1fr) !important;
+        gap: 4px;
+        margin-bottom: 8px;
+    }
+
+    .att-day-card {
+        padding: 6px 2px;
+        gap: 3px;
+    }
+
+    .att-day-icon {
+        font-size: 13px;
+    }
+
+    .achievements-modal-content {
+        max-width: 660px;
+    }
+
+    .achievements-list {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px;
+        max-height: 56vh;
+    }
+
+    .save-slots-grid {
+        grid-template-columns: repeat(5, 1fr) !important;
+        gap: 6px;
+        max-height: 60vh;
+    }
+
+    .save-slot-card {
+        padding: 6px 8px;
+        min-height: 85px;
+    }
+
+    .setup-classes {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr) !important;
+        gap: 6px;
+    }
+
+    .class-card {
+        padding: 6px 4px;
+    }
 }
 
 
