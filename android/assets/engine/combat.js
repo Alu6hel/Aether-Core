@@ -1237,6 +1237,11 @@ class Character extends KinematicBody {
         if (this.hasSkill('farmer_bountiful_earth')) loot *= 4;
         this.coinsCollected += loot;
 
+        if (enemy.isBoss && this.game) {
+            this.game.bossSlainCount = (this.game.bossSlainCount || 0) + 1;
+            try { localStorage.setItem('aether_boss_slain', this.game.bossSlainCount); } catch (e) {}
+        }
+
         const expGain = enemy.isBoss ? 500 : 35;
         const leveledUp = this.gainExp(expGain);
 

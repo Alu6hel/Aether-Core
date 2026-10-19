@@ -34,7 +34,8 @@ console.log("--- TEST 1: Title Screen Dyson Luminary Pacing ---");
         createLinearGradient: () => ({ addColorStop: () => {} }),
         translate: () => {},
         rotate: () => {},
-        scale: () => {}, ellipse: () => {}, fillText: () => {}, strokeText: () => {}, measureText: () => ({ width: 10 })
+        scale: () => {}, ellipse: () => {}, fillText: () => {}, strokeText: () => {}, measureText: () => ({ width: 10 }),
+        quadraticCurveTo: () => {}, bezierCurveTo: () => {}
     };
 
     const mockCanvas = { width: 480, height: 320, getContext: () => mockCtx };

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="font-mode-large">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="font-mode-large">
     <div id="app-container">
         <!-- Top Game Dashboard Bar (With Company Logo Placeholder/Emblem) -->
         <header id="game-header" class="hidden">
@@ -121,27 +121,34 @@
             <!-- Alumungandr Company Loading / Splash Screen (6.66-second cinematic sequence) -->
             <div id="splash-screen-container" class="splash-screen">
                 <div class="splash-content">
-                    <!-- Animated Dyson Sphere Megastructure & Round Logo Core -->
-                    <div class="splash-dyson-sphere">
-                        <!-- 3D Rotating Orbital Containment Rings -->
-                        <div class="dyson-ring dyson-ring-alpha">
-                            <span class="dyson-node node-1"></span>
-                            <span class="dyson-node node-2"></span>
-                        </div>
-                        <div class="dyson-ring dyson-ring-beta">
-                            <span class="dyson-node node-3"></span>
-                            <span class="dyson-node node-4"></span>
-                        </div>
-                        <div class="dyson-ring dyson-ring-gamma">
-                            <span class="dyson-node node-5"></span>
-                        </div>
+                    <!-- Cinematic Rolling Dyson Sphere & Circular Logo Collision Stage -->
+                    <div class="splash-stage">
+                        <!-- Kinetic Impact Spark & Shockwave Burst -->
+                        <div class="splash-impact-burst" id="splash-impact-burst"></div>
 
-                        <!-- Outer Solar Corona Glow Aura -->
-                        <div class="splash-corona-aura"></div>
-
-                        <!-- Round Circular Logo Stellar Capsule -->
-                        <div class="splash-logo-circle">
+                        <!-- 1. The Circular Setting for the Logo -->
+                        <div class="splash-logo-setting" id="splash-logo-setting">
+                            <div class="splash-logo-bezel"></div>
                             <img src="assets/logo.svg" alt="Alumungandr Logo" class="splash-logo" />
+                        </div>
+
+                        <!-- 2. The Logo-Sized Rolling 3D Dyson Sphere Actor -->
+                        <div class="splash-dyson-actor" id="splash-dyson-actor">
+                            <div class="dyson-actor-core"></div>
+                            <!-- 3D Rotating Orbital Containment Rings -->
+                            <div class="dyson-ring dyson-ring-alpha">
+                                <span class="dyson-node node-1"></span>
+                                <span class="dyson-node node-2"></span>
+                            </div>
+                            <div class="dyson-ring dyson-ring-beta">
+                                <span class="dyson-node node-3"></span>
+                                <span class="dyson-node node-4"></span>
+                            </div>
+                            <div class="dyson-ring dyson-ring-gamma">
+                                <span class="dyson-node node-5"></span>
+                            </div>
+                            <!-- Outer Solar Corona Glow Aura -->
+                            <div class="splash-corona-aura"></div>
                         </div>
                     </div>
 
@@ -731,11 +738,10 @@
                         <div class="settings-section">
                             <div class="settings-section-title">📖 TEXT READABILITY & TYPOGRAPHY</div>
                             <div class="settings-btn-group" id="font-scale-options">
-                                <button class="font-choice-btn active" data-font="standard">RETRO PIXEL (STANDARD)</button>
-                                <button class="font-choice-btn" data-font="large">CLEAR & LEGIBLE (LARGE)</button>
+                                <button class="font-choice-btn active" data-font="large" style="width: 100%; pointer-events: none;">CLEAR & LEGIBLE (LARGE - ACTIVE)</button>
                             </div>
                             <div class="font-preview-box" id="font-preview-box">
-                                <span class="preview-tag">LIVE PREVIEW:</span> The Living Runic Matrix is synchronized. [HP 140 / 140]
+                                <span class="preview-tag">[CLEAR & LEGIBLE ACTIVE]:</span> The Living Runic Matrix is synchronized. [HP 140 / 140]
                             </div>
                         </div>
 

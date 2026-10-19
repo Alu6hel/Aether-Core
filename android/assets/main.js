@@ -98,6 +98,16 @@ class GameApp {
             if (savedAch) this.achievementsClaimed = JSON.parse(savedAch);
             const savedRemains = localStorage.getItem('aether_remains_opened');
             if (savedRemains !== null) this.remainsOpenedCount = parseInt(savedRemains, 10);
+            const savedBoss = localStorage.getItem('aether_boss_slain');
+            if (savedBoss !== null) this.bossSlainCount = parseInt(savedBoss, 10);
+            const savedCores = localStorage.getItem('aether_cores_extracted');
+            if (savedCores !== null) this.coresExtractedCount = parseInt(savedCores, 10);
+            const savedJumps = localStorage.getItem('aether_elevation_jumps');
+            if (savedJumps !== null) this.elevationJumpsCount = parseInt(savedJumps, 10);
+            const savedParries = localStorage.getItem('aether_combat_parries');
+            if (savedParries !== null) this.combatParriesCount = parseInt(savedParries, 10);
+            const savedCrafts = localStorage.getItem('aether_crafted_items');
+            if (savedCrafts !== null) this.craftedItemsCount = parseInt(savedCrafts, 10);
         } catch (e) {
             console.warn("Could not load hub storage:", e);
         }
@@ -140,8 +150,7 @@ class GameApp {
         try {
             const savedScale = localStorage.getItem('aether_btn_scale') || '1.0';
             this.setButtonScale(savedScale);
-            const savedFont = localStorage.getItem('aether_font_mode') || 'standard';
-            this.setFontMode(savedFont);
+            this.setFontMode('large');
         } catch (e) {
             console.warn("Could not load settings:", e);
         }
@@ -162,23 +171,16 @@ class GameApp {
         });
     }
 
-    setFontMode(mode) {
-        this.fontMode = mode;
-        const isLarge = (mode === 'large');
-        if (isLarge) {
-            document.body.classList.add('font-mode-large');
-            document.documentElement.classList.add('font-mode-large');
-            document.documentElement.style.setProperty('--ui-font-scale', '1.25');
-        } else {
-            document.body.classList.remove('font-mode-large');
-            document.documentElement.classList.remove('font-mode-large');
-            document.documentElement.style.setProperty('--ui-font-scale', '1.0');
-        }
+    setFontMode(mode = 'large') {
+        this.fontMode = 'large';
+        document.body.classList.add('font-mode-large');
+        document.documentElement.classList.add('font-mode-large');
+        document.documentElement.style.setProperty('--ui-font-scale', '1.25');
         try {
-            localStorage.setItem('aether_font_mode', mode);
+            localStorage.setItem('aether_font_mode', 'large');
         } catch (e) {}
         document.querySelectorAll('.font-choice-btn').forEach(b => {
-            if (b.getAttribute('data-font') === mode) {
+            if (b.getAttribute('data-font') === 'large') {
                 b.classList.add('active');
             } else {
                 b.classList.remove('active');
@@ -186,11 +188,7 @@ class GameApp {
         });
         const previewBox = document.getElementById('font-preview-box');
         if (previewBox) {
-            if (isLarge) {
-                previewBox.innerHTML = '<span class="preview-tag">[CLEAR & LEGIBLE ACTIVE]:</span> The Living Runic Matrix is synchronized. [HP 140 / 140]';
-            } else {
-                previewBox.innerHTML = '<span class="preview-tag">[RETRO PIXEL ACTIVE]:</span> The Living Runic Matrix is synchronized. [HP 140 / 140]';
-            }
+            previewBox.innerHTML = '<span class="preview-tag">[CLEAR & LEGIBLE ACTIVE]:</span> The Living Runic Matrix is synchronized. [HP 140 / 140]';
         }
     }
 
@@ -368,12 +366,12 @@ class GameApp {
         const DURATION = 6660; // Exactly 6.66 seconds as requested
 
         const stages = [
-            { t: 0.00, msg: 'INITIALIZING LIVING MATRIX ENGINE...' },
-            { t: 0.18, msg: 'DEPLOYING DYSON SPHERE ENERGY COLLECTORS...' },
-            { t: 0.36, msg: 'HARMONIZING STELLAR ORBITAL RINGS...' },
-            { t: 0.54, msg: 'CONVERGING RUNIC MONOLITH CONDUITS...' },
-            { t: 0.72, msg: 'ESTABLISHING CHRONO-LINK & PIONEER MATRIX...' },
-            { t: 0.88, msg: 'DYSON CORE MAXIMUM OUTPUT ACHIEVED...' },
+            { t: 0.00, msg: 'INITIALIZING ALUMUNGANDR CORE VECTOR...' },
+            { t: 0.15, msg: 'DYSON SPHERE ROLLING INTO STELLAR ORBIT...' },
+            { t: 0.35, msg: 'CRITICAL KINETIC IMPACT & LOGO RESONANCE...' },
+            { t: 0.55, msg: 'ORBITAL RICOCHET & CONFINEMENT HARMONICS...' },
+            { t: 0.75, msg: 'CONVERGING RUNIC MONOLITH CONDUITS...' },
+            { t: 0.90, msg: 'DYSON MATRIX LOCKED & STABILIZED...' },
             { t: 0.98, msg: 'EXPEDITION READY [SYSTEM ONLINE]' }
         ];
 
@@ -1072,7 +1070,11 @@ class GameApp {
                 target: 3,
                 current: () => (this.elevationJumpsCount || 0),
                 rewardText: '+100 Gold, 1 Core',
-                reward: () => { this.addCoins(100); this.coresExtractedCount = (this.coresExtractedCount || 0) + 1; }
+                reward: () => { 
+                    this.addCoins(100); 
+                    this.coresExtractedCount = (this.coresExtractedCount || 0) + 1;
+                    try { localStorage.setItem('aether_cores_extracted', this.coresExtractedCount); } catch (e) {}
+                }
             },
             {
                 id: 'nine_sols_master',
@@ -1102,7 +1104,11 @@ class GameApp {
                 target: 1,
                 current: () => (this.remainsOpenedCount || 0),
                 rewardText: '+100 Gold, 1 Core',
-                reward: () => { this.addCoins(100); this.coresExtractedCount = (this.coresExtractedCount || 0) + 1; }
+                reward: () => { 
+                    this.addCoins(100); 
+                    this.coresExtractedCount = (this.coresExtractedCount || 0) + 1;
+                    try { localStorage.setItem('aether_cores_extracted', this.coresExtractedCount); } catch (e) {}
+                }
             },
             {
                 id: 'world_cartographer',
@@ -1210,6 +1216,8 @@ class GameApp {
         this.achievementsClaimed[achId] = true;
         try {
             localStorage.setItem('aether_achievements_claimed', JSON.stringify(this.achievementsClaimed));
+            localStorage.setItem('aether_cores_extracted', this.coresExtractedCount || 0);
+            localStorage.setItem('aether_star_tokens', this.starTokens || 0);
         } catch (e) {}
 
         if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playItemObtained();
@@ -1440,6 +1448,7 @@ class GameApp {
                 const res = this.player.inventory.craftItem(recipe.id, this.player);
                 if (res.success) {
                     this.craftedItemsCount = (this.craftedItemsCount || 0) + 1;
+                    try { localStorage.setItem('aether_crafted_items', this.craftedItemsCount); } catch (e) {}
                     if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playItemObtained();
                     this.renderer.addFloatingText(`+${recipe.resultCount || 1} ${recipe.name}`, this.player.pos.x, this.player.pos.y - 14, '#81c784');
                     if (infoPanel) infoPanel.innerText = `Crafted ${recipe.name}! ${recipe.desc}`;
@@ -1583,6 +1592,7 @@ class GameApp {
         // Create player at map spawn
         this.player = new Character(this.selectedClass, this.currentMap.spawnPoint.x, this.currentMap.spawnPoint.y);
         this.player.callsign = this.pioneerName || 'ALU-01';
+        this.player.game = this;
         
         // Update header ticker info
         const hubTickerInfo = document.getElementById('hub-ticker-info');
@@ -2998,6 +3008,7 @@ class GameApp {
         const didJump = this.player.jump();
         if (didJump) {
             this.elevationJumpsCount = (this.elevationJumpsCount || 0) + 1;
+            try { localStorage.setItem('aether_elevation_jumps', this.elevationJumpsCount); } catch (e) {}
             if (this.soundEnabled && this.sfxEnabled && this.renderer && this.renderer.audio) {
                 this.renderer.audio.playJump();
             }
@@ -3509,6 +3520,7 @@ class GameApp {
                 const res = player.takeDamage(enemy.attackDamage, true);
                 if (res.parried && this.soundEnabled && this.sfxEnabled) {
                     this.combatParriesCount = (this.combatParriesCount || 0) + 1;
+                    try { localStorage.setItem('aether_combat_parries', this.combatParriesCount); } catch (e) {}
                     this.renderer.audio.playParry();
                     // Knock enemy back on successful parry
                     enemy.x -= (player.facing.x) * 32;

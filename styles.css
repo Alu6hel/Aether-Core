@@ -1257,53 +1257,115 @@ body, html {
     to { opacity: 1; transform: scale(1); }
 }
 
-/* Animated 3D Dyson Sphere Megastructure */
-.splash-dyson-sphere {
+/* ==========================================================================
+   CINEMATIC ROLLING DYSON SPHERE & CIRCULAR LOGO SETTING (6.66s IMPACT)
+   ========================================================================== */
+.splash-stage {
     position: relative;
-    width: 170px;
-    height: 170px;
+    width: 320px;
+    height: 160px;
     display: flex;
     justify-content: center;
     align-items: center;
     margin-bottom: 16px;
-    perspective: 900px;
+    perspective: 1000px;
+    overflow: visible;
 }
 
-/* Round Circular Stellar Capsule (User Requirement) */
-.splash-logo-circle {
+/* 1. Distinct Circular Setting for Company Logo (User Requirement) */
+.splash-logo-setting {
     position: relative;
     width: 104px;
     height: 104px;
     border-radius: 50%;
-    background: radial-gradient(circle, #0c1a29 0%, #050910 100%);
-    border: 3px solid #00e5ff;
+    background: radial-gradient(circle at center, #0e1e30 0%, #060b14 75%, #020408 100%);
+    border: 3.5px solid #00e5ff;
     box-shadow: 
-        0 0 24px rgba(0, 229, 255, 0.8),
+        0 0 24px rgba(0, 229, 255, 0.85),
         0 0 45px rgba(255, 213, 79, 0.35),
         inset 0 0 16px rgba(0, 229, 255, 0.45);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 5;
-    overflow: hidden;
-    animation: splashLogoPulse 3s ease-in-out infinite;
+    animation: logoImpactRecoil 6.66s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.splash-logo-bezel {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1px dashed rgba(255, 213, 79, 0.65);
+    animation: bezelSpin 12s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes bezelSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 .splash-logo {
-    width: 76px;
-    height: 76px;
+    width: 72px;
+    height: 72px;
     object-fit: contain;
-    filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.8));
+    filter: drop-shadow(0 0 12px rgba(0, 229, 255, 0.9));
     z-index: 6;
 }
 
-/* Pulsing Solar Corona Aura */
+/* 2. Logo-Sized Rolling 3D Dyson Sphere Actor (User Requirement) */
+.splash-dyson-actor {
+    position: absolute;
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    pointer-events: none;
+    transform-style: preserve-3d;
+    animation: dysonRollAndKnock 6.66s cubic-bezier(0.2, 0.85, 0.32, 1.05) forwards;
+}
+
+.dyson-actor-core {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0%, #ffd54f 35%, #ff6f00 70%, #d84315 95%);
+    box-shadow: 
+        0 0 22px #ffd54f,
+        0 0 44px rgba(255, 152, 0, 0.85),
+        inset 0 0 10px #ffffff;
+    animation: corePulse 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes corePulse {
+    0% { transform: scale(0.92); filter: brightness(1.0); }
+    100% { transform: scale(1.1); filter: brightness(1.25); }
+}
+
+/* 3. Kinetic Impact Spark & Shockwave Burst */
+.splash-impact-burst {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0%, #00e5ff 45%, rgba(255, 213, 79, 0.85) 75%, transparent 100%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 15;
+    animation: impactBurst 6.66s ease-out forwards;
+}
+
+/* Outer Solar Corona Glow Aura */
 .splash-corona-aura {
     position: absolute;
-    width: 138px;
-    height: 138px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(0, 229, 255, 0.35) 0%, rgba(255, 213, 79, 0.2) 48%, transparent 75%);
+    background: radial-gradient(circle, rgba(0, 229, 255, 0.35) 0%, rgba(255, 213, 79, 0.2) 50%, transparent 75%);
     animation: dysonCoronaPulse 2.4s ease-in-out infinite alternate;
     z-index: 2;
     pointer-events: none;
@@ -1318,46 +1380,46 @@ body, html {
 }
 
 .dyson-ring-alpha {
-    width: 150px;
-    height: 150px;
-    border: 2px dashed rgba(0, 229, 255, 0.75);
-    box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
-    animation: dysonSpinAlpha 7s linear infinite;
+    width: 126px;
+    height: 126px;
+    border: 2px dashed rgba(0, 229, 255, 0.85);
+    box-shadow: 0 0 14px rgba(0, 229, 255, 0.5);
+    animation: dysonSpinAlpha 6s linear infinite;
     z-index: 4;
 }
 
 .dyson-ring-beta {
-    width: 168px;
-    height: 168px;
-    border: 2px dotted rgba(255, 213, 79, 0.7);
-    box-shadow: 0 0 14px rgba(255, 213, 79, 0.35);
-    animation: dysonSpinBeta 9.5s linear infinite reverse;
+    width: 140px;
+    height: 140px;
+    border: 2px dotted rgba(255, 213, 79, 0.8);
+    box-shadow: 0 0 16px rgba(255, 213, 79, 0.4);
+    animation: dysonSpinBeta 8.5s linear infinite reverse;
     z-index: 3;
 }
 
 .dyson-ring-gamma {
-    width: 132px;
-    height: 132px;
-    border: 1.5px solid rgba(0, 229, 255, 0.55);
-    box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
-    animation: dysonSpinGamma 5.5s linear infinite;
+    width: 114px;
+    height: 114px;
+    border: 1.5px solid rgba(0, 229, 255, 0.65);
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.35);
+    animation: dysonSpinGamma 5s linear infinite;
     z-index: 4;
 }
 
 /* Orbiting Photovoltaic Energy Nodes */
 .dyson-node {
     position: absolute;
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: #ffffff;
     box-shadow: 0 0 10px #00e5ff, 0 0 16px #ffd54f;
 }
 
-.node-1 { top: -3px; left: 50%; transform: translateX(-50%); }
-.node-2 { bottom: -3px; left: 50%; transform: translateX(-50%); }
-.node-3 { top: 50%; left: -3px; transform: translateY(-50%); }
-.node-4 { top: 50%; right: -3px; transform: translateY(-50%); }
+.node-1 { top: -4px; left: 50%; transform: translateX(-50%); }
+.node-2 { bottom: -4px; left: 50%; transform: translateX(-50%); }
+.node-3 { top: 50%; left: -4px; transform: translateY(-50%); }
+.node-4 { top: 50%; right: -4px; transform: translateY(-50%); }
 .node-5 { top: 12px; right: 18px; }
 
 @keyframes dysonSpinAlpha {
@@ -1379,6 +1441,109 @@ body, html {
     0% { transform: scale(0.9); opacity: 0.5; }
     50% { transform: scale(1.18); opacity: 0.95; }
     100% { transform: scale(0.9); opacity: 0.5; }
+}
+
+/* Dynamic Rolling, Knocking, & Rebound Keyframes */
+@keyframes dysonRollAndKnock {
+    /* 0s: Starts rolling in from off-screen left */
+    0% {
+        transform: translate(-300px, -45px) rotate(-1080deg) scale(0.85);
+        opacity: 0;
+    }
+    4% {
+        opacity: 1;
+    }
+    /* 18% (approx 1.2s): Accelerating along the approach path */
+    18% {
+        transform: translate(-120px, 10px) rotate(-480deg) scale(0.96);
+    }
+    /* 21.5% (approx 1.43s): DIRECT HIT into the circular logo setting */
+    21.5% {
+        transform: translate(-42px, 0px) rotate(0deg) scale(1.08);
+    }
+    /* 25%: Violent kinetic rebound bouncing up and back */
+    25% {
+        transform: translate(-100px, -70px) rotate(160deg) scale(0.92);
+    }
+    /* 35%: Knocks around across top towards the upper-right */
+    35% {
+        transform: translate(95px, -55px) rotate(420deg) scale(0.95);
+    }
+    /* 46%: Ricochets off right flank, swooping down behind the logo */
+    46% {
+        transform: translate(65px, 50px) rotate(700deg) scale(1.05);
+    }
+    /* 58%: Sweeps underneath the logo setting to the bottom-left */
+    58% {
+        transform: translate(-70px, 40px) rotate(940deg) scale(0.98);
+    }
+    /* 68%: Decelerates and locks into concentric cosmic containment orbit */
+    68% {
+        transform: translate(0px, 0px) rotate(1200deg) scale(1.0);
+    }
+    /* 85% - 100%: Orbital synchronization and harmonic matrix lock */
+    85% {
+        transform: translate(0px, 0px) rotate(1380deg) scale(1.02);
+    }
+    100% {
+        transform: translate(0px, 0px) rotate(1540deg) scale(1.0);
+    }
+}
+
+@keyframes logoImpactRecoil {
+    /* 0% - 20%: Sitting calmly in the center */
+    0%, 20% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+    }
+    /* 21.5% (t = 1.43s): Direct impact shock recoil! Knocked violently right */
+    21.5% {
+        transform: translate(32px, -6px) rotate(16deg) scale(0.93);
+        box-shadow: 0 0 35px #00e5ff, 0 0 60px #ffd54f, inset 0 0 25px #ffffff;
+    }
+    /* 25%: Elastic counter-rebound */
+    25% {
+        transform: translate(-16px, 4px) rotate(-8deg) scale(1.05);
+    }
+    /* 29%: Secondary harmonic wobble */
+    29% {
+        transform: translate(8px, -2px) rotate(3deg) scale(0.98);
+    }
+    /* 36%: Settles firmly back into center as the sphere knocks around */
+    36% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+    }
+    /* 68% - 100%: Living harmonic matrix synchronization with the sphere */
+    68% {
+        box-shadow: 0 0 28px rgba(0, 229, 255, 0.9), 0 0 50px rgba(255, 213, 79, 0.4);
+    }
+    100% {
+        transform: translate(0, 0) rotate(0deg) scale(1.0);
+        box-shadow: 0 0 34px rgba(0, 229, 255, 1.0), 0 0 55px rgba(255, 213, 79, 0.5);
+    }
+}
+
+@keyframes impactBurst {
+    0%, 20% {
+        opacity: 0;
+        transform: scale(0.1);
+    }
+    21.5% {
+        opacity: 1;
+        transform: scale(0.6);
+        box-shadow: 0 0 30px #ffffff, 0 0 60px #00e5ff, 0 0 90px #ffd54f;
+    }
+    24% {
+        opacity: 0.9;
+        transform: scale(1.6);
+        box-shadow: 0 0 50px #00e5ff, 0 0 80px #ffd54f;
+    }
+    28% {
+        opacity: 0;
+        transform: scale(2.2);
+    }
+    100% {
+        opacity: 0;
+    }
 }
 
 .splash-brand-title {
@@ -2241,17 +2406,45 @@ body, html {
    ACHIEVEMENTS MODAL (IMAGE 4)
    ========================================================================== */
 .achievements-modal-content {
-    max-width: 600px;
+    max-width: 760px;
     width: 95%;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 18px 20px 18px;
+    box-sizing: border-box;
 }
 
 .achievements-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-height: 55vh;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px;
+    flex: 1 1 auto;
+    max-height: calc(88vh - 75px);
     overflow-y: auto;
-    padding: 2px;
+    overflow-x: hidden;
+    padding: 4px 6px 36px 4px;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: #00e5ff #101518;
+}
+
+.achievements-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.achievements-list::-webkit-scrollbar-track {
+    background: #101518;
+    border-radius: 4px;
+}
+
+.achievements-list::-webkit-scrollbar-thumb {
+    background: #00e5ff;
+    border-radius: 4px;
+}
+
+.achievements-list::-webkit-scrollbar-thumb:hover {
+    background: #40efff;
 }
 
 .achievement-card {
@@ -2262,18 +2455,21 @@ body, html {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
     box-shadow: inset 1px 1px 0 rgba(255,255,255,0.05), 0 2px 6px rgba(0,0,0,0.5);
     transition: border-color 0.12s;
+    box-sizing: border-box;
+    min-height: 74px;
 }
 
 .achievement-card.completed {
     border-color: #00e5ff;
+    box-shadow: inset 1px 1px 0 rgba(255,255,255,0.05), 0 0 10px rgba(0, 229, 255, 0.25);
 }
 
 .achievement-card.claimed {
     border-color: #2e7d32;
-    opacity: 0.8;
+    opacity: 0.85;
 }
 
 .ach-left {
@@ -2284,7 +2480,16 @@ body, html {
 }
 
 .ach-icon-frame {
-    font-size: 24px;
+    font-size: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    flex-shrink: 0;
 }
 
 .ach-info {
@@ -2295,29 +2500,30 @@ body, html {
 }
 
 .ach-title {
-    font-size: 8px;
+    font-size: 13px !important;
+    font-weight: 700 !important;
     color: #ffffff;
-    font-weight: bold;
+    letter-spacing: 0.3px;
 }
 
 .ach-desc {
-    font-size: 6px;
-    color: #90a4ae;
-    line-height: 1.3;
+    font-size: 11px !important;
+    color: #b0bec5;
+    line-height: 1.35 !important;
 }
 
 .ach-progress-row {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 2px;
+    margin-top: 3px;
 }
 
 .ach-progress-track {
     flex: 1;
-    height: 6px;
+    height: 7px;
     background: #263238;
-    border-radius: 3px;
+    border-radius: 4px;
     overflow: hidden;
 }
 
@@ -2328,15 +2534,18 @@ body, html {
 }
 
 .ach-progress-text {
-    font-size: 6px;
+    font-size: 10.5px !important;
+    font-weight: 700;
     color: #cfd8dc;
 }
 
 .ach-reward-badge {
-    font-size: 6px;
+    font-size: 10.5px !important;
+    font-weight: 700;
     color: #ffd54f;
-    background: rgba(255, 213, 79, 0.15);
-    padding: 3px 6px;
+    background: rgba(255, 213, 79, 0.18);
+    border: 1px solid rgba(255, 213, 79, 0.35);
+    padding: 3px 8px;
     border-radius: 4px;
     white-space: nowrap;
 }
@@ -2345,9 +2554,11 @@ body, html {
     background: #1e2a38;
     border: 2px solid #00e5ff;
     color: #00e5ff;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 6.5px;
-    padding: 6px 10px;
+    font-family: 'JetBrains Mono', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px;
+    padding: 6px 12px;
     border-radius: 6px;
     cursor: pointer;
     white-space: nowrap;
@@ -2361,7 +2572,7 @@ body, html {
 
 .ach-claim-btn:disabled {
     border-color: #455a64;
-    color: #546e7a;
+    color: #78909c;
     background: #141b24;
     cursor: not-allowed;
 }
@@ -3282,7 +3493,8 @@ body.font-mode-large .scale-choice-btn,
 body.font-mode-large .font-choice-btn,
 body.font-mode-large .slot-action-btn,
 body.font-mode-large .shop-buy-btn,
-body.font-mode-large .achievement-claim-btn {
+body.font-mode-large .achievement-claim-btn,
+body.font-mode-large .ach-claim-btn {
     font-size: 12px !important;
     font-weight: 700 !important;
 }
@@ -3311,6 +3523,9 @@ body.font-mode-large .record-label,
 body.font-mode-large .record-value,
 body.font-mode-large .achievement-title,
 body.font-mode-large .achievement-desc,
+body.font-mode-large .ach-title,
+body.font-mode-large .ach-desc,
+body.font-mode-large .ach-progress-text,
 body.font-mode-large .shop-item-name,
 body.font-mode-large .shop-item-desc,
 body.font-mode-large .slot-title,
@@ -3392,14 +3607,16 @@ body.font-mode-large .font-preview-box {
     }
 
     .achievements-modal-content {
-        max-width: 660px;
+        max-width: 760px;
+        max-height: 88vh;
     }
 
     .achievements-list {
         display: grid !important;
         grid-template-columns: repeat(2, 1fr) !important;
-        gap: 6px;
-        max-height: 56vh;
+        gap: 8px;
+        max-height: calc(88vh - 75px);
+        padding-bottom: 36px;
     }
 
     .save-slots-grid {
