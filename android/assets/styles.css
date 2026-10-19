@@ -1257,31 +1257,128 @@ body, html {
     to { opacity: 1; transform: scale(1); }
 }
 
-.splash-logo-frame {
+/* Animated 3D Dyson Sphere Megastructure */
+.splash-dyson-sphere {
     position: relative;
-    width: 140px;
-    height: 110px;
+    width: 170px;
+    height: 170px;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
+    perspective: 900px;
+}
+
+/* Round Circular Stellar Capsule (User Requirement) */
+.splash-logo-circle {
+    position: relative;
+    width: 104px;
+    height: 104px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #0c1a29 0%, #050910 100%);
+    border: 3px solid #00e5ff;
+    box-shadow: 
+        0 0 24px rgba(0, 229, 255, 0.8),
+        0 0 45px rgba(255, 213, 79, 0.35),
+        inset 0 0 16px rgba(0, 229, 255, 0.45);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 5;
+    overflow: hidden;
+    animation: splashLogoPulse 3s ease-in-out infinite;
 }
 
 .splash-logo {
-    width: 130px;
-    height: 100px;
-    filter: drop-shadow(0 0 15px rgba(0, 229, 255, 0.75)) drop-shadow(0 0 30px rgba(255, 213, 79, 0.4));
-    animation: splashLogoPulse 3s ease-in-out infinite;
-    z-index: 2;
+    width: 76px;
+    height: 76px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.8));
+    z-index: 6;
 }
 
-.splash-logo-glow {
+/* Pulsing Solar Corona Aura */
+.splash-corona-aura {
     position: absolute;
-    width: 160px;
-    height: 120px;
-    background: radial-gradient(circle, rgba(0, 229, 255, 0.25) 0%, rgba(255, 213, 79, 0.15) 45%, transparent 70%);
+    width: 138px;
+    height: 138px;
     border-radius: 50%;
-    animation: splashGlowPulse 2.5s ease-in-out infinite alternate;
+    background: radial-gradient(circle, rgba(0, 229, 255, 0.35) 0%, rgba(255, 213, 79, 0.2) 48%, transparent 75%);
+    animation: dysonCoronaPulse 2.4s ease-in-out infinite alternate;
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* 3D Rotating Dyson Orbital Rings */
+.dyson-ring {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    transform-style: preserve-3d;
+}
+
+.dyson-ring-alpha {
+    width: 150px;
+    height: 150px;
+    border: 2px dashed rgba(0, 229, 255, 0.75);
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
+    animation: dysonSpinAlpha 7s linear infinite;
+    z-index: 4;
+}
+
+.dyson-ring-beta {
+    width: 168px;
+    height: 168px;
+    border: 2px dotted rgba(255, 213, 79, 0.7);
+    box-shadow: 0 0 14px rgba(255, 213, 79, 0.35);
+    animation: dysonSpinBeta 9.5s linear infinite reverse;
+    z-index: 3;
+}
+
+.dyson-ring-gamma {
+    width: 132px;
+    height: 132px;
+    border: 1.5px solid rgba(0, 229, 255, 0.55);
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+    animation: dysonSpinGamma 5.5s linear infinite;
+    z-index: 4;
+}
+
+/* Orbiting Photovoltaic Energy Nodes */
+.dyson-node {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 0 10px #00e5ff, 0 0 16px #ffd54f;
+}
+
+.node-1 { top: -3px; left: 50%; transform: translateX(-50%); }
+.node-2 { bottom: -3px; left: 50%; transform: translateX(-50%); }
+.node-3 { top: 50%; left: -3px; transform: translateY(-50%); }
+.node-4 { top: 50%; right: -3px; transform: translateY(-50%); }
+.node-5 { top: 12px; right: 18px; }
+
+@keyframes dysonSpinAlpha {
+    from { transform: rotateX(65deg) rotateY(25deg) rotateZ(0deg); }
+    to { transform: rotateX(65deg) rotateY(25deg) rotateZ(360deg); }
+}
+
+@keyframes dysonSpinBeta {
+    from { transform: rotateX(30deg) rotateY(70deg) rotateZ(0deg); }
+    to { transform: rotateX(30deg) rotateY(70deg) rotateZ(360deg); }
+}
+
+@keyframes dysonSpinGamma {
+    from { transform: rotateX(82deg) rotateZ(0deg); }
+    to { transform: rotateX(82deg) rotateZ(360deg); }
+}
+
+@keyframes dysonCoronaPulse {
+    0% { transform: scale(0.9); opacity: 0.5; }
+    50% { transform: scale(1.18); opacity: 0.95; }
+    100% { transform: scale(0.9); opacity: 0.5; }
 }
 
 .splash-brand-title {
@@ -3130,31 +3227,103 @@ body, html {
 }
 
 /* ==========================================================================
-   Large & Legible Font Mode (High Contrast Accessibility)
+   Typography Controls & Large Legible Font Mode (Accessibility)
    ========================================================================== */
-body.font-mode-large {
-    --ui-font-scale: 1.18;
+.font-preview-box {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: rgba(10, 16, 24, 0.95);
+    border: 1.5px solid #2d4054;
+    border-radius: 6px;
+    font-size: 10px;
+    color: #e0f2f1;
+    line-height: 1.5;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+    transition: all 0.2s ease;
 }
 
-body.font-mode-large .guide-text {
+.font-preview-box .preview-tag {
+    color: #00e5ff;
+    font-weight: bold;
+    margin-right: 6px;
+}
+
+/* When Clear & Legible Mode is Active */
+body.font-mode-large,
+html.font-mode-large {
+    --ui-font-scale: 1.25;
+    font-family: 'JetBrains Mono', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    font-size: 13px !important;
+    letter-spacing: 0.2px !important;
+}
+
+body.font-mode-large * {
+    font-family: 'JetBrains Mono', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    letter-spacing: 0.2px !important;
+}
+
+body.font-mode-large .game-title,
+body.font-mode-large .start-game-title {
+    font-size: 20px !important;
+    letter-spacing: 1px !important;
+    font-weight: 800 !important;
+}
+
+body.font-mode-large .modal-title,
+body.font-mode-large .settings-section-title {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+}
+
+body.font-mode-large .gba-btn-sm,
+body.font-mode-large .start-nav-btn,
+body.font-mode-large .scale-choice-btn,
+body.font-mode-large .font-choice-btn,
+body.font-mode-large .slot-action-btn,
+body.font-mode-large .shop-buy-btn,
+body.font-mode-large .achievement-claim-btn {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+}
+
+body.font-mode-large .runic-start-btn {
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    letter-spacing: 1px !important;
+    padding: 14px 28px !important;
+}
+
+body.font-mode-large .nav-label {
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+}
+
+body.font-mode-large .stat-val,
+body.font-mode-large .shield-label,
+body.font-mode-large .shield-badge {
     font-size: 11px !important;
+    font-weight: 700 !important;
+}
+
+body.font-mode-large .settings-section span,
+body.font-mode-large .record-label,
+body.font-mode-large .record-value,
+body.font-mode-large .achievement-title,
+body.font-mode-large .achievement-desc,
+body.font-mode-large .shop-item-name,
+body.font-mode-large .shop-item-desc,
+body.font-mode-large .slot-title,
+body.font-mode-large .slot-desc,
+body.font-mode-large .currency-info-text {
+    font-size: 12px !important;
     line-height: 1.5 !important;
 }
 
-body.font-mode-large .skill-node-desc {
-    font-size: 11px !important;
-    line-height: 1.45 !important;
-}
-
-body.font-mode-large .vital-num, 
-body.font-mode-large .crest-val,
-body.font-mode-large #rustic-area-title {
-    font-size: 9px !important;
-}
-
-body.font-mode-large .quest-title,
-body.font-mode-large .quest-obj {
-    font-size: 9px !important;
+body.font-mode-large .font-preview-box {
+    border-color: #00e5ff;
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.35);
+    font-size: 13px !important;
 }
 
 /* ==========================================================================

@@ -163,11 +163,14 @@ class GameApp {
 
     setFontMode(mode) {
         this.fontMode = mode;
-        if (mode === 'large') {
+        const isLarge = (mode === 'large');
+        if (isLarge) {
             document.body.classList.add('font-mode-large');
-            document.documentElement.style.setProperty('--ui-font-scale', '1.18');
+            document.documentElement.classList.add('font-mode-large');
+            document.documentElement.style.setProperty('--ui-font-scale', '1.25');
         } else {
             document.body.classList.remove('font-mode-large');
+            document.documentElement.classList.remove('font-mode-large');
             document.documentElement.style.setProperty('--ui-font-scale', '1.0');
         }
         try {
@@ -180,6 +183,14 @@ class GameApp {
                 b.classList.remove('active');
             }
         });
+        const previewBox = document.getElementById('font-preview-box');
+        if (previewBox) {
+            if (isLarge) {
+                previewBox.innerHTML = '<span class="preview-tag">[CLEAR & LEGIBLE ACTIVE]:</span> The Living Runic Matrix is synchronized. [HP 140 / 140]';
+            } else {
+                previewBox.innerHTML = '<span class="preview-tag">[RETRO PIXEL ACTIVE]:</span> The Living Runic Matrix is synchronized. [HP 140 / 140]';
+            }
+        }
     }
 
     resizeCanvas() {
@@ -346,13 +357,16 @@ class GameApp {
         const percentText = document.getElementById('splash-percent-text');
 
         const startTime = performance.now();
-        const DURATION = 4000; // 4 seconds exactly as requested
+        const DURATION = 6660; // Exactly 6.66 seconds as requested
 
         const stages = [
-            { t: 0.0, msg: 'INITIALIZING LIVING MATRIX ENGINE...' },
-            { t: 0.25, msg: 'CALIBRATING RUNIC TOTEM HARMONICS...' },
-            { t: 0.55, msg: 'CONNECTING TO CELESTIAL DYSON VAULT...' },
-            { t: 0.85, msg: 'SYNCHRONIZING PIONEER PROTOCOLS... [OK]' }
+            { t: 0.00, msg: 'INITIALIZING LIVING MATRIX ENGINE...' },
+            { t: 0.18, msg: 'DEPLOYING DYSON SPHERE ENERGY COLLECTORS...' },
+            { t: 0.36, msg: 'HARMONIZING STELLAR ORBITAL RINGS...' },
+            { t: 0.54, msg: 'CONVERGING RUNIC MONOLITH CONDUITS...' },
+            { t: 0.72, msg: 'ESTABLISHING CHRONO-LINK & PIONEER MATRIX...' },
+            { t: 0.88, msg: 'DYSON CORE MAXIMUM OUTPUT ACHIEVED...' },
+            { t: 0.98, msg: 'EXPEDITION READY [SYSTEM ONLINE]' }
         ];
 
         let finished = false;
@@ -361,17 +375,20 @@ class GameApp {
             finished = true;
             if (fillBar) fillBar.style.width = '100%';
             if (percentText) percentText.textContent = '100%';
-            if (statusText) statusText.textContent = 'SYSTEM READY [OK]';
+            if (statusText) statusText.textContent = 'EXPEDITION READY [SYSTEM ONLINE]';
 
             if (this.soundEnabled && this.sfxEnabled && this.renderer && this.renderer.audio) {
                 this.renderer.audio.playItemObtained();
             }
 
+            // Immediately activate START_SCREEN so the title screen is revealed behind the fading splash overlay
+            // with zero possibility of showing any in-world gameplay leak
+            this.setGameState('START_SCREEN');
+
             splashContainer.classList.add('fade-out');
             setTimeout(() => {
                 splashContainer.classList.add('hidden');
-                this.setGameState('START_SCREEN');
-            }, 650);
+            }, 700);
         };
 
         const updateFrame = (now) => {
@@ -399,17 +416,7 @@ class GameApp {
         };
 
         requestAnimationFrame(updateFrame);
-
-        // Fast-forward on tap after 1.2s
-        const tapHandler = () => {
-            if (performance.now() - startTime > 1200) {
-                finishSplash();
-                splashContainer.removeEventListener('click', tapHandler);
-                splashContainer.removeEventListener('touchstart', tapHandler);
-            }
-        };
-        splashContainer.addEventListener('click', tapHandler);
-        splashContainer.addEventListener('touchstart', tapHandler, { passive: true });
+        // User Requirement: No tap to skip. The cinematic Dyson sequence runs for the full 6.66 seconds.
     }
 
     setGameState(state) {
@@ -2093,8 +2100,7 @@ class GameApp {
         // Touch Controls Scale buttons
         const scaleButtons = document.querySelectorAll('.scale-choice-btn');
         scaleButtons.forEach(btn => {
-            btn.addEventListener('pointerdown', (e) => {
-                e.preventDefault();
+            this.bindTap(btn, () => {
                 const scale = btn.getAttribute('data-scale');
                 this.setButtonScale(scale);
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
@@ -2104,8 +2110,7 @@ class GameApp {
         // Typography Mode buttons
         const fontButtons = document.querySelectorAll('.font-choice-btn');
         fontButtons.forEach(btn => {
-            btn.addEventListener('pointerdown', (e) => {
-                e.preventDefault();
+            this.bindTap(btn, () => {
                 const fontMode = btn.getAttribute('data-font');
                 this.setFontMode(fontMode);
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
@@ -3525,8 +3530,8 @@ class GameApp {
         const dt = Math.min(0.05, (currentTime - this.lastTime) / 1000.0);
         this.lastTime = currentTime;
 
-        // 0. If in START_SCREEN state: Render atmospheric runic title scene with zero gameplay blur
-        if (this.gameState === 'START_SCREEN') {
+        // 0. If in START_SCREEN or SPLASH state: Render atmospheric runic title scene with zero gameplay leak
+        if (this.gameState === 'START_SCREEN' || this.gameState === 'SPLASH') {
             this.renderer.clear();
             this.renderer.renderTitleBackdrop(dt);
             requestAnimationFrame(this.loop.bind(this));

@@ -118,13 +118,33 @@
                 </div>
             </div>
 
-            <!-- Alumungandr Company Loading / Splash Screen (4-second sequence) -->
+            <!-- Alumungandr Company Loading / Splash Screen (6.66-second cinematic sequence) -->
             <div id="splash-screen-container" class="splash-screen">
                 <div class="splash-content">
-                    <div class="splash-logo-frame">
-                        <img src="assets/logo.svg" alt="Alumungandr Logo" class="splash-logo" />
-                        <div class="splash-logo-glow"></div>
+                    <!-- Animated Dyson Sphere Megastructure & Round Logo Core -->
+                    <div class="splash-dyson-sphere">
+                        <!-- 3D Rotating Orbital Containment Rings -->
+                        <div class="dyson-ring dyson-ring-alpha">
+                            <span class="dyson-node node-1"></span>
+                            <span class="dyson-node node-2"></span>
+                        </div>
+                        <div class="dyson-ring dyson-ring-beta">
+                            <span class="dyson-node node-3"></span>
+                            <span class="dyson-node node-4"></span>
+                        </div>
+                        <div class="dyson-ring dyson-ring-gamma">
+                            <span class="dyson-node node-5"></span>
+                        </div>
+
+                        <!-- Outer Solar Corona Glow Aura -->
+                        <div class="splash-corona-aura"></div>
+
+                        <!-- Round Circular Logo Stellar Capsule -->
+                        <div class="splash-logo-circle">
+                            <img src="assets/logo.svg" alt="Alumungandr Logo" class="splash-logo" />
+                        </div>
                     </div>
+
                     <div class="splash-brand-title">ALUMUNGANDR</div>
                     <div class="splash-brand-subtitle">INTERACTIVE STUDIOS</div>
                     
@@ -136,7 +156,6 @@
                         <div class="splash-status-text" id="splash-status-text">INITIALIZING LIVING MATRIX ENGINE...</div>
                         <div class="splash-percent-text" id="splash-percent-text">0%</div>
                     </div>
-                    <div class="splash-hint-text">TAP SCREEN TO FAST-FORWARD ▶</div>
                 </div>
             </div>
 
@@ -714,6 +733,9 @@
                             <div class="settings-btn-group" id="font-scale-options">
                                 <button class="font-choice-btn active" data-font="standard">RETRO PIXEL (STANDARD)</button>
                                 <button class="font-choice-btn" data-font="large">CLEAR & LEGIBLE (LARGE)</button>
+                            </div>
+                            <div class="font-preview-box" id="font-preview-box">
+                                <span class="preview-tag">LIVE PREVIEW:</span> The Living Runic Matrix is synchronized. [HP 140 / 140]
                             </div>
                         </div>
 
