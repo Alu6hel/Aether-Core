@@ -95,6 +95,7 @@ class KinematicBody {
         this.walkTimer = 0;
         this.isMoving = false;
         this.isSkidding = false;
+        this.isSwimming = false;
     }
 
     jump() {
@@ -125,6 +126,20 @@ class KinematicBody {
     }
 
     update(dt, map) {
+        // Check terrain water state
+        const curTx = Math.floor(this.pos.x / (map ? map.tileSize : 16));
+        const curTy = Math.floor((this.pos.y + 2) / (map ? map.tileSize : 16));
+        const curTile = (map && map.get) ? map.get(curTx, curTy) : null;
+        const inWater = (curTile === 1 || curTile === 2 || curTile === 18); // DEEP_WATER, WATER_FOAM, REEDS_WATER
+
+        if (inWater && this.pos.z <= 2.0) {
+            this.isSwimming = true;
+            this.pos.z = 0; // Buoyancy on surface
+            this.isJumping = false;
+        } else {
+            this.isSwimming = false;
+        }
+
         // Vertical jump physics & gravitational drop
         if (this.isJumping || this.pos.z > 0.001) {
             this.vel.z -= this.gravity * dt;
@@ -135,6 +150,8 @@ class KinematicBody {
                 this.isJumping = false;
             }
         }
+        // Strict ceiling clamp to prevent rocketing into air
+        this.pos.z = Math.max(0, Math.min(48.0, this.pos.z));
 
         // If in DASHING state, maintain high burst speed and glide through obstacles
         if (this.state === 'DASHING') {
@@ -148,8 +165,9 @@ class KinematicBody {
             return;
         }
 
-        // Target velocity based on analog input
-        const targetVel = this.input.clone().scale(this.maxSpeed);
+        // Target velocity based on analog input (reduced speed when swimming)
+        const effectiveMaxSpeed = this.isSwimming ? (this.maxSpeed * 0.60) : this.maxSpeed;
+        const targetVel = this.input.clone().scale(effectiveMaxSpeed);
 
         if (this.isMoving) {
             // Accelerate towards target velocity
@@ -218,10 +236,10 @@ class KinematicBody {
         if (map && map.getElevationAt) {
             const currentElev = map.getElevationAt(this.pos.x, this.pos.y);
             const prevElev = Math.max(startElev, this.groundElevation || 1);
-            if (currentElev < prevElev) {
+            if (currentElev < prevElev && this.pos.z <= 2 && !this.isSwimming) {
                 // Stepped off cliff edge downward! Convert height difference to air z so gravity drops entity smoothly
                 const dropPx = (prevElev - currentElev) * (map.heightStep || 10);
-                this.pos.z += dropPx;
+                this.pos.z = Math.min(24, dropPx);
                 this.isJumping = true;
                 if (this.vel.z > 0) this.vel.z = 0;
             }
@@ -242,6 +260,16 @@ class KinematicBody {
 
         for (let ty = top; ty <= bottom; ty++) {
             for (let tx = left; tx <= right; tx++) {
+                const tile = map.get(tx, ty);
+
+                // FENCE JUMPING: Low split-rail fence can be leapt over if in air (pos.z >= 6)
+                if (tile === 13) { // TILE.FENCE_WOOD
+                    if (this.pos.z >= 6) {
+                        continue; // Cleared fence!
+                    }
+                    return true; // Blocked on ground
+                }
+
                 if (map.isSolid(tx, ty)) {
                     return true;
                 }

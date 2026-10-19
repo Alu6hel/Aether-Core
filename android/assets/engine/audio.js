@@ -83,6 +83,7 @@ class ChiptuneSynth {
 
             osc.start(now);
             osc.stop(now + duration);
+            osc.onended = () => { try { osc.disconnect(); flt.disconnect(); gain.disconnect(); } catch (e) {} };
         } catch (e) {}
     }
 
@@ -113,6 +114,8 @@ class ChiptuneSynth {
 
             osc.start(now);
             osc.stop(now + duration);
+            osc.onended = () => { try { osc.disconnect(); flt.disconnect(); gain.disconnect(); } catch (e) {} };
+            osc.onended = () => { try { osc.disconnect(); flt.disconnect(); gain.disconnect(); } catch (e) {} };
         } catch (e) {}
     }
 
@@ -137,6 +140,7 @@ class ChiptuneSynth {
 
             osc.start(now);
             osc.stop(now + 0.09);
+            osc.onended = () => { try { osc.disconnect(); gain.disconnect(); } catch (e) {} };
         } catch (e) {}
     }
 
@@ -167,7 +171,7 @@ class ChiptuneSynth {
             noise.connect(flt);
             flt.connect(gain);
             gain.connect(this.masterGain);
-
+            noise.onended = () => { try { noise.disconnect(); flt.disconnect(); gain.disconnect(); } catch (e) {} };
             noise.start();
         } catch (e) {}
     }
@@ -198,6 +202,7 @@ class ChiptuneSynth {
 
             noise.connect(gain);
             gain.connect(this.masterGain);
+            noise.onended = () => { try { noise.disconnect(); gain.disconnect(); } catch (e) {} };
             noise.start();
         } catch (e) {}
     }
@@ -222,6 +227,7 @@ class ChiptuneSynth {
             gain.connect(this.masterGain);
             osc.start(now);
             osc.stop(now + 0.025);
+            osc.onended = () => { try { osc.disconnect(); gain.disconnect(); } catch (e) {} };
         } catch(e) {}
     }
 
@@ -274,6 +280,7 @@ class ChiptuneSynth {
             gain.connect(this.masterGain);
             osc.start(now);
             osc.stop(now + 0.12);
+            osc.onended = () => { try { osc.disconnect(); gain.disconnect(); } catch (e) {} };
 
             // 2. High-speed whoosh
             this.playNoise(0.05, 0.04);
@@ -306,6 +313,7 @@ class ChiptuneSynth {
 
             osc.start(now);
             osc.stop(now + 0.16);
+            osc.onended = () => { try { osc.disconnect(); flt.disconnect(); gain.disconnect(); } catch (e) {} };
         } catch(e) {}
     }
 
@@ -334,6 +342,7 @@ class ChiptuneSynth {
 
             osc.start(now);
             osc.stop(now + 0.14);
+            osc.onended = () => { try { osc.disconnect(); flt.disconnect(); gain.disconnect(); } catch (e) {} };
         } catch(e) {}
     }
 
@@ -359,6 +368,7 @@ class ChiptuneSynth {
             bGain.connect(this.masterGain);
             bell.start(now);
             bell.stop(now + 0.28);
+            bell.onended = () => { try { bell.disconnect(); bGain.disconnect(); } catch (e) {} };
 
             // Sub thud
             const thud = this.ctx.createOscillator();
@@ -372,6 +382,7 @@ class ChiptuneSynth {
             tGain.connect(this.masterGain);
             thud.start(now);
             thud.stop(now + 0.14);
+            thud.onended = () => { try { thud.disconnect(); tGain.disconnect(); } catch (e) {} };
         } catch(e) {}
     }
 
@@ -436,6 +447,7 @@ class ChiptuneSynth {
             gain.connect(this.masterGain);
             osc.start(now);
             osc.stop(now + 0.36);
+            osc.onended = () => { try { osc.disconnect(); gain.disconnect(); } catch (e) {} };
         } catch(e) {}
     }
 
@@ -459,6 +471,7 @@ class ChiptuneSynth {
             gain.connect(this.masterGain);
             osc.start(now);
             osc.stop(now + 0.45);
+            osc.onended = () => { try { osc.disconnect(); flt.disconnect(); gain.disconnect(); } catch (e) {} };
         } catch(e) {}
     }
 

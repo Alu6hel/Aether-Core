@@ -1138,9 +1138,9 @@ class GameApp {
             const day = slot.currentDay || 1;
             const gold = slot.coins || 0;
             const drop = typeof getBloodDropSvg === 'function' ? getBloodDropSvg(12) : '';
-            this.showToast(`★ SAVE STAR 0${st.index + 1}: ${pioneerName}\n${cls} • Day ${day} • ${drop} ${gold}\n(Tap SAVE SLOTS to load expedition)`, 'info');
+            this.showToast(`★ SAVE STAR 0${st.index + 1}: ${pioneerName}\n${cls} • Day ${day} • ${drop} ${gold}`, 'info');
         } else {
-            this.showToast(`★ SAVE STAR 0${st.index + 1}: Uncharted Star\n(Tap SAVE SLOTS to embark on a new expedition)`, 'info');
+            this.showToast(`★ SAVE STAR 0${st.index + 1}: Uncharted Star`, 'info');
         }
     }
 
@@ -2483,6 +2483,113 @@ class GameApp {
 
         const btnInventory = document.getElementById('btn-inventory');
         bindAction(btnInventory, () => this.toggleInventory());
+
+        // Multi-touch pinch-to-zoom centered on character anywhere in-game
+        let pinchStartDist = 0;
+        let pinchStartZoom = 1.0;
+
+        window.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                pinchStartDist = Math.hypot(dx, dy);
+                pinchStartZoom = (this.renderer && this.renderer.zoom) ? this.renderer.zoom : 1.0;
+                if (e.cancelable) e.preventDefault();
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && pinchStartDist > 5) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const currentDist = Math.hypot(dx, dy);
+                const ratio = currentDist / pinchStartDist;
+                const newZoom = pinchStartZoom * ratio;
+                if (this.renderer && this.renderer.setZoom) {
+                    this.renderer.setZoom(newZoom);
+                    this.showZoomIndicator(this.renderer.zoom);
+                }
+                if (e.cancelable) e.preventDefault();
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) {
+                pinchStartDist = 0;
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchcancel', () => {
+            pinchStartDist = 0;
+        });
+
+        // Trackpad & Mouse wheel zoom support
+        window.addEventListener('wheel', (e) => {
+            if (this.screens && this.screens.currentScreen === 'GAMEPLAY') {
+                const delta = e.deltaY < 0 ? 0.15 : -0.15;
+                if (this.renderer && this.renderer.setZoom) {
+                    this.renderer.setZoom((this.renderer.zoom || 1.0) + delta);
+                    this.showZoomIndicator(this.renderer.zoom);
+                }
+                if (e.cancelable) e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Keyboard zoom shortcuts (+ / - / 0)
+        window.addEventListener('keydown', (e) => {
+            if (this.screens && this.screens.currentScreen === 'GAMEPLAY') {
+                if (e.key === '=' || e.key === '+') {
+                    if (this.renderer && this.renderer.setZoom) {
+                        this.renderer.setZoom((this.renderer.zoom || 1.0) + 0.25);
+                        this.showZoomIndicator(this.renderer.zoom);
+                    }
+                } else if (e.key === '-' || e.key === '_') {
+                    if (this.renderer && this.renderer.setZoom) {
+                        this.renderer.setZoom((this.renderer.zoom || 1.0) - 0.25);
+                        this.showZoomIndicator(this.renderer.zoom);
+                    }
+                } else if (e.key === '0') {
+                    if (this.renderer && this.renderer.setZoom) {
+                        this.renderer.setZoom(1.0);
+                        this.showZoomIndicator(this.renderer.zoom);
+                    }
+                }
+            }
+        });
+    }
+
+    showZoomIndicator(zoom) {
+        let pill = document.getElementById('zoom-indicator-pill');
+        if (!pill && typeof document !== 'undefined') {
+            pill = document.createElement('div');
+            pill.id = 'zoom-indicator-pill';
+            pill.style.position = 'fixed';
+            pill.style.top = '14px';
+            pill.style.left = '50%';
+            pill.style.transform = 'translateX(-50%)';
+            pill.style.background = 'rgba(10, 15, 26, 0.92)';
+            pill.style.border = '1px solid rgba(0, 229, 255, 0.7)';
+            pill.style.borderRadius = '14px';
+            pill.style.color = '#00e5ff';
+            pill.style.fontFamily = 'monospace';
+            pill.style.fontSize = '12px';
+            pill.style.fontWeight = 'bold';
+            pill.style.padding = '5px 14px';
+            pill.style.letterSpacing = '1px';
+            pill.style.pointerEvents = 'none';
+            pill.style.zIndex = '9999';
+            pill.style.boxShadow = '0 0 12px rgba(0, 229, 255, 0.4)';
+            pill.style.transition = 'opacity 0.25s ease';
+            document.body.appendChild(pill);
+        }
+        if (pill) {
+            pill.innerText = '🔍 ZOOM: ' + zoom.toFixed(1) + 'x';
+            pill.style.opacity = '1';
+            if (this._zoomPillTimer) clearTimeout(this._zoomPillTimer);
+            this._zoomPillTimer = setTimeout(() => {
+                if (pill) pill.style.opacity = '0';
+            }, 1200);
+        }
     }
 
     setupUI() {
@@ -4558,13 +4665,20 @@ class GameApp {
         const enemies = this.currentMap.enemies;
         const player = this.player;
 
+        // Periodic dead enemy cleanup to prevent memory leaks and array bloat
+        if (enemies.length > 25) {
+            this.currentMap.enemies = enemies.filter(e => e.hp > 0);
+        }
+
         const isFrenzy = Boolean(this.isMonsterFrenzy);
         const aggroDist = isFrenzy ? 280 : 140;
 
-        for (const enemy of enemies) {
+        for (const enemy of this.currentMap.enemies) {
             if (enemy.hp <= 0) continue;
+            if (!Number.isFinite(enemy.x) || !Number.isFinite(enemy.y)) continue;
 
             const dist = Math.hypot(player.pos.x - enemy.x, player.pos.y - enemy.y);
+            if (dist < 0.001) continue;
 
             // Aggro AI: Move toward player if in range (buffed speed & aggro during Frenzy)
             if (dist < aggroDist && dist > 14) {
@@ -4779,6 +4893,13 @@ class GameApp {
 
             // 3. Render Pass
             this.renderer.clear();
+            const z = this.renderer.zoom || 1.0;
+            const applyZoom = (z > 1.001);
+            if (applyZoom) {
+                this.renderer.ctx.save();
+                this.renderer.ctx.scale(z, z);
+            }
+
             this.renderer.renderMap(this.currentMap, dt);
             this.renderer.renderEntitiesYSorted(
                 this.currentMap,
@@ -4793,13 +4914,17 @@ class GameApp {
             // 4. Render Day/Night Lighting Mask (Darkness + Torchlight radial aperture)
             this.renderer.renderLighting(this.dayTimer, this.player, Math.round(this.renderer.camera.x), Math.round(this.renderer.camera.y), this.currentMap);
 
+            // 5. Render Floating Loot & Combat Texts
+            this.renderer.renderFloatingTexts(Math.round(this.renderer.camera.x), Math.round(this.renderer.camera.y), dt);
+
+            if (applyZoom) {
+                this.renderer.ctx.restore();
+            }
+
             // 4.5. Render Monster Frenzy Crimson Vignette & HUD Alert when active
             if (this.isMonsterFrenzy && this.renderer && this.renderer.renderFrenzyVignette) {
                 this.renderer.renderFrenzyVignette(dt, 0.85);
             }
-
-            // 5. Render Floating Loot & Combat Texts
-            this.renderer.renderFloatingTexts(Math.round(this.renderer.camera.x), Math.round(this.renderer.camera.y), dt);
 
             // 6. Render Cutscenes & Overlays
             this.renderer.renderDialogue(this.cutscenes);

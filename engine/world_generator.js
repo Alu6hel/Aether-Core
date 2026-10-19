@@ -367,7 +367,6 @@ class WorldMap {
         if (
             t === TILE.CLIFF_LOW ||
             t === TILE.CLIFF_HIGH ||
-            t === TILE.DEEP_WATER ||
             t === TILE.VOID ||
             t === TILE.ANCIENT_TERMINAL ||
             t === TILE.FENCE_WOOD ||

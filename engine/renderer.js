@@ -19,6 +19,9 @@ class RetroRenderer {
         this.width = canvas.width;
         this.height = canvas.height;
         this.camera = { x: 0, y: 0 };
+        this.zoom = 1.0;
+        this.minZoom = 1.0;
+        this.maxZoom = 3.0;
         this.waterAnimTimer = 0;
         this.titleAnimTimer = 0;
         this.floatingTexts = [];
@@ -28,19 +31,27 @@ class RetroRenderer {
         this.ambientParticleArea = null;
     }
 
+    setZoom(val) {
+        this.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, val));
+    }
+
     clear(bgColor = '#0a0a0f') {
         this.ctx.fillStyle = bgColor;
         this.ctx.fillRect(0, 0, this.width, this.height);
     }
 
     updateCamera(playerPos, mapWidth, mapHeight, dt) {
-        const targetX = playerPos.x - this.width / 2;
-        const targetY = playerPos.y - this.height / 2;
+        const z = this.zoom || 1.0;
+        const viewW = this.width / z;
+        const viewH = this.height / z;
+
+        const targetX = playerPos.x - viewW / 2;
+        const targetY = playerPos.y - viewH / 2;
         this.camera.x += (targetX - this.camera.x) * 8.0 * dt;
         this.camera.y += (targetY - this.camera.y) * 8.0 * dt;
 
-        this.camera.x = Math.max(0, Math.min(this.camera.x, mapWidth * 16 - this.width));
-        this.camera.y = Math.max(0, Math.min(this.camera.y, mapHeight * 16 - this.height));
+        this.camera.x = Math.max(0, Math.min(this.camera.x, mapWidth * 16 - viewW));
+        this.camera.y = Math.max(0, Math.min(this.camera.y, mapHeight * 16 - viewH));
     }
 
     renderMap(map, dt) {
@@ -50,10 +61,14 @@ class RetroRenderer {
         const camY = Math.round(this.camera.y);
         const heightStep = map.heightStep || 10;
 
+        const z = this.zoom || 1.0;
+        const viewW = this.width / z;
+        const viewH = this.height / z;
+
         const startCol = Math.max(0, Math.floor(camX / 16) - 1);
-        const endCol = Math.min(map.width - 1, Math.ceil((camX + this.width) / 16) + 1);
+        const endCol = Math.min(map.width - 1, Math.ceil((camX + viewW) / 16) + 1);
         const startRow = Math.max(0, Math.floor(camY / 16) - 3);
-        const endRow = Math.min(map.height - 1, Math.ceil((camY + this.height) / 16) + 3);
+        const endRow = Math.min(map.height - 1, Math.ceil((camY + viewH) / 16) + 3);
 
         for (let y = startRow; y <= endRow; y++) {
             for (let x = startCol; x <= endCol; x++) {
@@ -135,48 +150,57 @@ class RetroRenderer {
                 ctx.fillRect(sx, sy, 16, 16);
                 break;
 
-            case 1: { // DEEP_WATER (Authentic GBA Wavy Ocean)
-                ctx.fillStyle = '#254ba8';
+            case 1: { // DEEP_WATER (Authentic GBA Multi-Layered Wavy Water with Caustics)
+                // Deep aquatic base
+                ctx.fillStyle = '#1c3d8f';
                 ctx.fillRect(sx, sy, 16, 16);
 
-                // Deep water gradient tone
-                ctx.fillStyle = '#1c3b88';
-                ctx.fillRect(sx, sy + 10, 16, 6);
+                // Deep water gradient tone at bottom
+                ctx.fillStyle = '#12265c';
+                ctx.fillRect(sx, sy + 11, 16, 5);
 
-                // Animated wavy water highlights (sinusoidal curves)
-                ctx.fillStyle = '#3f72e5';
-                const waveShift1 = Math.floor(Math.sin(this.waterAnimTimer * 2.5 + tx * 0.7 + ty * 0.5) * 2.5);
-                ctx.fillRect(sx, sy + 3 + waveShift1, 16, 2);
-                ctx.fillRect(sx + 3, sy + 2 + waveShift1, 10, 1);
+                // Multi-frequency sinusoidal animated waves
+                const w1 = Math.floor(Math.sin(this.waterAnimTimer * 2.8 + tx * 0.8 + ty * 0.4) * 2.0);
+                const w2 = Math.floor(Math.cos(this.waterAnimTimer * 2.2 + tx * 0.5 + ty * 0.9) * 2.0);
 
-                ctx.fillStyle = '#5c8df5';
-                const waveShift2 = Math.floor(Math.cos(this.waterAnimTimer * 2.0 + tx * 0.5 + ty * 0.8) * 2.0);
-                ctx.fillRect(sx + 2, sy + 8 + waveShift2, 12, 2);
+                // Mid-tone cerulean wave layer
+                ctx.fillStyle = '#2b62d9';
+                ctx.fillRect(sx, sy + 4 + w1, 16, 2);
+                ctx.fillRect(sx + 3, sy + 3 + w1, 10, 1);
 
-                // Glistening ocean wave crests
-                ctx.fillStyle = '#d4e4ff';
-                const crestTick = Math.floor((this.waterAnimTimer * 3.5 + tx * 3 + ty * 5) % 6);
-                if (crestTick === 0) {
-                    ctx.fillRect(sx + 4, sy + 4 + waveShift1, 3, 1);
-                    ctx.fillRect(sx + 11, sy + 9 + waveShift2, 2, 1);
-                } else if (crestTick === 3) {
-                    ctx.fillRect(sx + 8, sy + 3 + waveShift1, 4, 1);
+                // Vibrant azure caustic ribbons
+                ctx.fillStyle = '#4c8bf5';
+                ctx.fillRect(sx + 2, sy + 9 + w2, 12, 2);
+                ctx.fillRect(sx + 5, sy + 8 + w2, 6, 1);
+
+                // Crystalline specular wave glints
+                const crestTime = Math.floor((this.waterAnimTimer * 4.0 + tx * 3 + ty * 5) % 7);
+                if (crestTime === 0) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(sx + 4, sy + 4 + w1, 3, 1);
+                    ctx.fillStyle = '#bae6fd';
+                    ctx.fillRect(sx + 3, sy + 5 + w1, 5, 1);
+                } else if (crestTime === 3) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(sx + 9, sy + 9 + w2, 4, 1);
+                    ctx.fillStyle = '#bae6fd';
+                    ctx.fillRect(sx + 8, sy + 10 + w2, 6, 1);
                 }
                 break;
             }
 
             case 2: { // WATER_FOAM (Shoreline with organic curved froth & sand pebbles)
-                ctx.fillStyle = '#254ba8';
+                ctx.fillStyle = '#1c3d8f';
                 ctx.fillRect(sx, sy, 16, 16);
 
                 // Coastal turquoise shelf
-                ctx.fillStyle = '#3884c7';
+                ctx.fillStyle = '#0284c7';
                 ctx.fillRect(sx, sy, 16, 10);
-                ctx.fillStyle = '#4fa9e2';
+                ctx.fillStyle = '#38bdf8';
                 ctx.fillRect(sx, sy, 16, 5);
 
                 // Organic animated foam crests (pulsing surge)
-                const surge = Math.floor(Math.sin(this.waterAnimTimer * 3.0 + tx * 1.2) * 2);
+                const surge = Math.floor(Math.sin(this.waterAnimTimer * 3.2 + tx * 1.3) * 2);
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(sx, sy + 4 + surge, 16, 3);
                 // Foam bubbles with natural rounded tips
@@ -185,7 +209,7 @@ class RetroRenderer {
                 ctx.fillRect(sx + 12, sy + 2 + surge, 3, 3);
 
                 // Translucent froth bubbles
-                ctx.fillStyle = '#e1f5fe';
+                ctx.fillStyle = '#e0f2fe';
                 ctx.fillRect(sx + 2, sy + 8 + surge, 3, 2);
                 ctx.fillRect(sx + 9, sy + 9 + surge, 4, 2);
 
@@ -196,7 +220,7 @@ class RetroRenderer {
                 break;
             }
 
-            case 3: { // GROUND (Lush Overworld Grass or High-Tech Basalt Sub-Core)
+            case 3: { // GROUND (Lush Overworld Grass without artificial grid lines or Sub-Core)
                 if (isSubCore) {
                     // High-tech subterranean metallic floor plate
                     ctx.fillStyle = '#1c2430';
@@ -223,65 +247,69 @@ class RetroRenderer {
                         ctx.fillRect(sx + 3, sy + 7, 10, 2);
                     }
                 } else {
-                    // Lush GBA multi-tone green turf
-                    ctx.fillStyle = '#43a047';
+                    // Rich GBA multi-tone emerald turf
+                    ctx.fillStyle = '#3ca03e';
                     ctx.fillRect(sx, sy, 16, 16);
 
-                    // Micro-dithered shading texture
-                    ctx.fillStyle = '#388e3c';
-                    for (let py = 0; py < 16; py += 4) {
-                        for (let px = 0; px < 16; px += 4) {
-                            if ((px + py + tx * 4 + ty * 4) % 8 === 0) {
-                                ctx.fillRect(sx + px, sy + py, 2, 2);
-                            }
-                        }
+                    // Organic shaded grass blade tufts (placed pseudo-randomly per tile hash)
+                    const h1 = (tx * 13 + ty * 29) % 7;
+                    const h2 = (tx * 31 + ty * 17) % 11;
+                    const h3 = (tx * 7 + ty * 43) % 5;
+
+                    // Deep shade tufts
+                    ctx.fillStyle = '#2e7d32';
+                    if (h1 < 4) {
+                        ctx.fillRect(sx + 2 + h1, sy + 4, 3, 2);
+                        ctx.fillRect(sx + 3 + h1, sy + 3, 1, 1);
+                    }
+                    if (h2 < 5) {
+                        ctx.fillRect(sx + 9 + (h2 % 4), sy + 10, 3, 2);
+                        ctx.fillRect(sx + 10 + (h2 % 4), sy + 9, 1, 1);
                     }
 
-                    // 3-Blade clover clusters
-                    if ((tx * 7 + ty * 13) % 4 === 0) {
-                        ctx.fillStyle = '#2e7d32';
+                    // Sunlit grass blade highlights
+                    ctx.fillStyle = '#66bb6a';
+                    if (h1 > 2) {
+                        ctx.fillRect(sx + 1 + h1, sy + 8, 2, 2);
+                        ctx.fillRect(sx + 2 + h1, sy + 7, 1, 1);
+                    }
+                    if (h3 === 0) {
+                        ctx.fillRect(sx + 11, sy + 3, 2, 2);
+                    }
+
+                    // 3-Leaf clover clusters on select tiles
+                    if ((tx * 7 + ty * 13) % 6 === 0) {
+                        ctx.fillStyle = '#1b5e20';
                         ctx.fillRect(sx + 4, sy + 6, 2, 3);
+                        ctx.fillStyle = '#4caf50';
                         ctx.fillRect(sx + 3, sy + 5, 2, 2);
                         ctx.fillRect(sx + 6, sy + 5, 2, 2);
-                        ctx.fillStyle = '#66bb6a';
+                        ctx.fillStyle = '#a5d6a7';
                         ctx.fillRect(sx + 4, sy + 4, 2, 2);
                     }
-                    if ((tx * 11 + ty * 5) % 5 === 0) {
-                        ctx.fillStyle = '#2e7d32';
-                        ctx.fillRect(sx + 10, sy + 11, 2, 3);
-                        ctx.fillRect(sx + 9, sy + 10, 2, 2);
-                        ctx.fillRect(sx + 12, sy + 10, 2, 2);
-                        ctx.fillStyle = '#81c784';
-                        ctx.fillRect(sx + 10, sy + 9, 2, 2);
-                    }
 
-                    // Earth speckles & tiny wildflowers
-                    if ((tx * 17 + ty * 23) % 7 === 0) {
-                        // Wildflower
-                        const flowerColors = ['#ffffff', '#ffd54f', '#ff80ab', '#80d8ff'];
-                        const fCol = flowerColors[(tx + ty) % flowerColors.length];
+                    // Varied wildflowers (white, buttercup yellow, pink, blue)
+                    if ((tx * 19 + ty * 23) % 9 === 0) {
+                        const flowers = ['#ffffff', '#fde047', '#f472b6', '#60a5fa'];
+                        const fCol = flowers[(tx * 3 + ty) % flowers.length];
                         ctx.fillStyle = fCol;
-                        ctx.fillRect(sx + 6, sy + 9, 3, 3);
-                        ctx.fillStyle = '#ffd600';
-                        ctx.fillRect(sx + 7, sy + 10, 1, 1);
+                        ctx.fillRect(sx + 5 + (h2 % 4), sy + 6 + (h1 % 4), 3, 3);
+                        ctx.fillStyle = '#f59e0b'; // golden center
+                        ctx.fillRect(sx + 6 + (h2 % 4), sy + 7 + (h1 % 4), 1, 1);
                     }
                 }
                 break;
             }
 
             case 4: { // FOIL_GRASS (Authentic Pokémon Emerald Style Tall Grass)
-                // Base turf under grass
                 ctx.fillStyle = '#388e3c';
                 ctx.fillRect(sx, sy, 16, 16);
 
-                // Deep root shadows
                 ctx.fillStyle = '#1b5e20';
                 ctx.fillRect(sx + 1, sy + 9, 14, 7);
 
-                // Animated gentle wind sway for blade tips
                 const wind = Math.floor(Math.sin(this.waterAnimTimer * 2.5 + tx * 1.5) * 1.5);
 
-                // Blade cluster 1 (Left)
                 ctx.fillStyle = '#2e7d32';
                 ctx.fillRect(sx + 2, sy + 6, 3, 8);
                 ctx.fillStyle = '#43a047';
@@ -289,7 +317,6 @@ class RetroRenderer {
                 ctx.fillStyle = '#a5d6a7';
                 ctx.fillRect(sx + 2 + wind, sy + 2, 2, 2);
 
-                // Blade cluster 2 (Center)
                 ctx.fillStyle = '#2e7d32';
                 ctx.fillRect(sx + 6, sy + 4, 4, 10);
                 ctx.fillStyle = '#4caf50';
@@ -297,7 +324,6 @@ class RetroRenderer {
                 ctx.fillStyle = '#c8e6c9';
                 ctx.fillRect(sx + 7 + wind, sy, 2, 2);
 
-                // Blade cluster 3 (Right)
                 ctx.fillStyle = '#2e7d32';
                 ctx.fillRect(sx + 11, sy + 5, 3, 9);
                 ctx.fillStyle = '#43a047';
@@ -309,35 +335,30 @@ class RetroRenderer {
 
             case 5: { // CLIFF_LOW (Stratified Rock Wall or Sub-Core Blast Plate)
                 if (isSubCore) {
-                    // Industrial blast plate wall
                     ctx.fillStyle = '#18202a';
                     ctx.fillRect(sx, sy, 16, 16);
                     ctx.fillStyle = '#2c394b';
-                    ctx.fillRect(sx, sy, 16, 3); // Top bevel
+                    ctx.fillRect(sx, sy, 16, 3);
                     ctx.fillStyle = '#0f141b';
-                    ctx.fillRect(sx, sy + 14, 16, 2); // Base shadow
+                    ctx.fillRect(sx, sy + 14, 16, 2);
                     ctx.fillStyle = '#37474f';
                     ctx.fillRect(sx + 4, sy + 4, 8, 8);
                     ctx.fillStyle = '#00e5ff';
-                    ctx.fillRect(sx + 7, sy + 7, 2, 2); // Indicator diode
+                    ctx.fillRect(sx + 7, sy + 7, 2, 2);
                 } else {
-                    // Natural stratified rock crag with highlight rim
                     ctx.fillStyle = '#544036';
                     ctx.fillRect(sx, sy, 16, 16);
 
-                    // Top highlighted ledge shelf
                     ctx.fillStyle = '#8d705d';
                     ctx.fillRect(sx, sy, 16, 4);
                     ctx.fillStyle = '#bcaaa4';
                     ctx.fillRect(sx + 1, sy + 1, 14, 1);
 
-                    // Natural vertical fissures & stone stratification
                     ctx.fillStyle = '#372820';
                     ctx.fillRect(sx + 4, sy + 4, 2, 9);
                     ctx.fillRect(sx + 11, sy + 5, 2, 8);
-                    ctx.fillRect(sx + 5, sy + 8, 4, 2); // Horizontal crack
+                    ctx.fillRect(sx + 5, sy + 8, 4, 2);
 
-                    // Base shadow cast onto ground
                     ctx.fillStyle = '#241a15';
                     ctx.fillRect(sx, sy + 14, 16, 2);
                 }
@@ -353,18 +374,16 @@ class RetroRenderer {
                     ctx.fillStyle = '#111720';
                     ctx.fillRect(sx, sy + 13, 16, 3);
                     ctx.fillStyle = '#ff7043';
-                    ctx.fillRect(sx + 6, sy + 6, 4, 4); // Orange hazard core
+                    ctx.fillRect(sx + 6, sy + 6, 4, 4);
                 } else {
                     ctx.fillStyle = '#6d5446';
                     ctx.fillRect(sx, sy, 16, 16);
 
-                    // Sun-drenched rocky plateau rim
                     ctx.fillStyle = '#a18370';
                     ctx.fillRect(sx, sy, 16, 4);
                     ctx.fillStyle = '#d7ccc8';
                     ctx.fillRect(sx, sy + 1, 16, 1);
 
-                    // Deep fissures & stone grain
                     ctx.fillStyle = '#423128';
                     ctx.fillRect(sx + 2, sy + 5, 3, 8);
                     ctx.fillRect(sx + 9, sy + 4, 3, 9);
@@ -374,27 +393,23 @@ class RetroRenderer {
             }
 
             case 7: { // CAVE_ENTRANCE (Deep arched cavern mouth)
-                // Surrounding rock face
                 ctx.fillStyle = '#544036';
                 ctx.fillRect(sx, sy, 16, 16);
                 ctx.fillStyle = '#8d705d';
                 ctx.fillRect(sx, sy, 16, 3);
 
-                // Dark arched cavern tunnel opening with smooth stones
                 ctx.fillStyle = '#080810';
                 ctx.beginPath();
                 ctx.arc(sx + 8, sy + 12, 6, Math.PI, 0, false);
                 ctx.fill();
                 ctx.fillRect(sx + 2, sy + 11, 12, 5);
 
-                // Deepest abyss inside
                 ctx.fillStyle = '#000000';
                 ctx.beginPath();
                 ctx.arc(sx + 8, sy + 12, 4, Math.PI, 0, false);
                 ctx.fill();
                 ctx.fillRect(sx + 4, sy + 12, 8, 4);
 
-                // Carved stone threshold
                 ctx.fillStyle = '#a88a75';
                 ctx.fillRect(sx + 1, sy + 15, 14, 1);
                 ctx.fillStyle = '#d7ccc8';
@@ -407,15 +422,12 @@ class RetroRenderer {
                 ctx.fillStyle = '#1c2430';
                 ctx.fillRect(sx, sy, 16, 16);
 
-                // Heavy conduit trench
                 ctx.fillStyle = '#0d131a';
                 ctx.fillRect(sx + 4, sy, 8, 16);
 
-                // Vibrant cyan neon plasma tube
                 ctx.fillStyle = '#00e5ff';
                 ctx.fillRect(sx + 6, sy, 4, 16);
 
-                // Pulsing electric charge
                 const pulse = Math.floor((this.waterAnimTimer * 12 + ty * 2) % 16);
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(sx + 7, sy + pulse, 2, 4);
@@ -423,23 +435,19 @@ class RetroRenderer {
             }
 
             case 9: { // ANCIENT_TERMINAL / STEPPED ALTAR (With levitating quantum core)
-                // Base pavement
                 ctx.fillStyle = '#263238';
                 ctx.fillRect(sx, sy, 16, 16);
 
-                // Stepped altar tier 1 (Outer stone step)
                 ctx.fillStyle = '#455a64';
                 ctx.fillRect(sx + 1, sy + 2, 14, 12);
                 ctx.fillStyle = '#607d8b';
                 ctx.fillRect(sx + 2, sy + 3, 12, 2);
 
-                // Stepped altar tier 2 (Pedestal)
                 ctx.fillStyle = '#78909c';
                 ctx.fillRect(sx + 3, sy + 5, 10, 8);
                 ctx.fillStyle = '#b0bec5';
                 ctx.fillRect(sx + 4, sy + 6, 8, 2);
 
-                // Levitating glowing quantum core artifact with bob
                 const coreBob = Math.floor(Math.sin(this.waterAnimTimer * 4.0) * 2);
                 ctx.fillStyle = '#00e5ff';
                 ctx.fillRect(sx + 6, sy + 7 + coreBob, 4, 4);
@@ -452,13 +460,11 @@ class RetroRenderer {
                 ctx.fillStyle = '#3e2723';
                 ctx.fillRect(sx, sy, 16, 16);
 
-                // Rich dark fertile soil furrows
                 ctx.fillStyle = '#4e342e';
                 ctx.fillRect(sx + 1, sy + 2, 14, 3);
                 ctx.fillRect(sx + 1, sy + 7, 14, 3);
                 ctx.fillRect(sx + 1, sy + 12, 14, 3);
 
-                // Glowing reality sapling with gentle pulse
                 ctx.fillStyle = '#76ff03';
                 ctx.fillRect(sx + 7, sy + 3, 2, 2);
                 ctx.fillRect(sx + 6, sy + 8, 3, 2);
@@ -467,58 +473,70 @@ class RetroRenderer {
                 break;
             }
 
-            case 11: { // PATH_COBBLE (Authentic GBA Interlocking Cobblestone Road)
-                ctx.fillStyle = '#b0bec5';
+            case 11: { // PATH_COBBLE (Authentic GBA 3D Interlocking Cobblestone Road)
+                // Dark mortar base
+                ctx.fillStyle = '#475569';
                 ctx.fillRect(sx, sy, 16, 16);
 
-                // Darker mortar lines
-                ctx.fillStyle = '#78909c';
-                ctx.fillRect(sx, sy, 16, 1);
-                ctx.fillRect(sx, sy + 8, 16, 1);
-                const shift = (ty % 2 === 0) ? 0 : 8;
-                ctx.fillRect(sx + (shift % 16), sy, 1, 8);
-                ctx.fillRect(sx + ((shift + 8) % 16), sy + 8, 1, 8);
+                const row = ty % 2;
+                const ox1 = row === 0 ? 0 : 4;
+                const ox2 = row === 0 ? 8 : 12;
 
-                // Paver highlights
-                ctx.fillStyle = '#cfd8dc';
-                ctx.fillRect(sx + 1 + (shift % 16), sy + 1, 6, 2);
-                ctx.fillRect(sx + 1 + ((shift + 8) % 16), sy + 9, 6, 2);
+                // Cobblestone 1
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillRect(sx + ox1 + 1, sy + 1, 6, 6);
+                ctx.fillStyle = '#cbd5e1'; // Top-left highlight bevel
+                ctx.fillRect(sx + ox1 + 1, sy + 1, 5, 1);
+                ctx.fillRect(sx + ox1 + 1, sy + 2, 1, 4);
+                ctx.fillStyle = '#64748b'; // Bottom-right shadow
+                ctx.fillRect(sx + ox1 + 1, sy + 6, 6, 1);
+                ctx.fillRect(sx + ox1 + 6, sy + 1, 1, 6);
 
-                // Weathered stone flecks
-                if ((tx * 3 + ty * 7) % 5 === 0) {
-                    ctx.fillStyle = '#90a4ae';
-                    ctx.fillRect(sx + 3, sy + 4, 2, 2);
+                // Cobblestone 2
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillRect(sx + ox2 + 1, sy + 9, 6, 6);
+                ctx.fillStyle = '#cbd5e1';
+                ctx.fillRect(sx + ox2 + 1, sy + 9, 5, 1);
+                ctx.fillRect(sx + ox2 + 1, sy + 10, 1, 4);
+                ctx.fillStyle = '#64748b';
+                ctx.fillRect(sx + ox2 + 1, sy + 14, 6, 1);
+                ctx.fillRect(sx + ox2 + 6, sy + 9, 1, 6);
+
+                // Small filler cobblestones
+                ctx.fillStyle = '#64748b';
+                ctx.fillRect(sx + ((ox1 + 8) % 16) + 1, sy + 2, 5, 4);
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillRect(sx + ((ox1 + 8) % 16) + 1, sy + 2, 4, 1);
+
+                // Moss flecks in mortar
+                if ((tx * 5 + ty * 7) % 3 === 0) {
+                    ctx.fillStyle = '#22c55e';
+                    ctx.fillRect(sx + (tx % 12), sy + (ty % 12), 2, 2);
                 }
                 break;
             }
 
             case 12: { // WOODEN_BRIDGE (Walkable Timber Bridge over Water)
-                // Water background beneath bridge
-                ctx.fillStyle = '#254ba8';
+                ctx.fillStyle = '#1c3d8f';
                 ctx.fillRect(sx, sy, 16, 16);
 
-                // Dark water shadow under bridge deck
                 ctx.fillStyle = 'rgba(10, 20, 40, 0.45)';
                 ctx.fillRect(sx, sy, 16, 16);
 
-                // Horizontal timber planks
                 ctx.fillStyle = '#8d6e63';
                 ctx.fillRect(sx, sy + 1, 16, 14);
 
-                // Plank separation lines
                 ctx.fillStyle = '#4e342e';
                 ctx.fillRect(sx, sy + 1, 16, 1);
                 ctx.fillRect(sx, sy + 5, 16, 1);
                 ctx.fillRect(sx, sy + 9, 16, 1);
                 ctx.fillRect(sx, sy + 14, 16, 1);
 
-                // Wood grain highlights
                 ctx.fillStyle = '#a1887f';
                 ctx.fillRect(sx + 2, sy + 2, 12, 1);
                 ctx.fillRect(sx + 4, sy + 6, 8, 1);
                 ctx.fillRect(sx + 1, sy + 10, 14, 1);
 
-                // Iron nail studs
                 ctx.fillStyle = '#212121';
                 ctx.fillRect(sx + 2, sy + 3, 1, 1);
                 ctx.fillRect(sx + 13, sy + 3, 1, 1);
@@ -527,7 +545,6 @@ class RetroRenderer {
                 ctx.fillRect(sx + 2, sy + 11, 1, 1);
                 ctx.fillRect(sx + 13, sy + 11, 1, 1);
 
-                // Upper and lower guide railings
                 ctx.fillStyle = '#5d4037';
                 ctx.fillRect(sx, sy, 16, 2);
                 ctx.fillRect(sx, sy + 14, 16, 2);
@@ -541,110 +558,163 @@ class RetroRenderer {
 
             case 13: { // FENCE_WOOD (Split-Rail Rustic Wooden Fence)
                 // Turf underneath
-                ctx.fillStyle = '#43a047';
+                ctx.fillStyle = '#3ca03e';
                 ctx.fillRect(sx, sy, 16, 16);
 
-                // Fence post shadow
-                ctx.fillStyle = 'rgba(0,0,0,0.25)';
-                ctx.fillRect(sx + 4, sy + 13, 8, 3);
+                // Fence post shadow cast on grass
+                ctx.fillStyle = 'rgba(0,0,0,0.30)';
+                ctx.fillRect(sx + 5, sy + 12, 8, 3);
 
-                // Horizontal rails
-                ctx.fillStyle = '#6d4c41';
-                ctx.fillRect(sx, sy + 5, 16, 3);
-                ctx.fillRect(sx, sy + 10, 16, 3);
-                ctx.fillStyle = '#8d6e63';
+                // Horizontal rails with depth
+                ctx.fillStyle = '#5c3a21'; // Rail shadow
+                ctx.fillRect(sx, sy + 6, 16, 3);
+                ctx.fillRect(sx, sy + 11, 16, 3);
+
+                ctx.fillStyle = '#8b5a2b'; // Rail body
+                ctx.fillRect(sx, sy + 5, 16, 2);
+                ctx.fillRect(sx, sy + 10, 16, 2);
+
+                ctx.fillStyle = '#b8860b'; // Top sunlit highlight
                 ctx.fillRect(sx, sy + 5, 16, 1);
                 ctx.fillRect(sx, sy + 10, 16, 1);
 
-                // Vertical fence posts
-                ctx.fillStyle = '#4e342e';
-                ctx.fillRect(sx + 6, sy + 2, 4, 12);
-                ctx.fillStyle = '#795548';
+                // Vertical fence posts with rounded top
+                ctx.fillStyle = '#3e2723';
+                ctx.fillRect(sx + 6, sy + 3, 4, 11);
+                ctx.fillStyle = '#6d4c41';
                 ctx.fillRect(sx + 7, sy + 2, 2, 12);
                 ctx.fillStyle = '#a1887f';
-                ctx.fillRect(sx + 7, sy + 2, 2, 1);
+                ctx.fillRect(sx + 7, sy + 2, 2, 1); // Post cap highlight
                 break;
             }
 
-            case 14: { // BUILDING_WALL (Timber-Framed Stone/Wood Cottage Wall)
-                ctx.fillStyle = '#d7ccc8';
+            case 14: { // BUILDING_WALL (Timber-Framed Stone/Masonry Cottage Wall)
+                // Plaster/mortar wall body
+                ctx.fillStyle = '#e2e8f0';
                 ctx.fillRect(sx, sy, 16, 16);
 
-                // Stone texture flecks
-                ctx.fillStyle = '#bcaaa4';
-                ctx.fillRect(sx + 2, sy + 2, 4, 3);
-                ctx.fillRect(sx + 9, sy + 5, 5, 4);
-                ctx.fillRect(sx + 3, sy + 10, 6, 4);
+                // Stone foundation base trim at bottom
+                ctx.fillStyle = '#475569';
+                ctx.fillRect(sx, sy + 12, 16, 4);
+                ctx.fillStyle = '#64748b';
+                ctx.fillRect(sx, sy + 12, 16, 1);
 
-                // Dark oak timber corner studs and sill
+                // Vertical timber corner studs
                 ctx.fillStyle = '#4e342e';
-                ctx.fillRect(sx, sy, 2, 16);
-                ctx.fillRect(sx + 14, sy, 2, 16);
-                ctx.fillRect(sx, sy + 14, 16, 2);
+                ctx.fillRect(sx, sy, 3, 16);
+                ctx.fillRect(sx + 13, sy, 3, 16);
+
+                // Timber grain highlight
+                ctx.fillStyle = '#795548';
+                ctx.fillRect(sx + 1, sy, 1, 16);
+                ctx.fillRect(sx + 14, sy, 1, 16);
+
+                // Horizontal cross-beam timber
+                ctx.fillStyle = '#4e342e';
+                ctx.fillRect(sx, sy + 6, 16, 2);
+                ctx.fillStyle = '#795548';
+                ctx.fillRect(sx, sy + 6, 16, 1);
+
+                // Weathered stone flecks
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillRect(sx + 5, sy + 2, 2, 2);
+                ctx.fillRect(sx + 8, sy + 9, 3, 2);
                 break;
             }
 
-            case 15: { // BUILDING_ROOF (Terracotta Shingle Cottage Roof)
-                ctx.fillStyle = '#b71c1c';
+            case 15: { // BUILDING_ROOF (Terracotta Shingle Cottage Roof with Overhang Shadow & Bevel)
+                // Rich terracotta red base
+                ctx.fillStyle = '#991b1b';
                 ctx.fillRect(sx, sy, 16, 16);
 
-                // Shingle rows
-                ctx.fillStyle = '#c62828';
+                // Shingle row 1
+                ctx.fillStyle = '#b91c1c';
                 ctx.fillRect(sx, sy + 1, 16, 4);
+                ctx.fillStyle = '#f87171'; // Specular rim highlight
+                ctx.fillRect(sx, sy + 1, 16, 1);
+
+                // Shingle row 2
+                ctx.fillStyle = '#dc2626';
                 ctx.fillRect(sx, sy + 6, 16, 4);
-                ctx.fillRect(sx, sy + 11, 16, 4);
+                ctx.fillStyle = '#fca5a5';
+                ctx.fillRect(sx, sy + 6, 16, 1);
 
-                // Shingle highlights
-                ctx.fillStyle = '#e57373';
-                ctx.fillRect(sx + 1, sy + 1, 14, 1);
-                ctx.fillRect(sx + 1, sy + 6, 14, 1);
-                ctx.fillRect(sx + 1, sy + 11, 14, 1);
+                // Shingle row 3
+                ctx.fillStyle = '#b91c1c';
+                ctx.fillRect(sx, sy + 11, 16, 5);
+                ctx.fillStyle = '#f87171';
+                ctx.fillRect(sx, sy + 11, 16, 1);
 
-                // Vertical tile seams
-                ctx.fillStyle = '#7f0000';
+                // Vertical scalloped tile seams
+                ctx.fillStyle = '#7f1d1d';
                 ctx.fillRect(sx + 4, sy + 1, 1, 4);
-                ctx.fillRect(sx + 11, sy + 1, 1, 4);
+                ctx.fillRect(sx + 12, sy + 1, 1, 4);
                 ctx.fillRect(sx + 8, sy + 6, 1, 4);
-                ctx.fillRect(sx + 4, sy + 11, 1, 4);
-                ctx.fillRect(sx + 11, sy + 11, 1, 4);
+                ctx.fillRect(sx + 3, sy + 11, 1, 5);
+                ctx.fillRect(sx + 11, sy + 11, 1, 5);
+
+                // Bottom eave shadow cast on wall beneath
+                ctx.fillStyle = '#450a0a';
+                ctx.fillRect(sx, sy + 15, 16, 1);
                 break;
             }
 
-            case 16: { // BUILDING_DOOR (Arched Timber Door)
-                ctx.fillStyle = '#4e342e';
-                ctx.fillRect(sx, sy, 16, 16);
-
-                // Wood planks
-                ctx.fillStyle = '#6d4c41';
-                ctx.fillRect(sx + 2, sy + 2, 12, 14);
+            case 16: { // BUILDING_DOOR (Arched Heavy Timber Door with Iron Knocker)
                 ctx.fillStyle = '#3e2723';
-                ctx.fillRect(sx + 6, sy + 2, 1, 14);
-                ctx.fillRect(sx + 10, sy + 2, 1, 14);
+                ctx.fillRect(sx, sy, 16, 16);
 
-                // Iron door latch
-                ctx.fillStyle = '#ffd54f';
-                ctx.fillRect(sx + 3, sy + 8, 2, 2);
+                // Heavy arched oak planks
+                ctx.fillStyle = '#5d4037';
+                ctx.fillRect(sx + 2, sy + 2, 12, 14);
+
+                // Plank grooves
+                ctx.fillStyle = '#271810';
+                ctx.fillRect(sx + 5, sy + 2, 1, 14);
+                ctx.fillRect(sx + 9, sy + 2, 1, 14);
+
+                // Iron strap hinges
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(sx + 2, sy + 4, 10, 2);
+                ctx.fillRect(sx + 2, sy + 12, 10, 2);
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillRect(sx + 3, sy + 4, 1, 1);
+                ctx.fillRect(sx + 3, sy + 12, 1, 1);
+
+                // Iron ring knocker handle
+                ctx.fillStyle = '#fbbf24';
+                ctx.fillRect(sx + 11, sy + 8, 2, 2);
+                ctx.fillStyle = '#475569';
+                ctx.fillRect(sx + 10, sy + 9, 1, 2);
+                ctx.fillRect(sx + 13, sy + 9, 1, 2);
+                ctx.fillRect(sx + 11, sy + 11, 2, 1);
                 break;
             }
 
-            case 17: { // BUILDING_WINDOW (Warm Amber Glowing Window)
-                ctx.fillStyle = '#4e342e';
+            case 17: { // BUILDING_WINDOW (Amber Glowing Leaded Glass Window)
+                ctx.fillStyle = '#3e2723';
                 ctx.fillRect(sx, sy, 16, 16);
+
+                // Ambient glowing light aura
+                ctx.fillStyle = 'rgba(251, 191, 36, 0.25)';
+                ctx.fillRect(sx, sy + 1, 16, 14);
 
                 // Window frame & glowing glass
-                ctx.fillStyle = '#ffb300';
+                ctx.fillStyle = '#f59e0b';
                 ctx.fillRect(sx + 2, sy + 3, 12, 10);
-                ctx.fillStyle = '#fff8e1';
+                ctx.fillStyle = '#fef08a';
                 ctx.fillRect(sx + 4, sy + 5, 8, 6);
 
-                // Mullion cross
-                ctx.fillStyle = '#5d4037';
+                // Dark leaded mullion cross
+                ctx.fillStyle = '#451a03';
                 ctx.fillRect(sx + 7, sy + 3, 2, 10);
                 ctx.fillRect(sx + 2, sy + 7, 12, 2);
+
+                // Wood sill at bottom
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(sx + 1, sy + 13, 14, 2);
                 break;
             }
-
-            case 18: { // REEDS_WATER (Swaying Riverbank Reeds)
+case 18: { // REEDS_WATER (Swaying Riverbank Reeds)
                 // Shallow water base
                 ctx.fillStyle = '#3884c7';
                 ctx.fillRect(sx, sy, 16, 16);
@@ -1446,23 +1516,51 @@ class RetroRenderer {
         const jumpZ = (char.pos && char.pos.z) ? char.pos.z : 0;
         const sy = groundY - jumpZ;
 
-        // Ground shadow under character stays on terrain surface at groundY
-        const shadowScale = Math.max(0.35, 1.0 - jumpZ / 45.0);
-        ctx.fillStyle = `rgba(0,0,0,${0.4 * shadowScale})`;
-        ctx.beginPath();
-        ctx.ellipse(sx, groundY + 6, 6 * shadowScale, 3 * shadowScale, 0, 0, Math.PI * 2);
-        ctx.fill();
+        // Direction & Walk Animation state
+        const facing = char.cardinalFacing || "DOWN";
+        const isMoving = Boolean(char.vel && (typeof char.vel.length === "function" ? char.vel.length() > 5.0 : Math.hypot(char.vel.x || 0, char.vel.y || 0) > 5.0));
+        const walkCycle = isMoving ? (Math.floor(char.walkTimer || 0) % 2) : 0;
+        const bob = (isMoving && walkCycle === 1) ? -1 : 0;
+        const effBob = bob + (isMoving ? 0 : (Math.sin(Date.now() / 240) > 0.4 ? -1 : 0));
+
+        if (char.isSwimming) {
+            // Water ripples around swimming character waist
+            const ripTime = Date.now() / 320;
+            const rip1 = (ripTime % 2.0);
+            const rip2 = ((ripTime + 1.0) % 2.0);
+
+            ctx.strokeStyle = `rgba(165, 243, 252, ${0.75 * (1.0 - rip1 / 2.0)})`;
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.ellipse(sx, groundY + 3, 7 + rip1 * 4, 3.5 + rip1 * 2, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.55 * (1.0 - rip2 / 2.0)})`;
+            ctx.beginPath();
+            ctx.ellipse(sx, groundY + 3, 5 + rip2 * 3, 2.5 + rip2 * 1.5, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Water wake droplets if moving
+            if (isMoving) {
+                ctx.fillStyle = '#e0f2fe';
+                const splash = Math.sin(Date.now() / 90);
+                ctx.fillRect(sx - 7 + splash * 2, groundY + 1, 2, 2);
+                ctx.fillRect(sx + 6 - splash * 2, groundY + 1, 2, 2);
+            }
+        } else {
+            // Ground shadow under character stays on terrain surface at groundY
+            const shadowScale = Math.max(0.35, 1.0 - jumpZ / 45.0);
+            ctx.fillStyle = `rgba(0,0,0,${0.4 * shadowScale})`;
+            ctx.beginPath();
+            ctx.ellipse(sx, groundY + 6, 6 * shadowScale, 3 * shadowScale, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
         if (char.invulnerableTimer > 0 && Math.floor(Date.now() / 60) % 2 === 0) {
             return;
         }
 
-        // Direction & Walk Animation state
-        const facing = char.cardinalFacing || 'DOWN';
-        const isMoving = char.vel && char.vel.length() > 5.0;
-        const walkCycle = isMoving ? (Math.floor(char.walkTimer || 0) % 2) : 0;
-        const bob = (isMoving && walkCycle === 1) ? -1 : 0;
-        const effBob = bob + (isMoving ? 0 : (Math.sin(Date.now() / 240) > 0.4 ? -1 : 0));
+
 
         const equippedWep = (char.inventory && char.inventory.equippedWeapon) ? char.inventory.equippedWeapon.id : null;
         const equippedArm = (char.inventory && char.inventory.equippedArmor) ? char.inventory.equippedArmor.id : null;
@@ -1472,6 +1570,14 @@ class RetroRenderer {
 
         // Draw High-Fidelity GBA / Terraria Detailed Character Body
         this.drawDetailedCharacterBody(ctx, char, sx, sy, effBob, facing, walkCycle, equippedWep);
+
+        if (char.isSwimming) {
+            // Translucent water surface covering submerged legs & boots
+            ctx.fillStyle = 'rgba(28, 59, 136, 0.60)';
+            ctx.fillRect(sx - 7, groundY + 2, 14, 6);
+            ctx.fillStyle = 'rgba(224, 242, 254, 0.70)';
+            ctx.fillRect(sx - 6, groundY + 1, 12, 1);
+        }
 
         // Draw equipped front armor (Vanguard Chestplate, Iron Aegis, Shield, Flux Band)
         this.drawEquippedArmorFront(ctx, char, equippedArm, sx, sy, effBob, facing, walkCycle);
@@ -2885,6 +2991,7 @@ class RetroRenderer {
 
 
     addFloatingText(text, x, y, color = '#ffd54f') {
+        if (this.floatingTexts.length > 60) this.floatingTexts.shift();
         this.floatingTexts.push({
             text,
             x,
@@ -3714,10 +3821,13 @@ class RetroRenderer {
             p.x += p.vx * dt;
             p.y += p.vy * dt;
 
-            if (p.x < 0) p.x += this.width;
-            if (p.x > this.width) p.x -= this.width;
-            if (p.y < 0) p.y += this.height;
-            if (p.y > this.height) p.y -= this.height;
+            const z = this.zoom || 1.0;
+            const viewW = this.width / z;
+            const viewH = this.height / z;
+            if (p.x < 0) p.x += viewW;
+            if (p.x > viewW) p.x -= viewW;
+            if (p.y < 0) p.y += viewH;
+            if (p.y > viewH) p.y -= viewH;
 
             if (isGlacier) {
                 ctx.fillStyle = `rgba(224, 242, 254, ${currentAlpha})`;
@@ -3911,16 +4021,19 @@ class RetroRenderer {
         }
         if (!this.lightCanvas) return;
 
-        if (this.lightCanvas.width !== this.width || this.lightCanvas.height !== this.height) {
-            this.lightCanvas.width = this.width;
-            this.lightCanvas.height = this.height;
+        const z = this.zoom || 1.0;
+        const targetW = Math.ceil(this.width / z);
+        const targetH = Math.ceil(this.height / z);
+        if (this.lightCanvas.width !== targetW || this.lightCanvas.height !== targetH) {
+            this.lightCanvas.width = targetW;
+            this.lightCanvas.height = targetH;
         }
 
         const lCtx = this.lightCtx;
-        lCtx.clearRect(0, 0, this.width, this.height);
+        lCtx.clearRect(0, 0, targetW, targetH);
         lCtx.globalCompositeOperation = 'source-over';
         lCtx.fillStyle = ambientColor;
-        lCtx.fillRect(0, 0, this.width, this.height);
+        lCtx.fillRect(0, 0, targetW, targetH);
 
         lCtx.globalCompositeOperation = 'destination-out';
 
@@ -3946,7 +4059,7 @@ class RetroRenderer {
                 if (node.type === 'CAMPFIRE' || node.type === 'CAMPFIRE_SITE' || node.type === 'RUNIC_TOTEM' || node.type === 'GLOWING_CRYSTAL') {
                     const nx = Math.round(node.x) - camX;
                     const ny = Math.round(node.y) - camY;
-                    if (nx < -80 || nx > this.width + 80 || ny < -80 || ny > this.height + 80) continue;
+                    if (nx < -80 || nx > targetW + 80 || ny < -80 || ny > targetH + 80) continue;
 
                     const rad = (node.type === 'CAMPFIRE' || node.type === 'CAMPFIRE_SITE' ? 75 : 50) + Math.sin(Date.now() / 110 + nx) * 3;
                     const cGrad = lCtx.createRadialGradient(nx, ny, 8, nx, ny, rad);
@@ -4186,14 +4299,7 @@ class RetroRenderer {
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
             ctx.arc(sx, sy, 2.5 * pulse, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Pioneer Slot Badge tag above star
-            ctx.font = '6px "Press Start 2P", monospace';
-            ctx.textAlign = 'center';
-            ctx.fillStyle = 'rgba(255, 213, 79, 0.9)';
-            ctx.fillText(`★S0${saveObj.index + 1}`, sx, sy - flareLen - 3);
-
+            // Save stars shine as pure celestial radiant beacons (no writing)
             ctx.restore();
         }
 
