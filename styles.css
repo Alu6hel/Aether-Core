@@ -2330,8 +2330,10 @@ body, html {
    ANCIENT REMAINS / RELIQUARY MODAL (IMAGE 4)
    ========================================================================== */
 .remains-modal-content {
-    max-width: 580px;
+    max-width: 620px;
     width: 95%;
+    max-height: 92vh;
+    overflow-y: auto;
 }
 
 .remains-top-bar {
@@ -2341,30 +2343,30 @@ body, html {
     background: #141d27;
     border: 1px solid #283747;
     border-radius: 6px;
-    padding: 8px 12px;
-    margin-bottom: 12px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
 }
 
 .remains-keys-pill {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 9px;
+    font-size: 8px;
     color: #ffd54f;
 }
 
 .remains-status-tip {
-    font-size: 7px;
+    font-size: 6.5px;
     color: #90a4ae;
-    max-width: 60%;
+    max-width: 62%;
     line-height: 1.3;
 }
 
 .relic-chests-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 12px;
+    gap: 8px;
+    margin-bottom: 6px;
 }
 
 @media (max-width: 540px) {
@@ -2377,11 +2379,11 @@ body, html {
     background: #131b24;
     border: 2px solid #37474f;
     border-radius: 8px;
-    padding: 12px 8px;
+    padding: 8px 6px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     text-align: center;
     box-shadow: inset 1px 1px 0 rgba(255,255,255,0.06), 0 3px 8px rgba(0,0,0,0.5);
     transition: transform 0.1s, border-color 0.15s;
@@ -2397,16 +2399,140 @@ body, html {
     box-shadow: 0 0 12px rgba(255, 213, 79, 0.3);
 }
 
+/* Glowing Detailed Smokey Orb Relic Widgets (User Requirement) */
 .chest-art-frame {
-    font-size: 28px;
-    margin: 4px 0;
-    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.6));
+    width: 64px;
+    height: 64px;
+    margin: 4px 0 8px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.smokey-orb-widget {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.orb-aura {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    filter: blur(8px);
+    opacity: 0.65;
+    animation: orbAuraPulse 3s ease-in-out infinite alternate;
+}
+
+.aura-cyan { background: radial-gradient(circle, #00e5ff 0%, rgba(0, 229, 255, 0.2) 65%, transparent 100%); }
+.aura-violet { background: radial-gradient(circle, #e040fb 0%, rgba(224, 64, 251, 0.25) 65%, transparent 100%); }
+.aura-gold { background: radial-gradient(circle, #ffd54f 0%, rgba(255, 152, 0, 0.3) 65%, transparent 100%); }
+
+@keyframes orbAuraPulse {
+    from { transform: scale(0.9); opacity: 0.45; }
+    to { transform: scale(1.15); opacity: 0.85; }
+}
+
+.orb-smoke-layer {
+    position: absolute;
+    inset: 4px;
+    border-radius: 46% 54% 52% 48% / 50% 45% 55% 50%;
+    filter: blur(4px);
+    pointer-events: none;
+}
+
+.orb-smoke-layer.smoke-1 {
+    animation: orbSmokeRotate1 5s linear infinite;
+}
+
+.orb-smoke-layer.smoke-2 {
+    animation: orbSmokeRotate2 7s linear infinite reverse;
+    opacity: 0.75;
+}
+
+.smoke-cyan { background: radial-gradient(circle, rgba(255, 255, 255, 0.85) 0%, rgba(0, 229, 255, 0.55) 50%, rgba(0, 145, 234, 0.15) 85%); }
+.smoke-silver { background: radial-gradient(circle, rgba(224, 247, 250, 0.8) 0%, rgba(128, 222, 234, 0.4) 55%, transparent 90%); }
+.smoke-violet { background: radial-gradient(circle, rgba(255, 255, 255, 0.85) 0%, rgba(224, 64, 251, 0.55) 50%, rgba(123, 31, 162, 0.2) 85%); }
+.smoke-gold { background: radial-gradient(circle, rgba(255, 249, 196, 0.85) 0%, rgba(255, 213, 79, 0.55) 50%, rgba(255, 152, 0, 0.2) 85%); }
+.smoke-singularity { background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(255, 171, 0, 0.6) 45%, rgba(0, 229, 255, 0.3) 75%, transparent 100%); }
+
+@keyframes orbSmokeRotate1 {
+    from { transform: rotate(0deg) scale(0.96); }
+    50% { transform: rotate(180deg) scale(1.06); }
+    to { transform: rotate(360deg) scale(0.96); }
+}
+
+@keyframes orbSmokeRotate2 {
+    from { transform: rotate(0deg) scale(1.04); }
+    50% { transform: rotate(-180deg) scale(0.92); }
+    to { transform: rotate(-360deg) scale(1.04); }
+}
+
+.orb-plasma-core {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    z-index: 2;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
+    animation: orbCoreGlow 2.2s ease-in-out infinite alternate;
+}
+
+.core-cyan { background: radial-gradient(circle, #ffffff 0%, #00e5ff 60%, #0091ea 100%); }
+.core-violet { background: radial-gradient(circle, #ffffff 0%, #e040fb 60%, #7b1fa2 100%); }
+.core-singularity { background: radial-gradient(circle, #ffffff 0%, #ffd54f 45%, #ff3d00 80%, #212121 100%); }
+
+@keyframes orbCoreGlow {
+    from { transform: scale(0.92); filter: brightness(1.0); }
+    to { transform: scale(1.1); filter: brightness(1.3); }
+}
+
+.orb-gyro-ring {
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.ring-violet {
+    border: 1.5px dashed rgba(224, 64, 251, 0.85);
+    animation: orbRingSpin 6s linear infinite;
+}
+
+.ring-gold {
+    border: 1.5px dotted rgba(255, 213, 79, 0.9);
+    animation: orbRingSpin 8s linear infinite reverse;
+}
+
+.ring-inner-cyan {
+    inset: 4px;
+    border: 1px solid rgba(0, 229, 255, 0.7);
+    animation: orbRingSpinInner 4.5s linear infinite;
+}
+
+@keyframes orbRingSpin {
+    from { transform: rotateX(65deg) rotateZ(0deg); }
+    to { transform: rotateX(65deg) rotateZ(360deg); }
+}
+
+@keyframes orbRingSpinInner {
+    from { transform: rotateY(65deg) rotateZ(0deg); }
+    to { transform: rotateY(65deg) rotateZ(360deg); }
 }
 
 .chest-title {
     font-size: 8px;
     color: #ffffff;
     font-weight: bold;
+    min-height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .chest-cost {
@@ -2415,13 +2541,22 @@ body, html {
     background: rgba(255, 213, 79, 0.12);
     padding: 2px 6px;
     border-radius: 4px;
+    border: 1px solid rgba(255, 213, 79, 0.3);
 }
 
 .chest-desc {
     font-size: 6px;
     color: #b0bec5;
-    line-height: 1.3;
-    min-height: 28px;
+    line-height: 1.35;
+    min-height: 32px;
+}
+
+.relic-btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    margin-top: 4px;
 }
 
 .relic-open-btn {
@@ -2430,11 +2565,10 @@ body, html {
     color: #ffd54f;
     font-family: 'Press Start 2P', monospace;
     font-size: 7px;
-    padding: 8px 6px;
+    padding: 7px 4px;
     border-radius: 6px;
     cursor: pointer;
     width: 100%;
-    margin-top: 4px;
     transition: background 0.1s, border-color 0.1s, transform 0.06s;
 }
 
@@ -2444,20 +2578,99 @@ body, html {
     transform: translateY(-1px);
 }
 
-.relic-open-btn:active {
-    transform: translateY(2px);
-    background: #ffb300;
-    color: #101518;
+.relic-alt-btn {
+    background: #15222e;
+    border: 1.5px solid #00e5ff;
+    color: #00e5ff;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6.5px;
+    padding: 5px 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.1s, border-color 0.1s;
+}
+
+.relic-alt-btn:hover {
+    background: #1a3245;
+    border-color: #80deea;
+}
+
+/* Guaranteed Pity / Resonance Meter */
+.remains-pity-container {
+    background: rgba(16, 25, 36, 0.95);
+    border: 2px solid #ffb300;
+    border-radius: 8px;
+    padding: 6px 12px;
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: 0 0 14px rgba(255, 179, 0, 0.25);
+}
+
+.pity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 7.5px;
+    color: #ffffff;
+}
+
+.pity-val {
+    color: #ffd54f;
+    font-weight: bold;
+}
+
+.pity-progress-bar {
+    width: 100%;
+    height: 10px;
+    background: #090e15;
+    border: 1.5px solid #37474f;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.pity-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff9800 0%, #ffd54f 70%, #ffffff 100%);
+    box-shadow: 0 0 8px #ffd54f;
+    transition: width 0.3s ease-out;
+}
+
+.pity-subtext {
+    font-size: 6px;
+    color: #b0bec5;
+    text-align: center;
+    line-height: 1.3;
+}
+.remains-modal-content {
+    position: relative;
+    max-width: 620px;
+    width: 95%;
+    max-height: 92vh;
+    overflow-y: auto;
 }
 
 .remains-reward-display {
-    background: linear-gradient(180deg, #182330 0%, #0d141d 100%);
+    position: absolute;
+    inset: 6px;
+    z-index: 30;
+    background: rgba(14, 22, 32, 0.97);
     border: 2px solid #ffd54f;
     border-radius: 8px;
-    padding: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     text-align: center;
-    box-shadow: 0 0 20px rgba(255, 213, 79, 0.4);
+    box-shadow: 0 0 30px rgba(255, 213, 79, 0.5);
     animation: rewardPop 0.25s ease-out;
+}
+
+.remains-reward-display.hidden {
+    display: none !important;
 }
 
 @keyframes rewardPop {

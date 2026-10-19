@@ -2666,7 +2666,7 @@ class RetroRenderer {
         ctx.fillStyle = skyGrad;
         ctx.fillRect(0, 0, w, h);
 
-        // Twinkling stars in the upper sky
+        // Twinkling background stars in the upper sky
         if (starAlpha > 0.05) {
             for (let i = 0; i < 45; i++) {
                 const seed = (i * 137) % 1000;
@@ -2678,6 +2678,118 @@ class RetroRenderer {
                 const size = (i % 7 === 0) ? 2 : 1;
                 ctx.fillRect(Math.floor(sx), Math.floor(sy), size, size);
             }
+        }
+
+        // 1B. Persistent Radiant Beacon Stars for Player Saves (User Requirement)
+        // Shines 24/7 across all day/night phases on the Title Screen
+        let saveSlots = (this.game && this.game.saveSlots) ? this.game.saveSlots : null;
+        if (!saveSlots) {
+            try {
+                const raw = localStorage.getItem('aether_save_slots');
+                if (raw) saveSlots = JSON.parse(raw);
+            } catch (e) {}
+        }
+        
+        const activeSaves = [];
+        if (Array.isArray(saveSlots)) {
+            for (let sIdx = 0; sIdx < saveSlots.length; sIdx++) {
+                if (saveSlots[sIdx]) {
+                    activeSaves.push({ slot: saveSlots[sIdx], index: sIdx });
+                }
+            }
+        }
+
+        // Fixed constellation coordinates across upper sky (xRatio, yRatio)
+        const CONSTELLATION_POINTS = [
+            { rx: 0.12, ry: 0.10 }, // Slot 1
+            { rx: 0.22, ry: 0.07 }, // Slot 2
+            { rx: 0.32, ry: 0.13 }, // Slot 3
+            { rx: 0.42, ry: 0.08 }, // Slot 4
+            { rx: 0.52, ry: 0.12 }, // Slot 5
+            { rx: 0.62, ry: 0.07 }, // Slot 6
+            { rx: 0.72, ry: 0.14 }, // Slot 7
+            { rx: 0.18, ry: 0.20 }, // Slot 8
+            { rx: 0.38, ry: 0.22 }, // Slot 9
+            { rx: 0.58, ry: 0.20 }  // Slot 10
+        ];
+
+        this.saveStarPositions = [];
+
+        // If at least 2 active saves, draw connecting constellation starlight threads
+        if (activeSaves.length > 1) {
+            ctx.save();
+            ctx.strokeStyle = 'rgba(0, 229, 255, 0.25)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([2, 4]);
+            ctx.beginPath();
+            for (let a = 0; a < activeSaves.length; a++) {
+                const pt = CONSTELLATION_POINTS[activeSaves[a].index % CONSTELLATION_POINTS.length];
+                const px = Math.round(w * pt.rx);
+                const py = Math.round(h * pt.ry);
+                if (a === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // Draw each persistent bright save star
+        for (let a = 0; a < activeSaves.length; a++) {
+            const saveObj = activeSaves[a];
+            const pt = CONSTELLATION_POINTS[saveObj.index % CONSTELLATION_POINTS.length];
+            const sx = Math.round(w * pt.rx);
+            const sy = Math.round(h * pt.ry);
+            this.saveStarPositions.push({ x: sx, y: sy, slot: saveObj.slot, index: saveObj.index });
+
+            const pulse = 1.0 + 0.22 * Math.sin(t * 3.2 + saveObj.index * 1.7);
+            const flareLen = (12 + 4 * Math.sin(t * 4.0 + saveObj.index)) * pulse;
+
+            ctx.save();
+            // Outer radiant aura bloom (cyan & gold)
+            const starGlow = ctx.createRadialGradient(sx, sy, 1, sx, sy, 16 * pulse);
+            starGlow.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+            starGlow.addColorStop(0.3, 'rgba(0, 229, 255, 0.75)');
+            starGlow.addColorStop(0.65, 'rgba(255, 213, 79, 0.35)');
+            starGlow.addColorStop(1, 'rgba(0, 229, 255, 0)');
+            ctx.fillStyle = starGlow;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 16 * pulse, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 4-Point Diamond Cross Flare
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(sx - flareLen, sy);
+            ctx.lineTo(sx + flareLen, sy);
+            ctx.moveTo(sx, sy - flareLen);
+            ctx.lineTo(sx, sy + flareLen);
+            ctx.stroke();
+
+            // Diagonal mini spikes
+            ctx.strokeStyle = 'rgba(0, 229, 255, 0.85)';
+            ctx.lineWidth = 1;
+            const diagLen = flareLen * 0.55;
+            ctx.beginPath();
+            ctx.moveTo(sx - diagLen, sy - diagLen);
+            ctx.lineTo(sx + diagLen, sy + diagLen);
+            ctx.moveTo(sx - diagLen, sy + diagLen);
+            ctx.lineTo(sx + diagLen, sy - diagLen);
+            ctx.stroke();
+
+            // Core incandescent spark
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(sx, sy, 2.5 * pulse, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pioneer Slot Badge tag above star
+            ctx.font = '6px "Press Start 2P", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'rgba(255, 213, 79, 0.9)';
+            ctx.fillText(`★S0${saveObj.index + 1}`, sx, sy - flareLen - 3);
+
+            ctx.restore();
         }
 
         // Render Dyson Luminary Orb (Image 3/4)
@@ -2821,12 +2933,61 @@ class RetroRenderer {
         ctx.lineTo(w, mtnBaseY - 6);
         ctx.stroke();
 
-        // 2. Isometric Forest Floor (Matching Image 4 & 5)
+        // 2. Isometric Forest Floor & Real-World Time of Day Grass Engine (User Requirement)
         // Diamond rhombic grid projection
         const tileW = 56;
         const tileH = 28;
         const originX = Math.floor(w / 2);
         const originY = Math.floor(h * 0.46);
+
+        // Real-world local clock sampling
+        const realDate = new Date();
+        const realHour = realDate.getHours() + realDate.getMinutes() / 60.0; // 0.0 to 24.0
+
+        // Real-world natural lighting phase configurations:
+        // Dawn:  05:00 - 08:30 (5.0 to 8.5)
+        // Day:   08:30 - 17:30 (8.5 to 17.5)
+        // Dusk:  17:30 - 20:30 (17.5 to 20.5)
+        // Night: 20:30 - 05:00 (20.5 to 5.0)
+        let grassBaseDark, grassBaseLight, grassBladeColor, grassTipColor, pathDark, pathLight;
+        let isNight = false, isDawn = false, isDusk = false;
+
+        if (realHour >= 5.0 && realHour < 8.5) {
+            // Dawn: Soft cool morning mist, fresh emeralds, glistening dew
+            isDawn = true;
+            grassBaseDark = '#1d3f25';
+            grassBaseLight = '#275231';
+            grassBladeColor = '#388e3c';
+            grassTipColor = '#a5d6a7';
+            pathDark = '#2c4a36';
+            pathLight = '#3b5c46';
+        } else if (realHour >= 8.5 && realHour < 17.5) {
+            // Day: High vivid sunlit emeralds and colorful wildflowers
+            grassBaseDark = '#1c3620';
+            grassBaseLight = '#234428';
+            grassBladeColor = '#2e7d32';
+            grassTipColor = '#81c784';
+            pathDark = '#2c4233';
+            pathLight = '#37523f';
+        } else if (realHour >= 17.5 && realHour < 20.5) {
+            // Dusk: Amber/bronze twilight tones, warm sunset glints
+            isDusk = true;
+            grassBaseDark = '#2c351b';
+            grassBaseLight = '#3a4422';
+            grassBladeColor = '#556832';
+            grassTipColor = '#ffb74d';
+            pathDark = '#383b2a';
+            pathLight = '#494c36';
+        } else {
+            // Night: Deep nocturnal forest floor with BIOLUMINESCENT PHOSPHOR TIPS
+            isNight = true;
+            grassBaseDark = '#0a170f';
+            grassBaseLight = '#102216';
+            grassBladeColor = '#143820';
+            grassTipColor = 'rgba(0, 229, 255, 0.85)'; // Bioluminescent cyan glow
+            pathDark = '#111a14';
+            pathLight = '#18261e';
+        }
 
         const cols = 15;
         const rows = 15;
@@ -2843,9 +3004,9 @@ class RetroRenderer {
 
                 let tileColor;
                 if (isDiagPath) {
-                    tileColor = isCheck ? '#2b4430' : '#335039';
+                    tileColor = isCheck ? pathDark : pathLight;
                 } else {
-                    tileColor = isCheck ? '#1a2e1d' : '#213a25';
+                    tileColor = isCheck ? grassBaseDark : grassBaseLight;
                 }
 
                 ctx.fillStyle = tileColor;
@@ -2858,80 +3019,284 @@ class RetroRenderer {
                 ctx.fill();
 
                 // Isometric tile border line
-                ctx.strokeStyle = 'rgba(0, 0, 0, 0.28)';
+                ctx.strokeStyle = isNight ? 'rgba(0, 0, 0, 0.45)' : 'rgba(0, 0, 0, 0.22)';
                 ctx.lineWidth = 1;
                 ctx.stroke();
 
-                // Wild grass tufts and forest blossoms
+                // Detailed Multi-Blade Grass Tufts & Wildflowers
                 const seed = Math.abs(c * 23 + r * 37) % 100;
-                if (seed < 25 && !isDiagPath) {
-                    const sway = Math.sin(t * 2.5 + c * 0.5 + r * 0.7) * 1.5;
-                    ctx.fillStyle = '#388e3c';
-                    ctx.fillRect(ix - 2 + sway, iy - 4, 1, 4);
-                    ctx.fillRect(ix + 1 + sway, iy - 6, 1, 5);
-                    ctx.fillRect(ix - 4 + sway, iy - 3, 1, 3);
-                } else if (seed > 93) {
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(ix, iy - 2, 2, 2);
-                    ctx.fillStyle = '#ffd54f';
-                    ctx.fillRect(ix + 1, iy - 1, 1, 1);
+                if (seed < 45 && !isDiagPath) {
+                    // Wind wave ripple across the meadow
+                    const windWave = Math.sin(t * 2.3 + ix * 0.035 + iy * 0.05);
+                    const sway = windWave * 2.2;
+
+                    // Blade 1: Left curving blade
+                    ctx.strokeStyle = grassBladeColor;
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    ctx.moveTo(ix - 3, iy);
+                    ctx.quadraticCurveTo(ix - 5 + sway * 0.7, iy - 4, ix - 6 + sway, iy - 6);
+                    ctx.stroke();
+
+                    // Blade 2: Center taller blade
+                    ctx.beginPath();
+                    ctx.moveTo(ix, iy + 1);
+                    ctx.quadraticCurveTo(ix + sway * 0.5, iy - 5, ix + 1 + sway, iy - 8);
+                    ctx.stroke();
+
+                    // Blade 3: Right curving blade
+                    ctx.beginPath();
+                    ctx.moveTo(ix + 3, iy);
+                    ctx.quadraticCurveTo(ix + 4 + sway * 0.6, iy - 3, ix + 5 + sway, iy - 5);
+                    ctx.stroke();
+
+                    // Blade Tip Highlights / Dew / Bioluminescence
+                    ctx.fillStyle = grassTipColor;
+                    if (isNight) {
+                        // Bioluminescent glowing tips
+                        ctx.fillRect(ix + 1 + Math.round(sway), iy - 8, 1.5, 1.5);
+                        if (seed % 3 === 0) {
+                            ctx.fillStyle = 'rgba(105, 240, 174, 0.9)';
+                            ctx.fillRect(ix - 6 + Math.round(sway), iy - 6, 1.5, 1.5);
+                        }
+                    } else if (isDawn) {
+                        // Glistening morning dew drops
+                        ctx.fillStyle = 'rgba(224, 247, 250, 0.95)';
+                        ctx.fillRect(ix + 1 + Math.round(sway), iy - 8, 1, 1);
+                    } else {
+                        // Sunlit blade tips
+                        ctx.fillRect(ix + 1 + Math.round(sway), iy - 8, 1, 1);
+                    }
+                } else if (seed > 92 && !isDiagPath && !isNight) {
+                    // Daytime & Dawn Wildflowers
+                    const flowerType = seed % 3;
+                    const sway = Math.sin(t * 2.3 + ix * 0.035 + iy * 0.05) * 1.5;
+                    const fx = ix + sway;
+                    const fy = iy - 3;
+                    // Stem
+                    ctx.strokeStyle = '#2e7d32';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(ix, iy);
+                    ctx.lineTo(fx, fy);
+                    ctx.stroke();
+                    // Petals
+                    if (flowerType === 0) {
+                        ctx.fillStyle = '#ffffff'; // Chamomile
+                        ctx.fillRect(fx - 1, fy - 2, 3, 3);
+                        ctx.fillStyle = '#ffd54f';
+                        ctx.fillRect(fx, fy - 1, 1, 1);
+                    } else if (flowerType === 1) {
+                        ctx.fillStyle = '#ffb300'; // Buttercup
+                        ctx.fillRect(fx - 1, fy - 2, 3, 2);
+                        ctx.fillStyle = '#fff9c4';
+                        ctx.fillRect(fx, fy - 1, 1, 1);
+                    } else {
+                        ctx.fillStyle = '#ff5252'; // Starlight Poppy
+                        ctx.fillRect(fx - 1, fy - 2, 2, 2);
+                        ctx.fillStyle = '#212121';
+                        ctx.fillRect(fx, fy - 1, 1, 1);
+                    }
                 }
             }
         }
 
-        // 3. Four 2x2 Stepping Stone Block Clusters (Image 4)
-        const clusters = [
-            { x: originX - 115, y: originY - 32 },
-            { x: originX + 115, y: originY - 32 },
-            { x: originX - 115, y: originY + 56 },
-            { x: originX + 115, y: originY + 56 },
-            { x: originX - 175, y: originY + 12 },
-            { x: originX + 175, y: originY + 12 }
+        // Night Fireflies Floating Across Grass Blades
+        if (isNight) {
+            for (let f = 0; f < 10; f++) {
+                const fSeed = (f * 139) % 997;
+                const fx = (originX - 180 + ((fSeed * 7 + Math.floor(t * 18)) % 360));
+                const fy = (originY - 30 + ((fSeed * 11 + Math.floor(t * 12)) % 140));
+                const fAlpha = 0.35 + 0.55 * Math.sin(t * 3.8 + f * 1.9);
+                ctx.fillStyle = (f % 2 === 0) ? `rgba(0, 229, 255, ${fAlpha})` : `rgba(105, 240, 174, ${fAlpha})`;
+                ctx.fillRect(fx, fy, 2, 2);
+            }
+        }
+
+        // 3. Six Title Screen Holding Points & Glowing Smokey Orbs (User Requirement)
+        // Up to 6 consecutive days accumulation. If uncollected by end of 6th day or reset, resets to 0.
+        const holdingPoints = [
+            { id: 1, x: originX - 115, y: originY - 32, day: 1, type: 'wisp' },       // Day 1: West high
+            { id: 2, x: originX + 115, y: originY - 32, day: 2, type: 'sol' },        // Day 2: East high
+            { id: 3, x: originX - 175, y: originY + 12, day: 3, type: 'nebula' },     // Day 3: Far West
+            { id: 4, x: originX + 175, y: originY + 12, day: 4, type: 'chronos' },    // Day 4: Far East
+            { id: 5, x: originX - 115, y: originY + 56, day: 5, type: 'eclipse' },    // Day 5: West low
+            { id: 6, x: originX + 115, y: originY + 56, day: 6, type: 'singularity' } // Day 6: East low
         ];
 
-        for (const cl of clusters) {
-            const offsets = [
-                { dx: -7, dy: -4 },
-                { dx: 7, dy: -4 },
-                { dx: -7, dy: 5 },
-                { dx: 7, dy: 5 }
-            ];
-            for (const off of offsets) {
-                const bx = cl.x + off.dx;
-                const by = cl.y + off.dy;
+        // Retrieve daily holding state from game or storage
+        const dailyState = (this.game && this.game.getDailyHoldingState) ? this.game.getDailyHoldingState() : { currentDay: 1, claimedDays: [] };
+        this.holdingPointPositions = [];
 
-                // 3D stone block top face
-                ctx.fillStyle = '#263238';
+        // Helper: Draw Glowing Detailed Smokey Orb (User Requirement)
+        const drawSmokeyOrb = (ox, oy, orbType, dayNum) => {
+            ctx.save();
+            const hoverY = oy - 20 + Math.sin(t * 2.8 + dayNum) * 4;
+            const rot = t * 1.2 + dayNum * 0.8;
+            const pulse = 1.0 + 0.18 * Math.sin(t * 3.5 + dayNum);
+
+            // 1. Ambient lighting cast onto the pedestal below
+            const baseGlow = ctx.createRadialGradient(ox, oy + 4, 2, ox, oy + 4, 30);
+            baseGlow.addColorStop(0, 'rgba(0, 229, 255, 0.45)');
+            baseGlow.addColorStop(0.7, 'rgba(0, 229, 255, 0.12)');
+            baseGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = baseGlow;
+            ctx.beginPath();
+            ctx.ellipse(ox, oy + 4, 28, 12, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 2. Swirling Smokey Clouds & Wisps
+            const smokeColors = {
+                wisp: ['rgba(224, 247, 250, 0.65)', 'rgba(0, 229, 255, 0.45)', 'rgba(0, 145, 234, 0.25)'],
+                sol: ['rgba(255, 249, 196, 0.70)', 'rgba(255, 213, 79, 0.50)', 'rgba(255, 152, 0, 0.25)'],
+                nebula: ['rgba(243, 229, 245, 0.70)', 'rgba(224, 64, 251, 0.50)', 'rgba(123, 31, 162, 0.25)'],
+                chronos: ['rgba(232, 245, 233, 0.70)', 'rgba(105, 240, 174, 0.50)', 'rgba(0, 200, 83, 0.25)'],
+                eclipse: ['rgba(238, 238, 238, 0.65)', 'rgba(176, 190, 197, 0.50)', 'rgba(55, 71, 79, 0.3)'],
+                singularity: ['rgba(255, 255, 255, 0.85)', 'rgba(255, 213, 79, 0.65)', 'rgba(0, 229, 255, 0.45)']
+            };
+            const pal = smokeColors[orbType] || smokeColors.wisp;
+
+            // Outer rotating ethereal smoke plumes
+            for (let w = 0; w < 6; w++) {
+                const angle = rot + (w * Math.PI * 2) / 6;
+                const dist = (12 + 4 * Math.sin(t * 3.0 + w * 2)) * pulse;
+                const wx = ox + Math.cos(angle) * dist;
+                const wy = hoverY + Math.sin(angle) * (dist * 0.75);
+                const wRadius = (6 + 3 * Math.cos(t * 2.5 + w)) * pulse;
+
+                const smokeGrad = ctx.createRadialGradient(wx, wy, 1, wx, wy, wRadius);
+                smokeGrad.addColorStop(0, pal[0]);
+                smokeGrad.addColorStop(0.5, pal[1]);
+                smokeGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = smokeGrad;
                 ctx.beginPath();
-                ctx.moveTo(bx, by - 4);
-                ctx.lineTo(bx + 6, by);
-                ctx.lineTo(bx, by + 4);
-                ctx.lineTo(bx - 6, by);
-                ctx.closePath();
+                ctx.arc(wx, wy, wRadius, 0, Math.PI * 2);
                 ctx.fill();
+            }
 
-                ctx.strokeStyle = '#37474f';
+            // Inner dense swirling nebula core
+            for (let s = 0; s < 4; s++) {
+                const sAngle = -rot * 1.5 + (s * Math.PI) / 2;
+                const sDist = (6 + 2 * Math.sin(t * 4.0 + s)) * pulse;
+                const sx = ox + Math.cos(sAngle) * sDist;
+                const sy = hoverY + Math.sin(sAngle) * (sDist * 0.7);
+                const sRad = 8 * pulse;
+
+                const inGrad = ctx.createRadialGradient(sx, sy, 1, sx, sy, sRad);
+                inGrad.addColorStop(0, pal[0]);
+                inGrad.addColorStop(0.6, pal[2]);
+                inGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = inGrad;
+                ctx.beginPath();
+                ctx.arc(sx, sy, sRad, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Orbiting Stardust Gyroscope Rings (Singularity & Nebula)
+            if (orbType === 'singularity' || orbType === 'nebula') {
+                ctx.strokeStyle = pal[1];
                 ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.ellipse(ox, hoverY, 16 * pulse, 6 * pulse, rot * 0.8, 0, Math.PI * 2);
                 ctx.stroke();
+            }
 
-                // South/East shadow faces
-                ctx.fillStyle = '#101518';
-                ctx.beginPath();
-                ctx.moveTo(bx - 6, by);
-                ctx.lineTo(bx, by + 4);
-                ctx.lineTo(bx, by + 9);
-                ctx.lineTo(bx - 6, by + 5);
-                ctx.closePath();
-                ctx.fill();
+            // Core Incandescent Luminous Plasma Sphere
+            const coreRad = 7 * pulse;
+            const coreGrad = ctx.createRadialGradient(ox, hoverY - 1, 1, ox, hoverY, coreRad);
+            coreGrad.addColorStop(0, '#ffffff');
+            coreGrad.addColorStop(0.4, pal[0]);
+            coreGrad.addColorStop(0.85, pal[1]);
+            coreGrad.addColorStop(1, pal[2]);
+            ctx.fillStyle = coreGrad;
+            ctx.beginPath();
+            ctx.arc(ox, hoverY, coreRad, 0, Math.PI * 2);
+            ctx.fill();
 
-                ctx.fillStyle = '#182026';
+            // Ascending Smoke Sparks & Embers
+            for (let sp = 0; sp < 4; sp++) {
+                const sparkProg = (t * 20 + sp * 25 + dayNum * 17) % 36;
+                const spX = ox + Math.sin(t * 3.5 + sp * 2) * (6 + sparkProg * 0.2);
+                const spY = hoverY - 6 - sparkProg;
+                const spAlpha = Math.max(0, 1.0 - (sparkProg / 36));
+                ctx.fillStyle = (sp % 2 === 0) ? `rgba(255, 255, 255, ${spAlpha})` : `rgba(0, 229, 255, ${spAlpha})`;
+                ctx.fillRect(spX, spY, 1.5, 1.5);
+            }
+
+            // Pulsing Day Pill Tag above the Orb
+            ctx.font = '6px "Press Start 2P", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'rgba(255, 213, 79, 0.95)';
+            ctx.fillText(`DAY ${dayNum}`, ox, hoverY - 17);
+
+            ctx.restore();
+        };
+
+        // Render each of the 6 holding points
+        for (const cl of holdingPoints) {
+            // Draw Carved Stone Runic Pedestal Stand
+            ctx.fillStyle = '#1c2430';
+            ctx.fillRect(cl.x - 14, cl.y - 2, 28, 12);
+            ctx.fillStyle = '#263238';
+            ctx.fillRect(cl.x - 16, cl.y - 6, 32, 6);
+
+            // 3D stone block top face with hollow runic font basin
+            ctx.fillStyle = '#37474f';
+            ctx.beginPath();
+            ctx.moveTo(cl.x, cl.y - 10);
+            ctx.lineTo(cl.x + 16, cl.y - 5);
+            ctx.lineTo(cl.x, cl.y);
+            ctx.lineTo(cl.x - 16, cl.y - 5);
+            ctx.closePath();
+            ctx.fill();
+
+            // Basin inset
+            ctx.fillStyle = '#101518';
+            ctx.beginPath();
+            ctx.ellipse(cl.x, cl.y - 5, 8, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pedestal border
+            ctx.strokeStyle = '#455a64';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Check if this holding point has an active orb or is claimed
+            const isUnlocked = cl.day <= dailyState.currentDay;
+            const isClaimed = dailyState.claimedDays.includes(cl.day);
+
+            this.holdingPointPositions.push({
+                id: cl.id,
+                day: cl.day,
+                x: cl.x,
+                y: cl.y,
+                isUnlocked,
+                isClaimed,
+                type: cl.type
+            });
+
+            if (isUnlocked && !isClaimed) {
+                // Active Glowing Detailed Smokey Orb ready to collect!
+                drawSmokeyOrb(cl.x, cl.y, cl.type, cl.day);
+            } else if (isClaimed) {
+                // Claimed serene starlight font in basin
+                ctx.save();
+                const fontPulse = 0.4 + 0.3 * Math.sin(t * 3.0 + cl.day);
+                ctx.fillStyle = `rgba(0, 229, 255, ${fontPulse})`;
                 ctx.beginPath();
-                ctx.moveTo(bx, by + 4);
-                ctx.lineTo(bx + 6, by);
-                ctx.lineTo(bx + 6, by + 5);
-                ctx.lineTo(bx, by + 9);
-                ctx.closePath();
+                ctx.ellipse(cl.x, cl.y - 5, 7, 3.5, 0, 0, Math.PI * 2);
                 ctx.fill();
+                ctx.font = '5px "Press Start 2P", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = 'rgba(0, 229, 255, 0.7)';
+                ctx.fillText(`CLAIMED`, cl.x, cl.y - 12);
+                ctx.restore();
+            } else {
+                // Locked future day pedestal
+                ctx.font = '5px "Press Start 2P", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#546e7a';
+                ctx.fillText(`DAY ${cl.day}`, cl.x, cl.y - 12);
             }
         }
 

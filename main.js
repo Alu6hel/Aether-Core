@@ -10,6 +10,7 @@ class GameApp {
     constructor() {
         this.canvas = document.getElementById('game-canvas');
         this.renderer = new RetroRenderer(this.canvas);
+        this.renderer.game = this;
         this.cutscenes = new CutsceneEngine();
         this.storage = new GameStorage();
         this.edgeClient = new EdgeWorldClient();
@@ -98,6 +99,8 @@ class GameApp {
             if (savedAch) this.achievementsClaimed = JSON.parse(savedAch);
             const savedRemains = localStorage.getItem('aether_remains_opened');
             if (savedRemains !== null) this.remainsOpenedCount = parseInt(savedRemains, 10);
+            const savedPity = localStorage.getItem('aether_remains_pity');
+            if (savedPity !== null) this.remainsPityPoints = parseInt(savedPity, 10) || 0;
             const savedBoss = localStorage.getItem('aether_boss_slain');
             if (savedBoss !== null) this.bossSlainCount = parseInt(savedBoss, 10);
             const savedCores = localStorage.getItem('aether_cores_extracted');
@@ -331,6 +334,167 @@ class GameApp {
         }
     }
 
+    showToast(message, type = 'info') {
+        const container = document.getElementById('app-container') || document.body;
+        let toast = document.getElementById('aether-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'aether-toast';
+            toast.style.cssText = `
+                position: absolute;
+                top: 24px;
+                left: 50%;
+                transform: translateX(-50%) translateY(-20px);
+                background: #172230;
+                border: 2px solid #00e5ff;
+                border-radius: 8px;
+                padding: 10px 18px;
+                color: #ffffff;
+                font-family: 'Press Start 2P', monospace;
+                font-size: 8px;
+                line-height: 1.5;
+                text-align: center;
+                z-index: 99999;
+                pointer-events: none;
+                box-shadow: 0 4px 18px rgba(0, 0, 0, 0.8), 0 0 12px rgba(0, 229, 255, 0.4);
+                opacity: 0;
+                transition: opacity 0.2s, transform 0.2s;
+                max-width: 85%;
+                white-space: pre-line;
+            `;
+            container.appendChild(toast);
+        }
+
+        if (type === 'error') {
+            toast.style.borderColor = '#ff5252';
+            toast.style.boxShadow = '0 4px 18px rgba(0, 0, 0, 0.8), 0 0 14px rgba(255, 82, 82, 0.5)';
+            toast.style.color = '#ffcdd2';
+        } else if (type === 'success') {
+            toast.style.borderColor = '#ffd54f';
+            toast.style.boxShadow = '0 4px 18px rgba(0, 0, 0, 0.8), 0 0 14px rgba(255, 213, 79, 0.5)';
+            toast.style.color = '#fff9c4';
+        } else {
+            toast.style.borderColor = '#00e5ff';
+            toast.style.boxShadow = '0 4px 18px rgba(0, 0, 0, 0.8), 0 0 12px rgba(0, 229, 255, 0.4)';
+            toast.style.color = '#ffffff';
+        }
+
+        toast.textContent = message;
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(-50%) translateY(0px)';
+
+        if (this._toastTimeout) clearTimeout(this._toastTimeout);
+        this._toastTimeout = setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(-50%) translateY(-20px)';
+        }, 2800);
+    }
+
+    /* Randomized Dyson Sphere Trajectory on Each App Boot (User Requirement) */
+    randomizeDysonSphereTrajectory() {
+        const dysonActor = document.querySelector('.splash-dyson-actor');
+        if (!dysonActor) return;
+
+        // 1. Random entry sector
+        const entryVariants = [
+            { x: -350 - Math.random() * 50, y: -90 - Math.random() * 60, rot: -1200 - Math.random() * 360 }, // Top-left high
+            { x: -360 - Math.random() * 40, y: -10 + Math.random() * 20, rot: -1080 - Math.random() * 240 }, // Direct west
+            { x: -330 - Math.random() * 50, y: 80 + Math.random() * 60, rot: -980 - Math.random() * 260 },   // Bottom-left low
+            { x: -160 - Math.random() * 60, y: -290 - Math.random() * 50, rot: -1140 - Math.random() * 300 } // North-west steep
+        ];
+        const entry = entryVariants[Math.floor(Math.random() * entryVariants.length)];
+
+        // Hit 1 (21.5%): strikes perimeter at angle theta1 (left hemisphere 130deg - 230deg)
+        const hitRadius = 42 + Math.random() * 6;
+        const theta1 = (130 + Math.random() * 100) * (Math.PI / 180);
+        const hit1X = Math.round(Math.cos(theta1) * hitRadius);
+        const hit1Y = Math.round(Math.sin(theta1) * hitRadius);
+
+        // Rebound 1: bounces back along reflection angle
+        const reb1Dist = 80 + Math.random() * 35;
+        const reb1Angle = theta1 + Math.PI + (Math.random() - 0.5) * 0.8;
+        const reb1X = Math.round(Math.cos(reb1Angle) * reb1Dist);
+        const reb1Y = Math.round(Math.sin(reb1Angle) * reb1Dist);
+
+        // Hit 2 (35%): swings around and strikes opposite perimeter (upper-right 290deg - 370deg)
+        const theta2 = (290 + Math.random() * 80) * (Math.PI / 180);
+        const hit2X = Math.round(Math.cos(theta2) * hitRadius);
+        const hit2Y = Math.round(Math.sin(theta2) * hitRadius);
+
+        // Ricochet 2 (40%): sweeps around right flank
+        const swooX = Math.round(65 + Math.random() * 30);
+        const swooY = Math.round(45 + Math.random() * 25);
+
+        // Hit 3 (48%): strikes right flank
+        const theta3 = (20 + Math.random() * 80) * (Math.PI / 180);
+        const hit3X = Math.round(Math.cos(theta3) * hitRadius);
+        const hit3Y = Math.round(Math.sin(theta3) * hitRadius);
+
+        // Hit 4 (60%): sweeps underneath to bottom-left
+        const theta4 = (80 + Math.random() * 70) * (Math.PI / 180);
+        const hit4X = Math.round(Math.cos(theta4) * hitRadius);
+        const hit4Y = Math.round(Math.sin(theta4) * hitRadius);
+
+        let styleEl = document.getElementById('dynamic-dyson-style');
+        if (!styleEl) {
+            styleEl = document.createElement('style');
+            styleEl.id = 'dynamic-dyson-style';
+            document.head.appendChild(styleEl);
+        }
+
+        const keyframeCss = `
+            @keyframes dynamicDysonRoll {
+                0% {
+                    transform: translate(${Math.round(entry.x)}px, ${Math.round(entry.y)}px) rotate(${Math.round(entry.rot)}deg) scale(0.85);
+                    opacity: 0;
+                }
+                4% {
+                    opacity: 1;
+                }
+                16% {
+                    transform: translate(${Math.round(entry.x * 0.35 + hit1X * 0.65)}px, ${Math.round(entry.y * 0.35 + hit1Y * 0.65)}px) rotate(${Math.round(entry.rot * 0.4)}deg) scale(0.96);
+                }
+                /* Hit 1: First massive kinetic strike */
+                21.5% {
+                    transform: translate(${hit1X}px, ${hit1Y}px) rotate(0deg) scale(1.08);
+                }
+                25% {
+                    transform: translate(${reb1X}px, ${reb1Y}px) rotate(160deg) scale(0.92);
+                }
+                /* Hit 2: Knocks upper flank */
+                35.0% {
+                    transform: translate(${hit2X}px, ${hit2Y}px) rotate(420deg) scale(0.95);
+                }
+                40% {
+                    transform: translate(${swooX}px, ${swooY}px) rotate(580deg) scale(1.02);
+                }
+                /* Hit 3: Ricochet strike */
+                48.0% {
+                    transform: translate(${hit3X}px, ${hit3Y}px) rotate(740deg) scale(1.04);
+                }
+                54% {
+                    transform: translate(${Math.round(-hit3X * 0.7)}px, ${Math.round(-hit3Y * 0.6)}px) rotate(880deg) scale(0.97);
+                }
+                /* Hit 4: Under-sweep strike */
+                60.0% {
+                    transform: translate(${hit4X}px, ${hit4Y}px) rotate(1020deg) scale(1.05);
+                }
+                /* Concentric Containment Orbit Lock */
+                68% {
+                    transform: translate(0px, 0px) rotate(1200deg) scale(1.0);
+                }
+                85% {
+                    transform: translate(0px, 0px) rotate(1380deg) scale(1.02);
+                }
+                100% {
+                    transform: translate(0px, 0px) rotate(1540deg) scale(1.0);
+                }
+            }
+        `;
+        styleEl.textContent = keyframeCss;
+        dysonActor.style.animation = 'dynamicDysonRoll 6.66s cubic-bezier(0.2, 0.85, 0.32, 1.05) forwards';
+    }
+
     initSplashScreen() {
         this.gameState = 'SPLASH';
         if (this.screens) {
@@ -358,6 +522,7 @@ class GameApp {
         }
 
         splashContainer.classList.remove('hidden', 'fade-out');
+        this.randomizeDysonSphereTrajectory();
         const fillBar = document.getElementById('splash-progress-fill');
         const statusText = document.getElementById('splash-status-text');
         const percentText = document.getElementById('splash-percent-text');
@@ -516,6 +681,8 @@ class GameApp {
         if (shopCoins) shopCoins.innerText = `${curCoins}`;
         if (shopCores) shopCores.innerText = `${curCores}`;
         if (shopTokens) shopTokens.innerText = `${curTokens}`;
+
+        this.updateRemainsPityDisplay();
     }
 
     addCoins(amt) {
@@ -613,6 +780,50 @@ class GameApp {
             });
         }
 
+        // Title Screen Interactive Tap Listener (6 Holding Points & Persistent Save Stars)
+        const handleTitleTap = (e) => {
+            if (e.target && (e.target.closest('button') || e.target.closest('.clickable-chip') || e.target.closest('.modal-content'))) {
+                return;
+            }
+
+            if (!this.canvas || !this.renderer) return;
+            const rect = this.canvas.getBoundingClientRect();
+            const clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : (e.clientX !== undefined ? e.clientX : (e.pageX || 0));
+            const clientY = (e.touches && e.touches[0]) ? e.touches[0].clientY : (e.clientY !== undefined ? e.clientY : (e.pageY || 0));
+            if (clientX === undefined || clientY === undefined) return;
+
+            // Scale to internal canvas coordinates
+            const scaleX = (this.renderer.width || 480) / rect.width;
+            const scaleY = (this.renderer.height || 320) / rect.height;
+            const canvasX = (clientX - rect.left) * scaleX;
+            const canvasY = (clientY - rect.top) * scaleY;
+
+            // 1. Check 6 Holding Points on Title Screen
+            const pts = this.renderer.holdingPointPositions || [];
+            for (const pt of pts) {
+                const dist = Math.hypot(canvasX - pt.x, canvasY - (pt.y - 14));
+                if (dist < 42) {
+                    this.handleHoldingPointTap(pt);
+                    return;
+                }
+            }
+
+            // 2. Check Persistent Save Stars in Sky
+            const stars = this.renderer.saveStarPositions || [];
+            for (const st of stars) {
+                const sDist = Math.hypot(canvasX - st.x, canvasY - st.y);
+                if (sDist < 42) {
+                    this.showSaveStarInfo(st);
+                    return;
+                }
+            }
+        };
+
+        const startScreen = document.getElementById('start-screen-container');
+        if (startScreen) {
+            this.bindTap(startScreen, handleTitleTap);
+        }
+
         // Modal Close Handlers
         const closeRemains = document.getElementById('remains-close');
         if (closeRemains) {
@@ -650,8 +861,8 @@ class GameApp {
             });
         }
 
-        // Wire Relic Chest Open Buttons
-        document.querySelectorAll('.relic-open-btn').forEach(btn => {
+        // Wire Relic Chest Open Buttons & Alt Token Buttons
+        document.querySelectorAll('.relic-open-btn, .relic-alt-btn').forEach(btn => {
             this.bindTap(btn, () => {
                 const tier = btn.getAttribute('data-chest');
                 this.handleOpenRemains(tier);
@@ -730,59 +941,314 @@ class GameApp {
     }
 
     /* ==========================================================================
-       OPEN REMAINS / RELIQUARY UNBOXING (IMAGE 4)
+       6 TITLE SCREEN HOLDING POINTS & DAILY CONSECUTIVE ACCUMULATION (USER REQ)
        ========================================================================== */
+    getDailyHoldingState() {
+        let streak = 1;
+        let claimedDays = [];
+        let lastDate = null;
+        try {
+            const rawStreak = localStorage.getItem('aether_daily_holding_streak');
+            if (rawStreak !== null) streak = parseInt(rawStreak, 10) || 1;
+            const rawClaimed = localStorage.getItem('aether_daily_holding_claimed');
+            if (rawClaimed) claimedDays = JSON.parse(rawClaimed) || [];
+            lastDate = localStorage.getItem('aether_daily_holding_last_date');
+        } catch (e) {
+            console.warn("Could not read daily holding storage:", e);
+        }
+
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+        if (!lastDate) {
+            streak = 1;
+            claimedDays = [];
+            lastDate = todayStr;
+            try {
+                localStorage.setItem('aether_daily_holding_streak', streak);
+                localStorage.setItem('aether_daily_holding_claimed', JSON.stringify(claimedDays));
+                localStorage.setItem('aether_daily_holding_last_date', lastDate);
+            } catch (e) {}
+        } else if (lastDate !== todayStr) {
+            const prev = new Date(lastDate);
+            const curr = new Date(todayStr);
+            const diffDays = Math.round((curr - prev) / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 1) {
+                // Next day opened: add one remain to holding points up to 6th day
+                if (streak < 6) {
+                    streak += 1;
+                } else {
+                    // Past 6th day or uncollected: resets and always starts from 0 (day 1)
+                    streak = 1;
+                    claimedDays = [];
+                }
+            } else if (diffDays > 1) {
+                // Missed days: resets and starts from 0 to get to 6
+                streak = 1;
+                claimedDays = [];
+            }
+            lastDate = todayStr;
+            try {
+                localStorage.setItem('aether_daily_holding_streak', streak);
+                localStorage.setItem('aether_daily_holding_claimed', JSON.stringify(claimedDays));
+                localStorage.setItem('aether_daily_holding_last_date', lastDate);
+            } catch (e) {}
+        }
+
+        return { currentDay: streak, claimedDays };
+    }
+
+    handleHoldingPointTap(pt) {
+        if (!pt) return;
+        const state = this.getDailyHoldingState();
+        if (!pt.isUnlocked) {
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(180, 'sawtooth', 0.2, 0.1);
+            this.showToast(`🔒 Day ${pt.day} Smokey Orb awakens tomorrow! (Streak: Day ${state.currentDay}/6)`, 'info');
+            return;
+        }
+
+        if (pt.isClaimed || state.claimedDays.includes(pt.day)) {
+            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(280, 'sine', 0.15, 0.08);
+            this.showToast(`✓ Day ${pt.day} Smokey Orb already collected for this cycle!`, 'info');
+            return;
+        }
+
+        this.claimDailyHoldingRemain(pt.day, pt.type);
+    }
+
+    claimDailyHoldingRemain(day, type) {
+        const state = this.getDailyHoldingState();
+        if (state.claimedDays.includes(day)) return;
+
+        state.claimedDays.push(day);
+        try {
+            localStorage.setItem('aether_daily_holding_claimed', JSON.stringify(state.claimedDays));
+        } catch (e) {}
+
+        const rewardNames = [];
+        let coins = 75;
+        let keys = 2;
+        let cores = 0;
+        let tokens = 0;
+
+        if (day === 1) {
+            coins = 75;
+            keys = 2;
+            rewardNames.push("75 🪙 Gold", "2 🗝️ Keys", "5 🍞 Bread");
+            if (this.player && this.player.inventory) this.player.inventory.addItem('BREAD', 5);
+        } else if (day === 2) {
+            coins = 150;
+            keys = 2;
+            cores = 1;
+            rewardNames.push("150 🪙 Gold", "2 🗝️ Keys", "1 ☥ Dyson Core", "2 🧪 Salves");
+            if (this.player && this.player.inventory) this.player.inventory.addItem('ENERGY_SALVE', 2);
+        } else if (day === 3) {
+            coins = 220;
+            keys = 3;
+            tokens = 2;
+            rewardNames.push("220 🪙 Gold", "3 🗝️ Keys", "2 ✡ Tokens", "2 ⚡ Conduits");
+            if (this.player && this.player.inventory) this.player.inventory.addItem('ANCIENT_CONDUIT', 2);
+        } else if (day === 4) {
+            coins = 300;
+            keys = 3;
+            cores = 2;
+            tokens = 2;
+            rewardNames.push("300 🪙 Gold", "3 🗝️ Keys", "2 ☥ Cores", "2 ✡ Tokens", "1 ✨ Master Elixir");
+            if (this.player && this.player.inventory) this.player.inventory.addItem('SUPER_SALVE', 1);
+        } else if (day === 5) {
+            coins = 450;
+            keys = 4;
+            cores = 2;
+            tokens = 3;
+            rewardNames.push("450 🪙 Gold", "4 🗝️ Keys", "2 ☥ Cores", "3 ✡ Tokens", "3 🪨 Titanium");
+            if (this.player && this.player.inventory) this.player.inventory.addItem('TITANIUM_ORE', 3);
+        } else if (day === 6) {
+            coins = 600;
+            keys = 5;
+            cores = 3;
+            tokens = 5;
+            rewardNames.push("600 🪙 Gold", "5 🗝️ Keys", "3 ☥ Cores", "5 ✡ Tokens", "3 ✨ Master Elixirs");
+            if (this.player && this.player.inventory) this.player.inventory.addItem('SUPER_SALVE', 3);
+        }
+
+        this.addCoins(coins);
+        this.relicKeys = Math.min(15, (this.relicKeys || 15) + keys);
+        if (cores > 0) this.coresExtractedCount = (this.coresExtractedCount || 0) + cores;
+        if (tokens > 0) this.starTokens = (this.starTokens || 0) + tokens;
+
+        try {
+            localStorage.setItem('aether_relic_keys', this.relicKeys);
+            localStorage.setItem('aether_cores_extracted', this.coresExtractedCount || 0);
+            localStorage.setItem('aether_star_tokens', this.starTokens || 0);
+        } catch (e) {}
+
+        if (this.soundEnabled && this.sfxEnabled) {
+            this.renderer.audio.playItemObtained();
+        }
+
+        const orbTitle = (type || 'ASTRAL').toUpperCase();
+        this.showToast(`✨ DAY ${day} ${orbTitle} SMOKEY ORB CLAIMED!\n${rewardNames.join(' • ')}`, 'success');
+        this.updateStartCurrencies();
+
+        if (state.claimedDays.length >= 6) {
+            setTimeout(() => {
+                this.showToast(`🌟 ALL 6 SMOKEY ORBS COLLECTED! The Astral Altar will reset on your next day cycle.`, 'success');
+            }, 3000);
+        }
+    }
+
+    showSaveStarInfo(st) {
+        if (!st) return;
+        const slot = (this.saveSlots && this.saveSlots[st.index]) ? this.saveSlots[st.index] : null;
+        if (this.soundEnabled && this.sfxEnabled) {
+            this.renderer.audio.playTone(587.33, 'triangle', 0.25, 0.12);
+        }
+
+        if (slot) {
+            const pioneerName = slot.pioneerName || 'PIONEER';
+            const cls = (slot.selectedClass || 'WARRIOR').replace('_', ' ');
+            const day = slot.currentDay || 1;
+            const gold = slot.coins || 0;
+            this.showToast(`★ SAVE STAR 0${st.index + 1}: ${pioneerName}\n${cls} • Day ${day} • 🪙 ${gold} Gold\n(Tap SAVE SLOTS to load expedition)`, 'info');
+        } else {
+            this.showToast(`★ SAVE STAR 0${st.index + 1}: Uncharted Star\n(Tap SAVE SLOTS to embark on a new expedition)`, 'info');
+        }
+    }
+
+    /* ==========================================================================
+       OPEN REMAINS / SMOKEY RELIQUARY & PITY CONVERGENCE (USER REQ)
+       ========================================================================== */
+    updateRemainsPityDisplay() {
+        const pityVal = document.getElementById('remains-pity-val');
+        const pityFill = document.getElementById('remains-pity-fill');
+        const pts = this.remainsPityPoints || 0;
+        if (pityVal) pityVal.innerText = `${pts} / 100 PT`;
+        if (pityFill) pityFill.style.width = `${Math.min(100, pts)}%`;
+    }
+
     openRemainsModal() {
         const modal = document.getElementById('remains-modal');
         if (!modal) return;
         const rewardDisplay = document.getElementById('remains-reward-display');
         if (rewardDisplay) rewardDisplay.classList.add('hidden');
         this.updateStartCurrencies();
+        this.updateRemainsPityDisplay();
         modal.classList.remove('hidden');
+        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuSelect();
     }
 
     handleOpenRemains(tier) {
-        const costs = { common: 1, runic: 2, celestial: 3 };
-        const cost = costs[tier] || 1;
-        if (this.relicKeys < cost) {
-            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(130, 'sawtooth', 0.2, 0.1);
-            alert(`Not enough keys! Need ${cost} 🗝️ keys.`);
-            return;
+        let keyCost = 0;
+        let tokenCost = 0;
+        let addedPity = 10;
+        let orbName = 'Astral Vapor Sphere';
+
+        if (tier === 'common') {
+            keyCost = 1;
+            addedPity = 10;
+            orbName = 'Astral Vapor Sphere';
+        } else if (tier === 'runic') {
+            keyCost = 2;
+            addedPity = 25;
+            orbName = 'Resonant Nebula Orb';
+        } else if (tier === 'runic-tokens') {
+            tokenCost = 30;
+            addedPity = 25;
+            orbName = 'Resonant Nebula Orb';
+        } else if (tier === 'celestial') {
+            keyCost = 3;
+            addedPity = 50;
+            orbName = 'Primordial Singularity Orb';
+        } else if (tier === 'celestial-tokens') {
+            tokenCost = 300;
+            addedPity = 50;
+            orbName = 'Primordial Singularity Orb';
         }
 
-        this.relicKeys -= cost;
+        // Validate Key Cost
+        if (keyCost > 0) {
+            const curKeys = this.relicKeys !== undefined ? this.relicKeys : 15;
+            if (curKeys < keyCost) {
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(130, 'sawtooth', 0.2, 0.1);
+                this.showToast(`Not enough keys! Need ${keyCost} 🗝️ keys.`, 'error');
+                return;
+            }
+            this.relicKeys = curKeys - keyCost;
+        }
+
+        // Validate Token Cost
+        if (tokenCost > 0) {
+            const curTokens = this.starTokens || 0;
+            if (curTokens < tokenCost) {
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(130, 'sawtooth', 0.2, 0.1);
+                this.showToast(`Not enough Star Tokens! Need ${tokenCost} ✡ Tokens.`, 'error');
+                return;
+            }
+            this.starTokens = curTokens - tokenCost;
+        }
+
         this.remainsOpenedCount = (this.remainsOpenedCount || 0) + 1;
+        this.remainsPityPoints = (this.remainsPityPoints || 0) + addedPity;
+        let triggeredConvergence = false;
+
+        // Guaranteed Mythic Resonance Convergence at 100 pt
+        if (this.remainsPityPoints >= 100) {
+            triggeredConvergence = true;
+            this.remainsPityPoints = this.remainsPityPoints % 100;
+        }
+
         try {
             localStorage.setItem('aether_relic_keys', this.relicKeys);
+            localStorage.setItem('aether_star_tokens', this.starTokens || 0);
             localStorage.setItem('aether_remains_opened', this.remainsOpenedCount);
+            localStorage.setItem('aether_remains_pity', this.remainsPityPoints);
         } catch (e) {}
 
-        // Roll Rewards
+        // Roll Rich Non-Copyright Relic Rewards
         const loot = [];
         if (tier === 'common') {
-            const coins = 25 + Math.floor(Math.random() * 25);
+            const coins = 40 + Math.floor(Math.random() * 35);
             loot.push({ type: 'coins', name: 'ALU Coins', icon: '🪙', qty: coins });
-            loot.push({ type: 'item', id: 'BREAD', name: 'Field Bread', icon: '🍞', qty: 2 });
-            loot.push({ type: 'item', id: 'COPPER_ORE', name: 'Copper Shards', icon: '🪨', qty: 3 });
-        } else if (tier === 'runic') {
-            const coins = 80 + Math.floor(Math.random() * 60);
+            loot.push({ type: 'item', id: 'BREAD', name: 'Field Provisions', icon: '🍞', qty: 3 });
+            loot.push({ type: 'item', id: 'COPPER_ORE', name: 'Copper Shards', icon: '🪨', qty: 4 });
+            if (Math.random() < 0.25) {
+                loot.push({ type: 'keys', name: 'Astral Key Refund', icon: '🗝️', qty: 1 });
+            }
+        } else if (tier === 'runic' || tier === 'runic-tokens') {
+            const coins = 120 + Math.floor(Math.random() * 80);
             loot.push({ type: 'coins', name: 'ALU Coins', icon: '🪙', qty: coins });
             loot.push({ type: 'item', id: 'ENERGY_SALVE', name: 'Energy Salve', icon: '🧪', qty: 2 });
             loot.push({ type: 'item', id: 'ANCIENT_CONDUIT', name: 'Matrix Conduits', icon: '⚡', qty: 2 });
-            if (Math.random() < 0.45) {
-                loot.push({ type: 'cores', name: 'Dyson Core', icon: '☥', qty: 1 });
+            if (Math.random() < 0.65) {
+                loot.push({ type: 'cores', name: 'Ancient Dyson Core', icon: '☥', qty: 1 });
             }
-        } else { // celestial
-            const coins = 200 + Math.floor(Math.random() * 120);
+            if (Math.random() < 0.40) {
+                loot.push({ type: 'tokens', name: 'Star Matrix Token', icon: '✡', qty: 1 });
+            }
+        } else { // celestial or celestial-tokens
+            const coins = 300 + Math.floor(Math.random() * 150);
             loot.push({ type: 'coins', name: 'ALU Coins', icon: '🪙', qty: coins });
-            loot.push({ type: 'cores', name: 'Ancient Dyson Core', icon: '☥', qty: 1 });
-            loot.push({ type: 'tokens', name: 'Star Matrix Token', icon: '✡', qty: 1 });
+            loot.push({ type: 'cores', name: 'Quantum Dyson Core', icon: '☥', qty: 1 + (Math.random() < 0.5 ? 1 : 0) });
+            loot.push({ type: 'tokens', name: 'Star Matrix Tokens', icon: '✡', qty: 2 });
             loot.push({ type: 'item', id: 'SUPER_SALVE', name: 'Master Elixir', icon: '✨', qty: 1 });
+            loot.push({ type: 'item', id: 'TITANIUM_ORE', name: 'Singularity Ingot', icon: '💠', qty: 2 });
+        }
+
+        // Add Resonance Convergence Bonus if reached
+        if (triggeredConvergence) {
+            loot.unshift({
+                type: 'mythic_bonus',
+                name: '⚡ 100 PT RESONANCE BONUS: 1 Dyson Core + 2 Star Tokens + 300 Gold',
+                icon: '👑',
+                qty: 1
+            });
+            this.showToast('⚡ RESONANCE CONVERGENCE (100 PT) TRIGGERED! Guaranteed Mythic Relic unsealed!', 'success');
         }
 
         this.pendingRemainsLoot = loot;
 
-        // Render Rewards
+        // Render Rewards Modal
         const container = document.getElementById('remains-reward-items');
         if (container) {
             container.innerHTML = '';
@@ -805,18 +1271,33 @@ class GameApp {
             this.renderer.audio.playCoinCollect();
         }
         this.updateStartCurrencies();
+        this.updateRemainsPityDisplay();
     }
 
     claimRemainsLoot() {
         if (!this.pendingRemainsLoot) return;
+        let count = 0;
         for (const item of this.pendingRemainsLoot) {
+            count++;
             if (item.type === 'coins') {
                 this.addCoins(item.qty);
+            } else if (item.type === 'keys') {
+                this.relicKeys = Math.min(15, (this.relicKeys || 15) + item.qty);
+                try { localStorage.setItem('aether_relic_keys', this.relicKeys); } catch (e) {}
             } else if (item.type === 'cores') {
                 this.coresExtractedCount = (this.coresExtractedCount || 0) + item.qty;
+                try { localStorage.setItem('aether_cores_extracted', this.coresExtractedCount); } catch (e) {}
             } else if (item.type === 'tokens') {
                 this.starTokens = (this.starTokens || 0) + item.qty;
                 try { localStorage.setItem('aether_star_tokens', this.starTokens); } catch (e) {}
+            } else if (item.type === 'mythic_bonus') {
+                this.addCoins(300);
+                this.coresExtractedCount = (this.coresExtractedCount || 0) + 1;
+                this.starTokens = (this.starTokens || 0) + 2;
+                try {
+                    localStorage.setItem('aether_cores_extracted', this.coresExtractedCount);
+                    localStorage.setItem('aether_star_tokens', this.starTokens);
+                } catch (e) {}
             } else if (item.type === 'item') {
                 if (this.player && this.player.inventory) {
                     this.player.inventory.addItem(item.id, item.qty);
@@ -827,7 +1308,9 @@ class GameApp {
         const rewardDisplay = document.getElementById('remains-reward-display');
         if (rewardDisplay) rewardDisplay.classList.add('hidden');
         if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playItemObtained();
+        this.showToast(`✨ Collected ${count} relic treasures!`, 'success');
         this.updateStartCurrencies();
+        this.updateRemainsPityDisplay();
     }
 
     /* ==========================================================================

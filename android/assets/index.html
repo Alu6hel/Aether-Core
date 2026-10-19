@@ -498,7 +498,7 @@
             <div id="remains-modal" class="game-modal hidden">
                 <div class="modal-content remains-modal-content">
                     <div class="modal-header">
-                        <h3>⚱️ ANCIENT REMAINS & RELIQUARIES</h3>
+                        <h3>🔮 AETHERIAL REMAINS & SMOKEY RELIQUARIES</h3>
                         <button class="modal-close" id="remains-close">✕</button>
                     </div>
                     <div class="remains-top-bar">
@@ -506,33 +506,84 @@
                             <span class="key-icon">🗝️</span>
                             <span>AVAILABLE KEYS: <strong id="remains-keys-display">15/15</strong></span>
                         </div>
-                        <div class="remains-status-tip">Unbox ancient relics to claim ALU gold, Dyson cores, and rare crafting plans.</div>
+                        <div class="remains-status-tip">Keys unbox ancient smokey relics containing ALU gold, Dyson cores, blueprints, and weapons.</div>
                     </div>
+
+                    <!-- 3 Creative Non-Copyright Smokey Orb Relics -->
                     <div class="relic-chests-grid">
+                        <!-- Tier 1: Astral Vapor Sphere -->
                         <div class="relic-chest-card" data-tier="common">
-                            <div class="chest-art-frame">🏺</div>
-                            <div class="chest-title">WEATHERED URN</div>
+                            <div class="chest-art-frame">
+                                <div class="smokey-orb-widget orb-wisp">
+                                    <div class="orb-aura aura-cyan"></div>
+                                    <div class="orb-smoke-layer smoke-1 smoke-cyan"></div>
+                                    <div class="orb-smoke-layer smoke-2 smoke-silver"></div>
+                                    <div class="orb-plasma-core core-cyan"></div>
+                                </div>
+                            </div>
+                            <div class="chest-title">ASTRAL VAPOR SPHERE</div>
                             <div class="chest-cost">🗝️ 1 KEY</div>
-                            <div class="chest-desc">Common matrix container with gold and basic survival rations.</div>
+                            <div class="chest-desc">Swirling celestial mist holding survival rations, copper shards, and craft blueprints. (+10 PT)</div>
                             <button class="relic-open-btn" data-chest="common">OPEN (1 KEY)</button>
                         </div>
+
+                        <!-- Tier 2: Resonant Nebula Orb -->
                         <div class="relic-chest-card featured" data-tier="runic">
-                            <div class="chest-art-frame">⚱️</div>
-                            <div class="chest-title">RUNIC COFFER</div>
-                            <div class="chest-cost">🗝️ 2 KEYS</div>
-                            <div class="chest-desc">Ancient Dyson reliquary with rich gold, elixirs, and core chance.</div>
-                            <button class="relic-open-btn" data-chest="runic">OPEN (2 KEYS)</button>
+                            <div class="chest-art-frame">
+                                <div class="smokey-orb-widget orb-nebula">
+                                    <div class="orb-aura aura-violet"></div>
+                                    <div class="orb-gyro-ring ring-violet"></div>
+                                    <div class="orb-smoke-layer smoke-1 smoke-violet"></div>
+                                    <div class="orb-smoke-layer smoke-2 smoke-gold"></div>
+                                    <div class="orb-plasma-core core-violet"></div>
+                                </div>
+                            </div>
+                            <div class="chest-title">RESONANT NEBULA ORB</div>
+                            <div class="chest-cost">🗝️ 2 KEYS / 30 ✡</div>
+                            <div class="chest-desc">Dense cosmic vapor charged with Dyson cores, ultrasonic weapons, and armor. (+25 PT)</div>
+                            <div class="relic-btn-group">
+                                <button class="relic-open-btn" data-chest="runic">OPEN (2 KEYS)</button>
+                                <button class="relic-alt-btn" data-chest="runic-tokens">30 ✡ TOKENS</button>
+                            </div>
                         </div>
+
+                        <!-- Tier 3: Primordial Singularity Orb -->
                         <div class="relic-chest-card legendary" data-tier="celestial">
-                            <div class="chest-art-frame">👑</div>
-                            <div class="chest-title">CELESTIAL VAULT</div>
-                            <div class="chest-cost">🗝️ 3 KEYS</div>
-                            <div class="chest-desc">High-tier Dyson vault granting guaranteed Dyson Cores and Star Tokens.</div>
-                            <button class="relic-open-btn" data-chest="celestial">OPEN (3 KEYS)</button>
+                            <div class="chest-art-frame">
+                                <div class="smokey-orb-widget orb-singularity">
+                                    <div class="orb-aura aura-gold"></div>
+                                    <div class="orb-gyro-ring ring-gold"></div>
+                                    <div class="orb-gyro-ring ring-inner-cyan"></div>
+                                    <div class="orb-smoke-layer smoke-1 smoke-singularity"></div>
+                                    <div class="orb-smoke-layer smoke-2 smoke-gold"></div>
+                                    <div class="orb-plasma-core core-singularity"></div>
+                                </div>
+                            </div>
+                            <div class="chest-title">PRIMORDIAL SINGULARITY</div>
+                            <div class="chest-cost">🗝️ 3 KEYS / 300 ✡</div>
+                            <div class="chest-desc">Hyper-dense vortex granting guaranteed Dyson Cores, Void Scythes, and Mythics. (+50 PT)</div>
+                            <div class="relic-btn-group">
+                                <button class="relic-open-btn" data-chest="celestial">OPEN (3 KEYS)</button>
+                                <button class="relic-alt-btn" data-chest="celestial-tokens">300 ✡ TOKENS</button>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Guaranteed Legend / Mythic Pity Meter (From Reference Picture) -->
+                    <div class="remains-pity-container">
+                        <div class="pity-header">
+                            <span class="pity-label">⚡ RESONANCE CONVERGENCE</span>
+                            <span class="pity-val" id="remains-pity-val">0 / 100 PT</span>
+                        </div>
+                        <div class="pity-progress-bar">
+                            <div class="pity-progress-fill" id="remains-pity-fill" style="width: 0%;"></div>
+                        </div>
+                        <div class="pity-subtext">Guaranteed Mythic Relic upon reaching 100 pt resonance. (Gains 10–50 pt per unboxing).</div>
+                    </div>
+
+                    <!-- Unboxing Reward Display -->
                     <div id="remains-reward-display" class="remains-reward-display hidden">
-                        <div class="reward-title">✨ RELIC UNBOXED ✨</div>
+                        <div class="reward-title">✨ SMOKEY ORB UNBOXED ✨</div>
                         <div id="remains-reward-items" class="reward-items-grid"></div>
                         <button id="btn-claim-remains" class="gba-btn-sm primary">CLAIM ALL LOOT</button>
                     </div>
