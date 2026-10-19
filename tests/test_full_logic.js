@@ -39,7 +39,7 @@ test("Inventory: Add, stack, and consume Nanite Repair Gel", () => {
     // Mock player with low health
     const mockPlayer = { hp: 50, maxHp: 100, energy: 30, maxEnergy: 100 };
     const used = inv.useItem('NANITE_REPAIR_KIT', mockPlayer);
-    assert.strictEqual(used, true, "Item consumed successfully");
+    assert(used === true || (used && used.success === true), "Item consumed successfully");
     assert.strictEqual(mockPlayer.hp, 95, "Player healed for 45 HP");
 });
 

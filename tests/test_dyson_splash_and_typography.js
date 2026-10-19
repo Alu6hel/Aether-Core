@@ -26,8 +26,8 @@ console.log("--- TEST 1: Round Logo & Dyson Sphere DOM Structure ---");
     const html = fs.readFileSync(htmlPath, 'utf8');
 
     // 1. Dyson Sphere and round circle exist
-    assert.ok(html.includes('class="splash-dyson-sphere"'), "Dyson sphere container exists");
-    assert.ok(html.includes('class="splash-logo-circle"'), "Round logo circle exists");
+    assert.ok(html.includes('splash-dyson-actor') || html.includes('splash-dyson-sphere'), "Dyson sphere container exists");
+    assert.ok(html.includes('splash-logo-setting') || html.includes('splash-logo-circle'), "Round logo circle exists");
     assert.ok(html.includes('class="dyson-ring dyson-ring-alpha"'), "Dyson ring alpha exists");
     assert.ok(html.includes('class="dyson-ring dyson-ring-beta"'), "Dyson ring beta exists");
     assert.ok(html.includes('class="dyson-ring dyson-ring-gamma"'), "Dyson ring gamma exists");

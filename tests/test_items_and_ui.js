@@ -140,5 +140,84 @@ hero.facing = { x: 1, y: 0, clone: () => ({ x: 1, y: 0, normalize: () => ({ x: 1
 hero.primaryAttack([dummyEnemy]);
 assert(dummyEnemy.hp < 200, 'Enemy must take damage from primary attack');
 
-console.log('✓ Combat buff and equipment mechanics test passed successfully!');
+// 4. Test 6-Tier RPG System and Item Classification
+const { ITEM_TIER, TIER_CONFIG, ITEM_CATEGORY, getBloodDropSvg } = require('../engine/inventory.js');
+assert.strictEqual(Object.keys(ITEM_TIER).length, 6, 'Must define all 6 RPG tiers (T1 to T6)');
+assert.strictEqual(TIER_CONFIG[ITEM_TIER.MYTHIC].name, 'Mythic');
+
+const allItems = Object.values(BASE_ITEMS);
+assert(allItems.length >= 25, 'Item catalog must have extensive coverage');
+
+const tiersFound = new Set();
+const categoriesFound = new Set();
+for (const item of allItems) {
+    assert(item.tier >= 1 && item.tier <= 6, `Item ${item.id} has invalid tier: ${item.tier}`);
+    assert(item.tierBadge && item.tierBadge.startsWith('T'), `Item ${item.id} must have tier badge`);
+    assert(item.tierColor && item.tierColor.startsWith('#'), `Item ${item.id} must have tier color hex`);
+    assert(item.category, `Item ${item.id} must have a designated category`);
+    assert(typeof item.source === 'string' && item.source.length > 5, `Item ${item.id} must have descriptive source`);
+    tiersFound.add(item.tier);
+    categoriesFound.add(item.category);
+}
+assert.strictEqual(tiersFound.size, 6, 'All 6 tiers must be represented in BASE_ITEMS');
+assert.strictEqual(categoriesFound.size, 5, 'All 5 categories must be represented in BASE_ITEMS');
+
+// Verify Strict Found/Collected vs. Craftable Mechanics
+const rawMaterials = ['BRANCH', 'FLINT', 'MEDICINAL_HERB', 'COPPER_ORE', 'FIBER', 'STAR_FRUIT', 'AETHER_CRYSTAL', 'VOID_SHARD', 'CELESTIAL_KEY', 'STAR_MATRIX_TOKEN', 'PRIMORDIAL_CORE'];
+for (const matId of rawMaterials) {
+    assert(BASE_ITEMS[matId], `Raw material ${matId} must exist`);
+    assert.strictEqual(BASE_ITEMS[matId].isCraftable, false, `Raw material ${matId} cannot be crafted - must be found/collected`);
+}
+
+for (const recipe of CRAFTING_RECIPES) {
+    const resId = recipe.resultId || recipe.resultItemId;
+    const output = BASE_ITEMS[resId];
+    assert(output, `Crafting recipe ${recipe.id} output ${resId} must exist in BASE_ITEMS`);
+    assert.strictEqual(output.isCraftable, true, `Recipe output ${resId} must have isCraftable: true`);
+}
+console.log('✓ 6-Tier RPG classification and Found vs. Craftable mechanics verified!');
+
+// 5. Verify Universal Blood Drop Currency Symbol
+const bloodSvg = getBloodDropSvg(24, '#ff1744');
+assert(bloodSvg.includes('<svg'), 'getBloodDropSvg must return valid SVG markup');
+assert(bloodSvg.includes('viewBox="0 0 24 32"'), 'getBloodDropSvg must have 24x32 viewBox');
+assert(bloodSvg.includes('<ellipse'), 'getBloodDropSvg must render microscopic cell discs');
+assert(!bloodSvg.toLowerCase().includes('gold') && !bloodSvg.toLowerCase().includes('coin'), 'Currency symbol must not contain words gold or coin');
+console.log('✓ Blood Drop Currency Symbol SVG verified!');
+
+// 6. Test Tier VI Combat Mechanics (Life Steal & Armor Reflection)
+const scythe = BASE_ITEMS.PRIMORDIAL_VOID_SCYTHE;
+assert.strictEqual(scythe.tier, 6, 'Void Scythe must be Tier VI Mythic');
+assert.strictEqual(scythe.lifeSteal, 0.35, 'Void Scythe must provide 35% life steal');
+
+hero.hp = 80;
+hero.maxHp = 150;
+hero.attackCooldown = 0;
+hero.state = 'IDLE';
+hero.weaponLifeSteal = scythe.lifeSteal;
+hero.attackDamageBonus = scythe.damageBonus;
+hero.pos.x = 100;
+hero.pos.y = 100;
+const scytheTarget = { x: 120, y: 100, hp: 300 };
+hero.primaryAttack([scytheTarget]);
+assert(hero.hp > 80, `Life steal must heal hero when attacking with Tier VI weapon (hp: ${hero.hp})`);
+
+// Test Armor Damage Reflection (Genesis Starmantle)
+const mantle = BASE_ITEMS.GENESIS_STARMANTLE;
+assert.strictEqual(mantle.tier, 6, 'Genesis Starmantle must be Tier VI Mythic');
+assert.strictEqual(mantle.reflectDamage, 0.25, 'Genesis Starmantle must reflect 25% damage');
+hero.armorReflect = mantle.reflectDamage;
+hero.defenseBonus = mantle.defenseBonus;
+hero.invulnerableTimer = 0;
+const reflectResult = hero.takeDamage(40);
+assert.strictEqual(reflectResult.damageReflected, 10, '25% of 40 incoming damage must be reflected');
+
+// Test Fortify Tonic Duration and Defense
+inv.addItem(BASE_ITEMS.FORTIFIED_ELIXIR, 1);
+const fortifyRes = inv.useItem('FORTIFIED_ELIXIR', hero);
+assert(fortifyRes.success, 'Fortified elixir must be consumable');
+assert.strictEqual(hero.fortifyTimer, 20.0, 'Fortify timer should be 20s');
+assert.strictEqual(hero.fortifyDefense, 30, 'Fortify defense should be 30');
+
+console.log('✓ Tier VI Mythic Combat Integration (Life Steal, Reflection, Fortify) verified!');
 console.log('ALL TESTS PASSED!');

@@ -474,11 +474,16 @@ class Character extends KinematicBody {
         this.defenseBonus = 0;
         this.attackDamageBonus = 0;
         this.weaponSpeedBonus = 0;
+        this.weaponTier = 1;
+        this.weaponLifeSteal = 0;
+        this.armorReflect = 0;
         this.stasisTimer = 0;
         this.berserkerTimer = 0;
         this.barrierShield = 0;
         this.regenTimer = 0;
         this.regenRate = 0;
+        this.fortifyTimer = 0;
+        this.fortifyDefense = 0;
 
         // Parry & Deflection System (Nine-Sols inspired)
         this.isParryActive = false;
@@ -549,9 +554,14 @@ class Character extends KinematicBody {
         if (this.invulnerableTimer > 0) this.invulnerableTimer -= dt;
         if (this.stasisTimer > 0) this.stasisTimer -= dt;
         if (this.berserkerTimer > 0) this.berserkerTimer -= dt;
+        if (this.fortifyTimer > 0) this.fortifyTimer -= dt;
         if (this.regenTimer > 0) {
             this.regenTimer -= dt;
             this.hp = Math.min(this.maxHp, this.hp + (this.regenRate || 8.0) * dt);
+        }
+        // Continuous passive armor regen (e.g. Genesis Starmantle)
+        if (this.inventory && this.inventory.equippedArmor && this.inventory.equippedArmor.regenRate) {
+            this.hp = Math.min(this.maxHp, this.hp + this.inventory.equippedArmor.regenRate * dt);
         }
         for (let i = 0; i < this.abilityCooldowns.length; i++) {
             if (this.abilityCooldowns[i] > 0) this.abilityCooldowns[i] -= dt;
@@ -799,8 +809,16 @@ class Character extends KinematicBody {
             if (this.berserkerTimer > 0) {
                 totalDamage = Math.floor(totalDamage * 1.5);
             }
-            const slashRange = this.hasSkill('warrior_titan_edge') ? 44 : 36;
+            const rangeBonus = (this.inventory && this.inventory.equippedWeapon && this.inventory.equippedWeapon.rangeBonus) ? this.inventory.equippedWeapon.rangeBonus : 0;
+            const slashRange = (this.hasSkill('warrior_titan_edge') ? 44 : 36) + rangeBonus;
             const slashArc = this.hasSkill('warrior_titan_edge') ? Math.PI * 1.1 : Math.PI * 0.8;
+
+            const wepTier = (this.inventory && this.inventory.equippedWeapon && this.inventory.equippedWeapon.tier) ? this.inventory.equippedWeapon.tier : (this.weaponTier || 1);
+            const tierColors = ['#b0bec5', '#b0bec5', '#66bb6a', '#00e5ff', '#e040fb', '#ffd700', '#ff1744'];
+            const slashColor = tierColors[wepTier] || '#ff9100';
+
+            const spdBonus = (this.weaponSpeedBonus || 0) + ((this.inventory && this.inventory.equippedWeapon) ? (this.inventory.equippedWeapon.speedBonus || 0) : 0);
+            const swingTime = Math.max(0.14, 0.24 * (1 - spdBonus * 0.01));
 
             this.attackSwing = {
                 type: 'WARRIOR_SLASH',
@@ -809,8 +827,9 @@ class Character extends KinematicBody {
                 angle: baseAngle,
                 range: slashRange,
                 arc: slashArc,
-                timer: 0.24,
-                maxTimer: 0.24
+                timer: swingTime,
+                maxTimer: swingTime,
+                color: slashColor
             };
 
             // Hit detection in frontal cone arc
@@ -825,15 +844,22 @@ class Character extends KinematicBody {
                     while (angleDiff > Math.PI) angleDiff = Math.abs(angleDiff - Math.PI * 2);
                     if (angleDiff <= (slashArc * 0.55)) {
                         enemy.hp -= totalDamage;
+                        // Life Steal mechanics (Void Scythe, Primordial Scythe)
+                        const lifeSteal = (this.weaponLifeSteal || 0) + ((this.inventory && this.inventory.equippedWeapon && this.inventory.equippedWeapon.lifeSteal) ? this.inventory.equippedWeapon.lifeSteal : 0);
+                        if (lifeSteal > 0 && totalDamage > 0) {
+                            const heal = Math.max(1, Math.round(totalDamage * lifeSteal));
+                            this.hp = Math.min(this.maxHp, this.hp + heal);
+                            this.addSpark(this.pos.x, this.pos.y, '#00e676', 6);
+                        }
                         // Heavy kinetic pushback
                         enemy.x += dir.x * 32;
                         enemy.y += dir.y * 32;
-                        this.addSpark(enemy.x, enemy.y, '#ff9100', 14);
+                        this.addSpark(enemy.x, enemy.y, slashColor, 14);
                         if (enemy.hp <= 0) this.onEnemyDefeated(enemy);
                     }
                 }
             }
-            this.addSpark(this.pos.x + dir.x * 18, this.pos.y + dir.y * 18, '#ff5722', 12);
+            this.addSpark(this.pos.x + dir.x * 18, this.pos.y + dir.y * 18, slashColor, 12);
 
         } else if (this.charClass === CHARACTER_CLASS.FARMER_GOD) {
             // Cosmic Scythe Reap & Celestial Seeds: Massive reality sweep
@@ -888,7 +914,8 @@ class Character extends KinematicBody {
     performParry() {
         if (this.state === 'ATTACKING') return;
         this.state = 'PARRYING';
-        this.stateTimer = this.parryWindow;
+        const extraParry = (this.parryBonus || 0) + ((this.inventory && this.inventory.equippedArmor && this.inventory.equippedArmor.parryBonus) ? this.inventory.equippedArmor.parryBonus : 0);
+        this.stateTimer = this.parryWindow + extraParry;
         this.isParryActive = true;
         this.addSpark(this.pos.x, this.pos.y, '#ffffff', 6);
     }
@@ -903,7 +930,8 @@ class Character extends KinematicBody {
             this.energy -= 12;
         }
 
-        this.dashCooldown = 0.35;
+        const cdRed = (this.inventory && this.inventory.equippedArmor && this.inventory.equippedArmor.cooldownReduction) ? this.inventory.equippedArmor.cooldownReduction : 0;
+        this.dashCooldown = Math.max(0.05, 0.35 * (1 - cdRed));
         this.state = 'DASHING';
         this.stateTimer = 0.22;
         this.invulnerableTimer = 0.28; // i-frames
@@ -1252,8 +1280,13 @@ class Character extends KinematicBody {
             return { parried: true, damageTaken: 0, reflectDamage };
         }
 
-        // Apply Armor / Equipment Defense Bonus
-        const totalDefense = (this.defenseBonus || 0) + ((this.inventory && this.inventory.equippedArmor) ? (this.inventory.equippedArmor.defenseBonus || 0) : 0);
+        const incomingAmount = amount;
+
+        // Apply Armor / Equipment Defense Bonus + Fortify Stim
+        let totalDefense = (this.defenseBonus || 0) + ((this.inventory && this.inventory.equippedArmor) ? (this.inventory.equippedArmor.defenseBonus || 0) : 0);
+        if (this.fortifyTimer > 0) {
+            totalDefense += (this.fortifyDefense || 30);
+        }
         if (totalDefense > 0) {
             amount = Math.max(1, amount - Math.floor(totalDefense * 0.5));
         }
@@ -1272,13 +1305,21 @@ class Character extends KinematicBody {
             }
         }
 
+        // Armor Damage Reflection (Aegis Dreadnought Exosuit, Genesis Starmantle)
+        const reflectRate = (this.armorReflect || 0) + ((this.inventory && this.inventory.equippedArmor && this.inventory.equippedArmor.reflectDamage) ? this.inventory.equippedArmor.reflectDamage : 0);
+        let reflectDmg = 0;
+        if (reflectRate > 0) {
+            reflectDmg = Math.floor(incomingAmount * reflectRate);
+            this.addSpark(this.pos.x, this.pos.y, '#ffd54f', 10);
+        }
+
         // Hit confirmed
         this.hp = Math.max(0, this.hp - amount);
         this.invulnerableTimer = 0.5; // i-frames
         this.state = 'HURT';
         this.stateTimer = 0.2;
         this.addSpark(this.pos.x, this.pos.y, '#ff1744', 10);
-        return { parried: false, damageTaken: amount };
+        return { parried: false, damageTaken: amount, damageReflected: reflectDmg };
     }
 
     onEnemyDefeated(enemy) {

@@ -379,7 +379,7 @@ class GameApp {
             toast.style.color = '#ffffff';
         }
 
-        toast.textContent = message;
+        toast.innerHTML = message;
         toast.style.opacity = '1';
         toast.style.transform = 'translateX(-50%) translateY(0px)';
 
@@ -931,7 +931,7 @@ class GameApp {
             if (titleEl) titleEl.innerText = `🎖️ PIONEER RANK ${rank}`;
             if (iconEl) iconEl.innerText = '🎖️';
             if (headlineEl) headlineEl.innerText = 'Expeditionary Honor & Tier Perks';
-            if (descEl) descEl.innerText = `Rank ${rank} Pioneer Status. Grants permanent passive enhancements: Rank I (+5% coin yield), Rank II (+15 Max HP), Rank III (+25% parry window), Rank IV (+10% move speed), Rank V (Ascended Godhood). Earn higher ranks by surviving more days and extracting Genesis Cores!`;
+            if (descEl) descEl.innerText = `Rank ${rank} Pioneer Status. Grants permanent passive enhancements: Rank I (+5% scavenging yield), Rank II (+15 Max HP), Rank III (+25% parry window), Rank IV (+10% move speed), Rank V (Ascended Godhood). Earn higher ranks by surviving more days and extracting Genesis Cores!`;
             if (labelEl) labelEl.innerText = 'PIONEER TIER:';
             if (valEl) valEl.innerText = `RANK ${rank} (EXPEDITION LEVEL ${rank * 3})`;
         }
@@ -1032,44 +1032,57 @@ class GameApp {
         let cores = 0;
         let tokens = 0;
 
+        const dropIcon = typeof getBloodDropSvg === 'function' ? getBloodDropSvg(12) : '🩸';
         if (day === 1) {
             coins = 75;
             keys = 2;
-            rewardNames.push("75 🪙 Gold", "2 🗝️ Keys", "5 🍞 Bread");
+            rewardNames.push(`${dropIcon} 75`, "2 🗝️ Keys", "5 🍞 Bread");
             if (this.player && this.player.inventory) this.player.inventory.addItem('BREAD', 5);
+            if (this.inventory) this.inventory.addItem('BREAD', 5);
         } else if (day === 2) {
             coins = 150;
             keys = 2;
             cores = 1;
-            rewardNames.push("150 🪙 Gold", "2 🗝️ Keys", "1 ☥ Dyson Core", "2 🧪 Salves");
+            rewardNames.push(`${dropIcon} 150`, "2 🗝️ Keys", "1 ☥ Dyson Core", "2 🧪 Salves");
             if (this.player && this.player.inventory) this.player.inventory.addItem('ENERGY_SALVE', 2);
+            if (this.inventory) this.inventory.addItem('ENERGY_SALVE', 2);
         } else if (day === 3) {
             coins = 220;
             keys = 3;
             tokens = 2;
-            rewardNames.push("220 🪙 Gold", "3 🗝️ Keys", "2 ✡ Tokens", "2 ⚡ Conduits");
+            rewardNames.push(`${dropIcon} 220`, "3 🗝️ Keys", "2 ✡ Tokens", "2 ⚡ Conduits");
             if (this.player && this.player.inventory) this.player.inventory.addItem('ANCIENT_CONDUIT', 2);
+            if (this.inventory) this.inventory.addItem('ANCIENT_CONDUIT', 2);
         } else if (day === 4) {
             coins = 300;
             keys = 3;
             cores = 2;
             tokens = 2;
-            rewardNames.push("300 🪙 Gold", "3 🗝️ Keys", "2 ☥ Cores", "2 ✡ Tokens", "1 ✨ Master Elixir");
+            rewardNames.push(`${dropIcon} 300`, "3 🗝️ Keys", "2 ☥ Cores", "2 ✡ Tokens", "1 ✨ Master Elixir");
             if (this.player && this.player.inventory) this.player.inventory.addItem('SUPER_SALVE', 1);
+            if (this.inventory) this.inventory.addItem('SUPER_SALVE', 1);
         } else if (day === 5) {
             coins = 450;
             keys = 4;
             cores = 2;
             tokens = 3;
-            rewardNames.push("450 🪙 Gold", "4 🗝️ Keys", "2 ☥ Cores", "3 ✡ Tokens", "3 🪨 Titanium");
+            rewardNames.push(`${dropIcon} 450`, "4 🗝️ Keys", "2 ☥ Cores", "3 ✡ Tokens", "3 🪨 Titanium");
             if (this.player && this.player.inventory) this.player.inventory.addItem('TITANIUM_ORE', 3);
+            if (this.inventory) this.inventory.addItem('TITANIUM_ORE', 3);
         } else if (day === 6) {
             coins = 600;
             keys = 5;
             cores = 3;
             tokens = 5;
-            rewardNames.push("600 🪙 Gold", "5 🗝️ Keys", "3 ☥ Cores", "5 ✡ Tokens", "3 ✨ Master Elixirs");
-            if (this.player && this.player.inventory) this.player.inventory.addItem('SUPER_SALVE', 3);
+            rewardNames.push(`${dropIcon} 600`, "5 🗝️ Keys", "3 ☥ Cores", "5 ✡ Tokens", "1 🌌 Primordial Ambrosia [T6]");
+            if (this.player && this.player.inventory) {
+                this.player.inventory.addItem('SUPER_SALVE', 3);
+                this.player.inventory.addItem('PRIMORDIAL_AMBROSIA', 1);
+            }
+            if (this.inventory) {
+                this.inventory.addItem('SUPER_SALVE', 3);
+                this.inventory.addItem('PRIMORDIAL_AMBROSIA', 1);
+            }
         }
 
         this.addCoins(coins);
@@ -1110,7 +1123,8 @@ class GameApp {
             const cls = (slot.selectedClass || 'WARRIOR').replace('_', ' ');
             const day = slot.currentDay || 1;
             const gold = slot.coins || 0;
-            this.showToast(`★ SAVE STAR 0${st.index + 1}: ${pioneerName}\n${cls} • Day ${day} • 🪙 ${gold} Gold\n(Tap SAVE SLOTS to load expedition)`, 'info');
+            const drop = typeof getBloodDropSvg === 'function' ? getBloodDropSvg(12) : '';
+            this.showToast(`★ SAVE STAR 0${st.index + 1}: ${pioneerName}\n${cls} • Day ${day} • ${drop} ${gold}\n(Tap SAVE SLOTS to load expedition)`, 'info');
         } else {
             this.showToast(`★ SAVE STAR 0${st.index + 1}: Uncharted Star\n(Tap SAVE SLOTS to embark on a new expedition)`, 'info');
         }
@@ -1207,9 +1221,10 @@ class GameApp {
 
         // Roll Rich Non-Copyright Relic Rewards
         const loot = [];
+        const bloodDropIcon = typeof getBloodDropSvg === 'function' ? getBloodDropSvg(20) : '🩸';
         if (tier === 'common') {
             const coins = 40 + Math.floor(Math.random() * 35);
-            loot.push({ type: 'coins', name: 'ALU Coins', icon: '🪙', qty: coins });
+            loot.push({ type: 'coins', name: '', icon: bloodDropIcon, qty: coins });
             loot.push({ type: 'item', id: 'BREAD', name: 'Field Provisions', icon: '🍞', qty: 3 });
             loot.push({ type: 'item', id: 'COPPER_ORE', name: 'Copper Shards', icon: '🪨', qty: 4 });
             if (Math.random() < 0.25) {
@@ -1217,9 +1232,12 @@ class GameApp {
             }
         } else if (tier === 'runic' || tier === 'runic-tokens') {
             const coins = 120 + Math.floor(Math.random() * 80);
-            loot.push({ type: 'coins', name: 'ALU Coins', icon: '🪙', qty: coins });
+            loot.push({ type: 'coins', name: '', icon: bloodDropIcon, qty: coins });
             loot.push({ type: 'item', id: 'ENERGY_SALVE', name: 'Energy Salve', icon: '🧪', qty: 2 });
             loot.push({ type: 'item', id: 'ANCIENT_CONDUIT', name: 'Matrix Conduits', icon: '⚡', qty: 2 });
+            if (Math.random() < 0.35) {
+                loot.push({ type: 'item', id: 'CHRONO_STASIS_ELIXIR', name: 'Chrono-Stasis Elixir [T4]', icon: '⏳', qty: 1 });
+            }
             if (Math.random() < 0.65) {
                 loot.push({ type: 'cores', name: 'Ancient Dyson Core', icon: '☥', qty: 1 });
             }
@@ -1228,21 +1246,28 @@ class GameApp {
             }
         } else { // celestial or celestial-tokens
             const coins = 300 + Math.floor(Math.random() * 150);
-            loot.push({ type: 'coins', name: 'ALU Coins', icon: '🪙', qty: coins });
+            loot.push({ type: 'coins', name: '', icon: bloodDropIcon, qty: coins });
             loot.push({ type: 'cores', name: 'Quantum Dyson Core', icon: '☥', qty: 1 + (Math.random() < 0.5 ? 1 : 0) });
             loot.push({ type: 'tokens', name: 'Star Matrix Tokens', icon: '✡', qty: 2 });
-            loot.push({ type: 'item', id: 'SUPER_SALVE', name: 'Master Elixir', icon: '✨', qty: 1 });
+            loot.push({ type: 'item', id: 'PRIMORDIAL_AMBROSIA', name: 'Primordial Ambrosia [T6]', icon: '🌌', qty: 1 });
             loot.push({ type: 'item', id: 'TITANIUM_ORE', name: 'Singularity Ingot', icon: '💠', qty: 2 });
+            // Top Tier VI weapons and armor in celestial remains
+            if (Math.random() < 0.50) {
+                loot.push({ type: 'item', id: 'PRIMORDIAL_VOID_SCYTHE', name: 'Primordial Void Scythe [T6]', icon: '⚡', qty: 1 });
+            } else {
+                loot.push({ type: 'item', id: 'GENESIS_STARMANTLE', name: 'Genesis Starmantle [T6]', icon: '👘', qty: 1 });
+            }
         }
 
         // Add Resonance Convergence Bonus if reached
         if (triggeredConvergence) {
             loot.unshift({
                 type: 'mythic_bonus',
-                name: '⚡ 100 PT RESONANCE BONUS: 1 Dyson Core + 2 Star Tokens + 300 Gold',
+                name: '⚡ 100 PT RESONANCE BONUS',
                 icon: '👑',
                 qty: 1
             });
+            loot.push({ type: 'item', id: 'PRIMORDIAL_CORE', name: 'Primordial Void Core [T6]', icon: '🌀', qty: 1 });
             this.showToast('⚡ RESONANCE CONVERGENCE (100 PT) TRIGGERED! Guaranteed Mythic Relic unsealed!', 'success');
         }
 
@@ -1302,6 +1327,9 @@ class GameApp {
                 if (this.player && this.player.inventory) {
                     this.player.inventory.addItem(item.id, item.qty);
                 }
+                if (this.inventory) {
+                    this.inventory.addItem(item.id, item.qty);
+                }
             }
         }
         this.pendingRemainsLoot = null;
@@ -1347,7 +1375,8 @@ class GameApp {
         for (const item of catalog) {
             const card = document.createElement('div');
             card.className = 'shop-item-card';
-            const costStr = item.costTokens ? `${item.costTokens} ✡` : `${item.costCoins} 🪙`;
+            const bloodDrop = typeof getBloodDropSvg === 'function' ? getBloodDropSvg(13) : '';
+            const costStr = item.costTokens ? `${item.costTokens} ✡` : `${bloodDrop} ${item.costCoins}`;
 
             card.innerHTML = `
                 <div class="shop-item-left">
@@ -1381,14 +1410,15 @@ class GameApp {
         if (item.costCoins) {
             if (playerCoins < item.costCoins) {
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(130, 'sawtooth', 0.15, 0.1);
-                alert(`Insufficient Gold! Need ${item.costCoins} 🪙.`);
+                const drop = typeof getBloodDropSvg === 'function' ? getBloodDropSvg(12) : '';
+                this.showToast(`Insufficient balance! Need ${drop} ${item.costCoins}`, 'error');
                 return;
             }
             this.player.coinsCollected -= item.costCoins;
         } else if (item.costTokens) {
             if (playerTokens < item.costTokens) {
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(130, 'sawtooth', 0.15, 0.1);
-                alert(`Insufficient Star Tokens! Need ${item.costTokens} ✡.`);
+                this.showToast(`Insufficient Star Tokens! Need ${item.costTokens} ✡.`, 'error');
                 return;
             }
             this.starTokens -= item.costTokens;
@@ -1444,11 +1474,12 @@ class GameApp {
         if (!grid) return;
         grid.innerHTML = '';
 
+        const dropIcon = typeof getBloodDropSvg === 'function' ? getBloodDropSvg(22) : '🩸';
         const days = [
-            { day: 1, name: '50 Gold', icon: '🪙' },
+            { day: 1, name: '+50', icon: dropIcon },
             { day: 2, name: '1 Dyson Core', icon: '☥' },
             { day: 3, name: '3 Keys', icon: '🗝️' },
-            { day: 4, name: '120 Gold', icon: '🪙' },
+            { day: 4, name: '+120', icon: dropIcon },
             { day: 5, name: '2 Tokens', icon: '✡' },
             { day: 6, name: 'Master Salve', icon: '🧪' },
             { day: 7, name: 'Matrix Coffer', icon: '👑' }
@@ -1534,6 +1565,7 @@ class GameApp {
        MILESTONES & ACHIEVEMENTS (IMAGE 4)
        ========================================================================== */
     getAchievementsList() {
+        const drop = typeof getBloodDropSvg === 'function' ? getBloodDropSvg(13) : '';
         return [
             {
                 id: 'pioneer_awaken',
@@ -1542,7 +1574,7 @@ class GameApp {
                 icon: '⚡',
                 target: 1,
                 current: () => (this.player ? 1 : 0),
-                rewardText: '+50 Gold',
+                rewardText: `${drop} +50`,
                 reward: () => this.addCoins(50)
             },
             {
@@ -1552,7 +1584,7 @@ class GameApp {
                 icon: '🧗',
                 target: 3,
                 current: () => (this.elevationJumpsCount || 0),
-                rewardText: '+100 Gold, 1 Core',
+                rewardText: `${drop} +100, 1 Core`,
                 reward: () => { 
                     this.addCoins(100); 
                     this.coresExtractedCount = (this.coresExtractedCount || 0) + 1;
@@ -1566,7 +1598,7 @@ class GameApp {
                 icon: '🛡️',
                 target: 3,
                 current: () => (this.combatParriesCount || 0),
-                rewardText: '+150 Gold, 1 Token',
+                rewardText: `${drop} +150, 1 Token`,
                 reward: () => { this.addCoins(150); this.starTokens = (this.starTokens || 0) + 1; try { localStorage.setItem('aether_star_tokens', this.starTokens); } catch (e) {} }
             },
             {
@@ -1576,7 +1608,7 @@ class GameApp {
                 icon: '🔨',
                 target: 3,
                 current: () => (this.craftedItemsCount || 0),
-                rewardText: '+80 Gold',
+                rewardText: `${drop} +80`,
                 reward: () => this.addCoins(80)
             },
             {
@@ -1586,7 +1618,7 @@ class GameApp {
                 icon: '⚱️',
                 target: 1,
                 current: () => (this.remainsOpenedCount || 0),
-                rewardText: '+100 Gold, 1 Core',
+                rewardText: `${drop} +100, 1 Core`,
                 reward: () => { 
                     this.addCoins(100); 
                     this.coresExtractedCount = (this.coresExtractedCount || 0) + 1;
@@ -1600,17 +1632,17 @@ class GameApp {
                 icon: '🗺️',
                 target: 2,
                 current: () => (this.discoveredBiomesCount || 1),
-                rewardText: '+120 Gold',
+                rewardText: `${drop} +120`,
                 reward: () => this.addCoins(120)
             },
             {
                 id: 'dyson_capitalist',
-                title: 'Dyson Capitalist',
-                desc: 'Accumulate 300+ ALU Coins in your Pioneer wallet.',
-                icon: '🪙',
+                title: 'Pioneer Reserve',
+                desc: 'Accumulate 300+ in your Pioneer wallet.',
+                icon: typeof getBloodDropSvg === 'function' ? getBloodDropSvg(20) : '🩸',
                 target: 300,
                 current: () => (this.player ? this.player.coinsCollected : 0),
-                rewardText: '+200 Gold, 2 Tokens',
+                rewardText: `${drop} +200, 2 Tokens`,
                 reward: () => { this.addCoins(200); this.starTokens = (this.starTokens || 0) + 2; try { localStorage.setItem('aether_star_tokens', this.starTokens); } catch (e) {} }
             },
             {
@@ -1620,7 +1652,7 @@ class GameApp {
                 icon: '👾',
                 target: 1,
                 current: () => (this.bossSlainCount || 0),
-                rewardText: '+300 Gold, 3 Tokens',
+                rewardText: `${drop} +300, 3 Tokens`,
                 reward: () => { this.addCoins(300); this.starTokens = (this.starTokens || 0) + 3; try { localStorage.setItem('aether_star_tokens', this.starTokens); } catch (e) {} }
             }
         ];
@@ -1751,7 +1783,7 @@ class GameApp {
                     <div class="slot-num">SLOT 0${i + 1}</div>
                     <div class="slot-title">${slot.pioneerName || 'PIONEER'}</div>
                     <div class="slot-desc">${(slot.selectedClass || 'WARRIOR').replace('_', ' ')} • Day ${slot.currentDay || 1}</div>
-                    <div class="slot-desc" style="color: #ffd54f;">🪙 ${slot.coins || 0} GOLD</div>
+                    <div class="slot-desc" style="display: flex; align-items: center; gap: 4px; color: #ff8a80;">${typeof getBloodDropSvg === 'function' ? getBloodDropSvg(13) : ''} ${slot.coins || 0}</div>
                     <div class="slot-card-actions">
                         <button class="slot-action-btn slot-resume-btn" type="button">RESUME ▶</button>
                         <button class="slot-action-btn slot-delete-btn" type="button" title="Wipe Slot">🗑️ WIPE</button>
@@ -1908,8 +1940,12 @@ class GameApp {
 
         for (const recipe of CRAFTING_RECIPES) {
             const canCraft = this.player.inventory.canCraft(recipe);
+            const targetItem = (typeof BASE_ITEMS !== 'undefined' && (BASE_ITEMS[recipe.resultId] || BASE_ITEMS[recipe.resultItemId])) ? (BASE_ITEMS[recipe.resultId] || BASE_ITEMS[recipe.resultItemId]) : { tier: recipe.tier || 1, tierBadge: `T${recipe.tier || 1}`, tierColor: '#b0bec5' };
             const card = document.createElement('div');
-            card.className = 'craft-recipe-card';
+            card.className = `craft-recipe-card tier-${targetItem.tier || 1}`;
+            if (targetItem.tierColor) {
+                card.style.borderLeft = `3px solid ${targetItem.tierColor}`;
+            }
 
             const matsHtml = recipe.materials.map(mat => {
                 const have = this.player.inventory.getItemCount(mat.itemId);
@@ -1920,7 +1956,10 @@ class GameApp {
 
             card.innerHTML = `
                 <div class="craft-recipe-info">
-                    <div class="craft-recipe-title">${recipe.name}</div>
+                    <div class="craft-recipe-title" style="display: flex; align-items: center; gap: 6px;">
+                        <span class="slot-tier-badge badge-t${targetItem.tier || 1}" style="position: static; font-size: 7px; padding: 1px 4px;">${targetItem.tierBadge || 'T1'}</span>
+                        <span>${recipe.name}</span>
+                    </div>
                     <div class="craft-recipe-mats">${matsHtml}</div>
                 </div>
                 <button class="craft-action-btn" ${canCraft ? '' : 'disabled'}>CRAFT</button>
@@ -2076,6 +2115,7 @@ class GameApp {
         this.player = new Character(this.selectedClass, this.currentMap.spawnPoint.x, this.currentMap.spawnPoint.y);
         this.player.callsign = this.pioneerName || 'ALU-01';
         this.player.game = this;
+        this.player.inventory = this.inventory;
         
         // Update header ticker info
         const hubTickerInfo = document.getElementById('hub-ticker-info');
@@ -2329,6 +2369,9 @@ class GameApp {
 
         const btnMenuTop = document.getElementById('btn-menu-top');
         bindAction(btnMenuTop, () => this.toggleGbaMenu());
+
+        const btnCraftingTop = document.getElementById('btn-crafting-top');
+        if (btnCraftingTop) bindAction(btnCraftingTop, () => this.openCraftingModal());
 
         const btnDevTop = document.getElementById('btn-dev-top');
         bindAction(btnDevTop, () => this.toggleDevModal());
@@ -2916,7 +2959,7 @@ class GameApp {
                     `Pioneer: ${this.pioneerName || 'ALU-01'} (${(this.selectedClass || 'SUPER_SOLDIER').replace('_', ' ')})\n` +
                     `Day: ${this.currentDay} | Layer: ${this.currentLayer}\n` +
                     `HP: ${Math.round(this.player.hp)}/${this.player.maxHp} | Energy: ${Math.round(this.player.energy)}/${this.player.maxEnergy}\n` +
-                    `Coins: ${this.player.coinsCollected} GOLD | Harvests: ${this.harvestCount || 0}`
+                    `Harvests: ${this.harvestCount || 0}`
                 );
                 break;
             case 'inventory':
@@ -2941,7 +2984,7 @@ class GameApp {
                 this.saveCurrentSlot();
                 this.renderer.addFloatingText(`RUN SAVED TO SLOT 0${this.activeSlotIndex + 1}!`, this.player.pos.x, this.player.pos.y - 18, '#ffd54f');
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playItemObtained();
-                this.showGbaDialogue("MISSION PROGRESS SAVED", `Expedition telemetry saved to Slot 0${this.activeSlotIndex + 1}.\nDay: ${this.currentDay} | Coins: ${this.player.coinsCollected} GOLD`);
+                this.showGbaDialogue("MISSION PROGRESS SAVED", `Expedition telemetry saved to Slot 0${this.activeSlotIndex + 1}.\nDay: ${this.currentDay}`);
                 break;
             case 'dev':
                 this.toggleDevModal();
@@ -3183,33 +3226,73 @@ class GameApp {
         if (!grid) return;
         grid.innerHTML = '';
 
+        // Wire up Category Filter Tabs if not already bound
+        const filterContainer = document.getElementById('inv-filter-tabs');
+        if (filterContainer && !this._invFilterBound) {
+            this._invFilterBound = true;
+            filterContainer.querySelectorAll('.inv-tab-btn').forEach(btn => {
+                this.bindTap(btn, () => {
+                    filterContainer.querySelectorAll('.inv-tab-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    this.currentInvFilter = btn.dataset.cat || 'ALL';
+                    this.renderInventoryModal();
+                });
+            });
+        }
+        const activeCat = this.currentInvFilter || 'ALL';
+
+        const activeInv = (this.player && this.player.inventory) ? this.player.inventory : this.inventory;
+
         // Update Equipped Gear Bar
         const gearNameWep = document.getElementById('gear-name-weapon');
         const gearNameArm = document.getElementById('gear-name-armor');
         if (gearNameWep) {
-            gearNameWep.innerText = (this.inventory && this.inventory.equippedWeapon) ? this.inventory.equippedWeapon.name : 'NONE';
+            const wep = activeInv && activeInv.equippedWeapon;
+            gearNameWep.innerText = wep ? `${wep.name} (${wep.tierBadge || 'T' + (wep.tier || 1)})` : 'NONE';
+            gearNameWep.style.color = wep ? (wep.tierColor || '#ffd54f') : '#90a4ae';
         }
         if (gearNameArm) {
-            gearNameArm.innerText = (this.inventory && this.inventory.equippedArmor) ? this.inventory.equippedArmor.name : 'NONE';
+            const arm = activeInv && activeInv.equippedArmor;
+            gearNameArm.innerText = arm ? `${arm.name} (${arm.tierBadge || 'T' + (arm.tier || 1)})` : 'NONE';
+            gearNameArm.style.color = arm ? (arm.tierColor || '#00e5ff') : '#90a4ae';
         }
 
-        const totalSlots = Math.max(16, (this.inventory && this.inventory.maxSlots) || 16);
+        const totalSlots = Math.max(16, (activeInv && activeInv.maxSlots) || 16);
+        const allSlots = (activeInv && activeInv.slots) ? activeInv.slots : [];
 
+        // Filter items based on active category
+        const displaySlots = [];
         for (let i = 0; i < totalSlots; i++) {
-            const slot = this.inventory && this.inventory.slots ? this.inventory.slots[i] : null;
+            const slot = allSlots[i] || null;
+            if (!slot || !slot.item) {
+                if (activeCat === 'ALL') displaySlots.push(null);
+            } else if (activeCat === 'ALL' || slot.item.category === activeCat) {
+                displaySlots.push(slot);
+            }
+        }
+        while (displaySlots.length < 16) {
+            displaySlots.push(null);
+        }
+
+        for (let i = 0; i < displaySlots.length; i++) {
+            const slot = displaySlots[i];
             const el = document.createElement('div');
 
             if (slot && slot.item) {
                 const item = slot.item;
-                const isEquipped = (this.inventory.equippedWeapon && this.inventory.equippedWeapon.id === item.id) ||
-                                   (this.inventory.equippedArmor && this.inventory.equippedArmor.id === item.id);
-                const rarity = item.rarity || 'common';
+                const isEquipped = (activeInv.equippedWeapon && activeInv.equippedWeapon.id === item.id) ||
+                                   (activeInv.equippedArmor && activeInv.equippedArmor.id === item.id);
+                const tier = item.tier || 1;
+                const tierBadge = item.tierBadge || `T${tier}`;
+                const tierName = item.tierName || (tier === 6 ? 'Mythic' : tier === 5 ? 'Legendary' : tier === 4 ? 'Epic' : tier === 3 ? 'Rare' : tier === 2 ? 'Uncommon' : 'Common');
+                const tierColor = item.tierColor || (tier === 6 ? '#ff1744' : tier === 5 ? '#ffb300' : tier === 4 ? '#ba68c8' : tier === 3 ? '#00b0ff' : tier === 2 ? '#4caf50' : '#90a4ae');
 
-                el.className = `inv-slot rarity-${rarity}`;
+                el.className = `inv-slot tier-${tier} rarity-${item.rarity || 'common'}`;
                 el.innerHTML = `
                     ${isEquipped ? '<span class="slot-equipped-badge">EQUIPPED</span>' : ''}
+                    <span class="slot-tier-badge badge-t${tier}">${tierBadge}</span>
                     <div class="slot-icon">${item.icon || '📦'}</div>
-                    <div class="slot-name">${item.name}</div>
+                    <div class="slot-name" style="color:${tierColor};">${item.name}</div>
                     ${slot.count > 1 ? `<span class="slot-count">x${slot.count}</span>` : ''}
                 `;
 
@@ -3218,17 +3301,22 @@ class GameApp {
                     el.classList.add('selected');
 
                     let statsHtml = '';
-                    if (item.damageBonus) statsHtml += `<span style="color:#ffb74d;">ATK +${item.damageBonus} </span>`;
-                    if (item.defenseBonus) statsHtml += `<span style="color:#64b5f6;">DEF +${item.defenseBonus} </span>`;
-                    if (item.speedBonus) statsHtml += `<span style="color:#81c784;">SPD +${item.speedBonus} </span>`;
-                    if (item.maxHpBonus) statsHtml += `<span style="color:#e57373;">MAX HP +${item.maxHpBonus} </span>`;
-                    if (item.maxEnergyBonus) statsHtml += `<span style="color:#4dd0e1;">MAX NRG +${item.maxEnergyBonus} </span>`;
-                    if (item.healAmount) statsHtml += `<span style="color:#81c784;">HEAL +${item.healAmount} HP </span>`;
-                    if (item.energyAmount) statsHtml += `<span style="color:#4dd0e1;">NRG +${item.energyAmount} </span>`;
-                    if (item.stasisDuration) statsHtml += `<span style="color:#ffd54f;">STASIS ${item.stasisDuration}s </span>`;
-                    if (item.berserkDuration) statsHtml += `<span style="color:#ff5252;">BERSERK +50% ATK (${item.berserkDuration}s) </span>`;
-                    if (item.barrierHp) statsHtml += `<span style="color:#40c4ff;">SHIELD +${item.barrierHp} </span>`;
-                    if (item.regenDuration) statsHtml += `<span style="color:#69f0ae;">REGEN +8 HP/s (${item.regenDuration}s) </span>`;
+                    if (item.damageBonus) statsHtml += `<span class="item-stat-chip" style="color:#ffb74d;">ATK +${item.damageBonus}</span>`;
+                    if (item.defenseBonus) statsHtml += `<span class="item-stat-chip" style="color:#64b5f6;">DEF +${item.defenseBonus}</span>`;
+                    if (item.speedBonus) statsHtml += `<span class="item-stat-chip" style="color:#81c784;">SPD +${item.speedBonus}</span>`;
+                    if (item.maxHpBonus) statsHtml += `<span class="item-stat-chip" style="color:#e57373;">MAX HP +${item.maxHpBonus}</span>`;
+                    if (item.maxEnergyBonus) statsHtml += `<span class="item-stat-chip" style="color:#4dd0e1;">MAX NRG +${item.maxEnergyBonus}</span>`;
+                    if (item.lifeSteal) statsHtml += `<span class="item-stat-chip" style="color:#ff5252;">${Math.round(item.lifeSteal * 100)}% LIFE STEAL</span>`;
+                    if (item.rangeBonus) statsHtml += `<span class="item-stat-chip" style="color:#ffd54f;">RANGE +${item.rangeBonus}</span>`;
+                    if (item.parryBonus) statsHtml += `<span class="item-stat-chip" style="color:#ce93d8;">+${Math.round(item.parryBonus * 1000)}ms PARRY</span>`;
+                    if (item.healAmount) statsHtml += `<span class="item-stat-chip" style="color:#81c784;">HEAL +${item.healAmount} HP</span>`;
+                    if (item.energyAmount) statsHtml += `<span class="item-stat-chip" style="color:#4dd0e1;">NRG +${item.energyAmount}</span>`;
+                    if (item.stasisDuration) statsHtml += `<span class="item-stat-chip" style="color:#ffd54f;">STASIS ${item.stasisDuration}s</span>`;
+                    if (item.berserkDuration) statsHtml += `<span class="item-stat-chip" style="color:#ff5252;">BERSERK +50% ATK (${item.berserkDuration}s)</span>`;
+                    if (item.barrierHp) statsHtml += `<span class="item-stat-chip" style="color:#40c4ff;">SHIELD +${item.barrierHp}</span>`;
+                    if (item.regenDuration) statsHtml += `<span class="item-stat-chip" style="color:#69f0ae;">REGEN +${item.regenRate || 8} HP/s (${item.regenDuration}s)</span>`;
+                    if (item.fortifyDuration) statsHtml += `<span class="item-stat-chip" style="color:#ab47bc;">DEF +${item.defenseBonus || 30} (${item.fortifyDuration}s)</span>`;
+                    if (item.reflectDamage) statsHtml += `<span class="item-stat-chip" style="color:#ffb300;">${Math.round(item.reflectDamage * 100)}% REFLECT</span>`;
 
                     let actionBtnHtml = '';
                     if (item.type === 'WEAPON' || item.type === 'ARMOR' || item.type === 'RELIC') {
@@ -3245,13 +3333,20 @@ class GameApp {
                         actionBtnHtml = `<button id="btn-inv-action" class="item-act-btn">DEPLOY CAMPFIRE</button>`;
                     }
 
+                    const sourceClass = item.isCraftable ? 'source-crafted' : (tier === 6 ? 'source-remains' : '');
+                    const sourcePrefix = item.isCraftable ? 'CRAFTED' : (tier === 6 ? 'REMAINS' : 'FOUND');
+
                     const detailsEl = document.getElementById('item-details');
                     if (detailsEl) {
                         detailsEl.innerHTML = `
                             <div class="item-detail-header">
-                                <span class="item-detail-title" style="color:${rarity === 'legendary' ? '#ffd54f' : rarity === 'epic' ? '#ba68c8' : rarity === 'rare' ? '#4fc3f7' : '#eceff1'};">${item.icon || ''} ${item.name}</span>
-                                <span class="item-detail-type">${item.type}</span>
+                                <span class="item-detail-title" style="color:${tierColor};">${item.icon || ''} ${item.name}</span>
+                                <div class="item-detail-badges">
+                                    <span class="item-tier-pill slot-tier-badge badge-t${tier}">${tierBadge} • ${tierName.toUpperCase()}</span>
+                                    <span class="item-detail-type">${item.category || item.type}</span>
+                                </div>
                             </div>
+                            <div class="item-source-badge ${sourceClass}">⚡ ${sourcePrefix}: ${item.source || (item.isCraftable ? 'Crafted at Anvil' : 'Found in the wild')}</div>
                             ${statsHtml ? `<div class="item-detail-stats">${statsHtml}</div>` : ''}
                             <div class="item-detail-desc">${item.desc}</div>
                             ${actionBtnHtml}
@@ -3260,7 +3355,7 @@ class GameApp {
                         const actBtn = document.getElementById('btn-inv-action');
                         if (actBtn) {
                             this.bindTap(actBtn, () => {
-                                const res = this.inventory.useItem(item.id, this.player);
+                                const res = activeInv.useItem(item.id, this.player);
                                 if (res && (res.success || res === true)) {
                                     this.renderInventoryModal();
                                     this.updateHUD();
@@ -3963,6 +4058,32 @@ class GameApp {
         else periodName = "Night";
 
         if (rusticTimeText) rusticTimeText.innerText = `${hh}:${mm} • ${periodName}`;
+
+        // 6. Active Combat Buffs HUD (Stasis, Berserk, Barrier, Regen, Fortify)
+        const buffsHud = document.getElementById('active-buffs-hud');
+        if (buffsHud) {
+            if (this.player) {
+                let chips = '';
+                if (this.player.stasisTimer > 0) {
+                    chips += `<span class="buff-chip buff-stasis">⏱️ STASIS ${this.player.stasisTimer.toFixed(1)}s</span>`;
+                }
+                if (this.player.berserkerTimer > 0) {
+                    chips += `<span class="buff-chip buff-berserk">⚔️ BERSERK ${this.player.berserkerTimer.toFixed(1)}s</span>`;
+                }
+                if (this.player.barrierShield > 0) {
+                    chips += `<span class="buff-chip buff-shield">🛡️ BARRIER ${Math.round(this.player.barrierShield)}</span>`;
+                }
+                if (this.player.regenTimer > 0) {
+                    chips += `<span class="buff-chip buff-regen">🌿 REGEN ${this.player.regenTimer.toFixed(1)}s</span>`;
+                }
+                if (this.player.fortifyTimer > 0) {
+                    chips += `<span class="buff-chip buff-fortify">🪵 FORTIFY ${this.player.fortifyTimer.toFixed(1)}s</span>`;
+                }
+                buffsHud.innerHTML = chips;
+            } else {
+                buffsHud.innerHTML = '';
+            }
+        }
 
         this.updateMiniMap();
         this.updateTouchControlsVisibility();

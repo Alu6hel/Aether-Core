@@ -442,23 +442,109 @@ body, html {
     line-height: 1;
 }
 
-.inv-slot.rarity-common {
-    border-color: #37474f;
+/* --- Standard RPG 6-Tier Inventory & Item Slot Theming --- */
+.inv-slot.tier-1, .inv-slot.rarity-common {
+    border-color: #607d8b;
+    box-shadow: 0 0 5px rgba(96, 125, 139, 0.25);
 }
 
-.inv-slot.rarity-rare {
+.inv-slot.tier-2, .inv-slot.rarity-uncommon {
+    border-color: #4caf50;
+    box-shadow: 0 0 7px rgba(76, 175, 80, 0.4);
+    background: radial-gradient(circle at center, rgba(76, 175, 80, 0.08) 0%, #0c121b 80%);
+}
+
+.inv-slot.tier-3, .inv-slot.rarity-rare {
     border-color: #00b0ff;
-    box-shadow: 0 0 6px rgba(0, 176, 255, 0.25);
+    box-shadow: 0 0 8px rgba(0, 176, 255, 0.45);
+    background: radial-gradient(circle at center, rgba(0, 176, 255, 0.1) 0%, #0c121b 80%);
 }
 
-.inv-slot.rarity-epic {
-    border-color: #ab47bc;
-    box-shadow: 0 0 6px rgba(171, 71, 188, 0.3);
+.inv-slot.tier-4, .inv-slot.rarity-epic {
+    border-color: #ba68c8;
+    box-shadow: 0 0 10px rgba(186, 104, 200, 0.55);
+    background: radial-gradient(circle at center, rgba(186, 104, 200, 0.12) 0%, #0c121b 80%);
 }
 
-.inv-slot.rarity-legendary {
-    border-color: #ffd54f;
-    box-shadow: 0 0 8px rgba(255, 213, 79, 0.45);
+.inv-slot.tier-5, .inv-slot.rarity-legendary {
+    border-color: #ffb300;
+    box-shadow: 0 0 12px rgba(255, 179, 0, 0.65);
+    background: radial-gradient(circle at center, rgba(255, 179, 0, 0.15) 0%, #0c121b 80%);
+}
+
+.inv-slot.tier-6, .inv-slot.rarity-mythic {
+    border-color: #ff1744;
+    box-shadow: 0 0 15px rgba(255, 23, 68, 0.8), inset 0 0 8px rgba(255, 23, 68, 0.3);
+    background: radial-gradient(circle at center, rgba(255, 23, 68, 0.2) 0%, #0c121b 80%);
+    animation: pulseMythicSlot 2.2s infinite alternate ease-in-out;
+}
+
+@keyframes pulseMythicSlot {
+    0% { border-color: #ff1744; box-shadow: 0 0 10px rgba(255, 23, 68, 0.6); }
+    100% { border-color: #ff5252; box-shadow: 0 0 18px rgba(255, 23, 68, 0.95), inset 0 0 10px rgba(255, 23, 68, 0.4); }
+}
+
+.inv-slot .slot-tier-badge {
+    position: absolute;
+    top: 2px;
+    right: 3px;
+    font-size: 6px;
+    font-weight: bold;
+    padding: 1px 3px;
+    border-radius: 2px;
+    line-height: 1;
+    letter-spacing: 0.5px;
+}
+
+.slot-tier-badge.badge-t1 { background: #455a64; color: #cfd8dc; }
+.slot-tier-badge.badge-t2 { background: #2e7d32; color: #e8f5e9; }
+.slot-tier-badge.badge-t3 { background: #0277bd; color: #e1f5fe; }
+.slot-tier-badge.badge-t4 { background: #7b1fa2; color: #f3e5f5; }
+.slot-tier-badge.badge-t5 { background: #f57f17; color: #fffde7; }
+.slot-tier-badge.badge-t6 { background: #b71c1c; color: #ffebee; border: 1px solid #ff5252; }
+
+/* Category Filter Tabs in Pioneer Inventory */
+.inv-filter-tabs {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #1f2d3d;
+}
+
+.inv-filter-tabs::-webkit-scrollbar {
+    height: 3px;
+}
+
+.inv-filter-tabs::-webkit-scrollbar-thumb {
+    background: #2a3a4d;
+    border-radius: 2px;
+}
+
+.inv-tab-btn {
+    background: #0f1622;
+    border: 1px solid #243447;
+    border-radius: 4px;
+    color: #90a4ae;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    padding: 4px 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+.inv-tab-btn:hover {
+    color: #eceff1;
+    border-color: #3f5570;
+}
+
+.inv-tab-btn.active {
+    background: #00838f;
+    border-color: #00e5ff;
+    color: #ffffff;
+    box-shadow: 0 0 6px rgba(0, 229, 255, 0.4);
 }
 
 .item-details {
@@ -476,12 +562,27 @@ body, html {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
     margin-bottom: 4px;
 }
 
 .item-details .item-detail-title {
     font-size: 9px;
     font-weight: bold;
+}
+
+.item-details .item-detail-badges {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.item-details .item-tier-pill {
+    font-size: 6px;
+    font-weight: bold;
+    padding: 2px 5px;
+    border-radius: 3px;
 }
 
 .item-details .item-detail-type {
@@ -492,10 +593,43 @@ body, html {
     border-radius: 3px;
 }
 
+.item-details .item-source-badge {
+    font-size: 6px;
+    color: #80deea;
+    background: rgba(0, 176, 255, 0.12);
+    border: 1px solid rgba(0, 176, 255, 0.25);
+    padding: 2px 5px;
+    border-radius: 3px;
+    margin-bottom: 4px;
+    display: inline-block;
+}
+
+.item-details .item-source-badge.source-crafted {
+    color: #a5d6a7;
+    background: rgba(76, 175, 80, 0.12);
+    border-color: rgba(76, 175, 80, 0.25);
+}
+
+.item-details .item-source-badge.source-remains {
+    color: #ff8a80;
+    background: rgba(255, 23, 68, 0.15);
+    border-color: rgba(255, 23, 68, 0.35);
+}
+
 .item-details .item-detail-stats {
-    color: #81c784;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 4px 0;
+}
+
+.item-stat-chip {
+    font-size: 7px;
     font-weight: bold;
-    margin: 3px 0;
+    padding: 2px 5px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .item-details .item-detail-desc {
@@ -516,6 +650,56 @@ body, html {
     box-shadow: 0 2px 4px rgba(0,0,0,0.5);
     margin-top: 4px;
     transition: background 0.1s ease;
+}
+
+.item-details .item-act-btn.unequip-btn {
+    background: #b71c1c;
+    border-color: #ef5350;
+}
+
+/* --- Active Combat Buffs HUD Display --- */
+.active-buffs-hud {
+    position: absolute;
+    top: 72px;
+    left: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 15;
+    pointer-events: none;
+}
+
+.buff-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(10, 16, 26, 0.85);
+    border: 1px solid #2a3a4d;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: #eceff1;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    backdrop-filter: blur(2px);
+    animation: buffAppear 0.2s ease-out;
+}
+
+.buff-chip.buff-stasis { border-color: #ffd54f; color: #ffd54f; box-shadow: 0 0 8px rgba(255, 213, 79, 0.4); }
+.buff-chip.buff-berserk { border-color: #ff5252; color: #ff5252; box-shadow: 0 0 8px rgba(255, 82, 82, 0.4); }
+.buff-chip.buff-shield { border-color: #40c4ff; color: #40c4ff; box-shadow: 0 0 8px rgba(64, 196, 255, 0.4); }
+.buff-chip.buff-regen { border-color: #69f0ae; color: #69f0ae; box-shadow: 0 0 8px rgba(105, 240, 174, 0.4); }
+.buff-chip.buff-fortify { border-color: #ab47bc; color: #ab47bc; box-shadow: 0 0 8px rgba(171, 71, 188, 0.4); }
+
+@keyframes buffAppear {
+    from { opacity: 0; transform: translateX(-6px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* Blood Drop Currency styling */
+.currency-blood-drop, .blood-currency-icon {
+    vertical-align: middle;
+    display: inline-block;
 }
 
 .item-details .item-act-btn:active {
@@ -1462,7 +1646,7 @@ body, html {
 }
 
 /* 1. Distinct Circular Setting for Company Logo (User Requirement) */
-.splash-logo-setting {
+.splash-logo-setting, .splash-logo-circle {
     position: relative;
     width: 108px;
     height: 108px;
