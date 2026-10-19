@@ -2167,15 +2167,10 @@ class GameApp {
     loadNewWorld(seed) {
         this.currentSeed = seed;
         this.areaMaps = {
-            CINDERWATCH_HAMLET: new WorldMap(seed, 64, 64, 'CINDERWATCH_HAMLET'),
-            WHISPERING_WOODS: new WorldMap(seed, 80, 80, 'WHISPERING_WOODS'),
-            SUNKEN_GROTTO: new WorldMap(seed, 64, 64, 'SUNKEN_GROTTO'),
-            SUB_BEDROCK_CORE: new WorldMap(seed, 64, 64, 'SUB_BEDROCK_CORE'),
-            SOLARIUM_DUNES: new WorldMap(seed, 72, 72, 'SOLARIUM_DUNES'),
-            CELESTIAL_ZENITH: new WorldMap(seed, 70, 70, 'CELESTIAL_ZENITH')
+            CINDERWATCH_HAMLET: new WorldMap(seed, null, null, 'CINDERWATCH_HAMLET')
         };
         this.surfaceMap = this.areaMaps.CINDERWATCH_HAMLET;
-        this.subCoreMap = this.areaMaps.SUB_BEDROCK_CORE;
+        this.subCoreMap = null;
         
         this.currentAreaId = 'CINDERWATCH_HAMLET';
         this.currentLayer = 'SURFACE';
@@ -2212,12 +2207,36 @@ class GameApp {
     }
 
     changeArea(newAreaId, targetSpawn = null) {
+        // Secret Sub-Map Gate Checks (Unlocked via Secret Quests)
+        if (newAreaId === 'SUB_BEDROCK_CORE') {
+            const hasCipher = this.player && this.player.inventory && this.player.inventory.hasItem('SUB_CORE_CIPHER');
+            if (!hasCipher && !this.godMode) {
+                this.renderer.addFloatingText('BLAST DOOR LOCKED! Requires Sub-Core Cipher from Zara', this.player.pos.x, this.player.pos.y - 20, '#ff1744');
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+                return;
+            }
+        } else if (newAreaId === 'CELESTIAL_ZENITH') {
+            const hasKeystone = this.player && this.player.inventory && this.player.inventory.hasItem('ASTRAL_KEYSTONE');
+            if (!hasKeystone && !this.godMode) {
+                this.renderer.addFloatingText('ZENITH VEIL LOCKED! Requires Astral Keystone from Nabilah', this.player.pos.x, this.player.pos.y - 20, '#ff1744');
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+                return;
+            }
+        } else if (newAreaId === 'ECLIPSE_SANCTUARY') {
+            const hasAmulet = this.player && this.player.inventory && this.player.inventory.hasItem('ECLIPSE_AMULET');
+            if (!hasAmulet && !this.godMode) {
+                this.renderer.addFloatingText('VOID RIFT BLOCKED! Requires Eclipse Amulet from Rowan', this.player.pos.x, this.player.pos.y - 20, '#ff1744');
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCancel();
+                return;
+            }
+        }
+
         if (!this.areaMaps[newAreaId]) {
-            this.areaMaps[newAreaId] = new WorldMap(this.currentSeed, 64, 64, newAreaId);
+            this.areaMaps[newAreaId] = new WorldMap(this.currentSeed, null, null, newAreaId);
         }
         this.currentAreaId = newAreaId;
         this.currentMap = this.areaMaps[newAreaId];
-        this.currentLayer = (newAreaId === 'SUB_BEDROCK_CORE' || newAreaId === 'SUNKEN_GROTTO') ? 'SUB_CORE' : 'SURFACE';
+        this.currentLayer = (newAreaId === 'SUB_BEDROCK_CORE' || newAreaId === 'SUNKEN_GROTTO' || this.currentMap.isBasement) ? 'SUB_CORE' : 'SURFACE';
 
         if (!this.discoveredBiomes) this.discoveredBiomes = new Set();
         this.discoveredBiomes.add(newAreaId);
@@ -2233,11 +2252,14 @@ class GameApp {
 
         // Position player
         if (targetSpawn) {
-            this.player.pos.set(targetSpawn.x, targetSpawn.y);
+            if (this.player.pos.set) this.player.pos.set(targetSpawn.x, targetSpawn.y);
+            else { this.player.pos.x = targetSpawn.x; this.player.pos.y = targetSpawn.y; }
         } else {
-            this.player.pos.set(this.currentMap.spawnPoint.x, this.currentMap.spawnPoint.y);
+            if (this.player.pos.set) this.player.pos.set(this.currentMap.spawnPoint.x, this.currentMap.spawnPoint.y);
+            else { this.player.pos.x = this.currentMap.spawnPoint.x; this.player.pos.y = this.currentMap.spawnPoint.y; }
         }
-        this.player.vel.set(0, 0);
+        if (this.player.vel && this.player.vel.set) this.player.vel.set(0, 0);
+        else if (this.player.vel) { this.player.vel.x = 0; this.player.vel.y = 0; }
 
         // Play ambient chime & update BGM
         if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(440, 'triangle', 0.25, 0.12);
@@ -3825,6 +3847,19 @@ class GameApp {
             const qObj = document.getElementById('quest-obj-text');
             if (qTitle) qTitle.textContent = this.activeDialogue.questUpdate.title;
             if (qObj) qObj.textContent = this.activeDialogue.questUpdate.objective;
+
+            // Award key items if specified in quest
+            if (this.activeDialogue.questUpdate.rewardItem && this.player && this.player.inventory) {
+                const rItemId = this.activeDialogue.questUpdate.rewardItem;
+                if (!this.player.inventory.hasItem(rItemId)) {
+                    const itemDef = (typeof BASE_ITEMS !== 'undefined' && BASE_ITEMS[rItemId]) 
+                        ? BASE_ITEMS[rItemId] 
+                        : { id: rItemId, name: rItemId, type: 'KEY_ITEM' };
+                    this.player.inventory.addItem(itemDef, 1);
+                    this.renderer.addFloatingText(`KEY ITEM: ${itemDef.name}!`, this.player.pos.x, this.player.pos.y - 20, '#ffd700');
+                    if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playItemObtained();
+                }
+            }
         }
 
         if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playBlip();
@@ -4406,7 +4441,7 @@ class GameApp {
 
         const ptx = Math.floor(this.player.pos.x / 16);
         const pty = Math.floor(this.player.pos.y / 16);
-        const viewTiles = 30;
+        const viewTiles = 36;
         const startX = Math.max(0, Math.min(mw - viewTiles, ptx - Math.floor(viewTiles / 2)));
         const startY = Math.max(0, Math.min(mh - viewTiles, pty - Math.floor(viewTiles / 2)));
         const step = cw / viewTiles;
@@ -4419,11 +4454,17 @@ class GameApp {
                 if (tile === 1) ctx.fillStyle = '#1e88e5'; // River
                 else if (tile === 12) ctx.fillStyle = '#8d6e63'; // Bridge
                 else if (tile === 11) ctx.fillStyle = '#b0bec5'; // Cobblestone
-                else if (tile === 5 || tile === 6) ctx.fillStyle = '#455a64'; // Cliff
+                else if (tile === 5 || tile === 6 || tile === 29) ctx.fillStyle = '#455a64'; // Cliff
                 else if (tile === 14 || tile === 15) ctx.fillStyle = '#c62828'; // Cottage
                 else if (tile === 4) ctx.fillStyle = '#2e7d32'; // Tall grass
                 else if (tile === 20) ctx.fillStyle = '#00e5ff'; // Cavern mushroom
-                else if (tile === 0) ctx.fillStyle = '#05070a'; // Void
+                else if (tile === 30) ctx.fillStyle = '#1b5e20'; // Enchanted mist
+                else if (tile === 31) ctx.fillStyle = '#e65100'; // Heat mirage
+                else if (tile === 32) ctx.fillStyle = '#81d4fa'; // Blizzard haze
+                else if (tile === 33) ctx.fillStyle = '#1a101f'; // Chasm drop
+                else if (tile === 34 || tile === 0) ctx.fillStyle = '#05070a'; // Cosmic void
+                else if (tile === 35) ctx.fillStyle = '#ffd54f'; // Purposeful building sign
+                else if (tile === 36) ctx.fillStyle = '#00e5ff'; // Basement stairs
                 else ctx.fillStyle = '#388e3c'; // Ground
 
                 ctx.fillRect(Math.floor(x * step), Math.floor(y * step), Math.ceil(step), Math.ceil(step));
@@ -4454,16 +4495,50 @@ class GameApp {
             }
         }
 
-        // Draw Player blip
+        // Draw Enemies within scan window
+        if (this.currentMap.enemies) {
+            ctx.fillStyle = '#ff1744';
+            for (const e of this.currentMap.enemies) {
+                if (e.hp <= 0) continue;
+                const ex = Math.floor(e.x / 16);
+                const ey = Math.floor(e.y / 16);
+                if (ex >= startX && ex < startX + viewTiles && ey >= startY && ey < startY + viewTiles) {
+                    ctx.fillRect(Math.floor((ex - startX) * step), Math.floor((ey - startY) * step), e.isBoss ? 4 : 2, e.isBoss ? 4 : 2);
+                }
+            }
+        }
+
+        // Draw Player blip & Cardinal Orientation Pointer
         const pScreenX = Math.floor((ptx - startX) * step);
         const pScreenY = Math.floor((pty - startY) * step);
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(pScreenX, pScreenY, 2.5, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#d50000';
-        ctx.lineWidth = 1;
-        ctx.stroke();
+        const fx = this.player.facing ? this.player.facing.x : 0;
+        const fy = this.player.facing ? this.player.facing.y : 1;
+        const angle = Math.atan2(fy, fx);
+
+        if (ctx.beginPath) {
+            // Directional pointer cone
+            ctx.fillStyle = '#00e5ff';
+            ctx.beginPath();
+            if (ctx.moveTo) ctx.moveTo(pScreenX + Math.cos(angle) * 7, pScreenY + Math.sin(angle) * 7);
+            if (ctx.lineTo) {
+                ctx.lineTo(pScreenX + Math.cos(angle + 2.4) * 5, pScreenY + Math.sin(angle + 2.4) * 5);
+                ctx.lineTo(pScreenX + Math.cos(angle - 2.4) * 5, pScreenY + Math.sin(angle - 2.4) * 5);
+            }
+            if (ctx.closePath) ctx.closePath();
+            if (ctx.fill) ctx.fill();
+
+            // Core player dot
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            if (ctx.arc) ctx.arc(pScreenX, pScreenY, 2.5, 0, Math.PI * 2);
+            if (ctx.fill) ctx.fill();
+            ctx.strokeStyle = '#00bcd4';
+            ctx.lineWidth = 1;
+            if (ctx.stroke) ctx.stroke();
+        } else {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(pScreenX - 1, pScreenY - 1, 3, 3);
+        }
     }
 
     updateInput() {
@@ -4479,34 +4554,41 @@ class GameApp {
     }
 
     updateEnemies(dt) {
+        if (!this.currentMap || !this.currentMap.enemies || !this.player) return;
         const enemies = this.currentMap.enemies;
         const player = this.player;
+
+        const isFrenzy = Boolean(this.isMonsterFrenzy);
+        const aggroDist = isFrenzy ? 280 : 140;
 
         for (const enemy of enemies) {
             if (enemy.hp <= 0) continue;
 
             const dist = Math.hypot(player.pos.x - enemy.x, player.pos.y - enemy.y);
 
-            // Simple aggro AI: Move toward player if in range
-            if (dist < 140 && dist > 14) {
-                const spd = enemy.isBoss ? 45 : 35;
+            // Aggro AI: Move toward player if in range (buffed speed & aggro during Frenzy)
+            if (dist < aggroDist && dist > 14) {
+                const baseSpd = enemy.isBoss ? 45 : (enemy.speed || 35);
+                const spd = isFrenzy ? baseSpd * 1.35 : baseSpd;
                 enemy.x += ((player.pos.x - enemy.x) / dist) * spd * dt;
                 enemy.y += ((player.pos.y - enemy.y) / dist) * spd * dt;
             }
 
             // Attack player if in melee contact
             if (dist < 16 && (!enemy.attackCd || enemy.attackCd <= 0)) {
-                enemy.attackCd = 1.0; // 1s attack cooldown
+                enemy.attackCd = isFrenzy ? 0.75 : 1.0;
                 if (this.godMode) continue;
 
-                const res = player.takeDamage(enemy.attackDamage, true);
+                const res = player.takeDamage(enemy.attackDamage || 10, true);
                 if (res.parried && this.soundEnabled && this.sfxEnabled) {
                     this.combatParriesCount = (this.combatParriesCount || 0) + 1;
                     try { localStorage.setItem('aether_combat_parries', this.combatParriesCount); } catch (e) {}
                     this.renderer.audio.playParry();
                     // Knock enemy back on successful parry
-                    enemy.x -= (player.facing.x) * 32;
-                    enemy.y -= (player.facing.y) * 32;
+                    const pfx = player.facing ? player.facing.x : 0;
+                    const pfy = player.facing ? player.facing.y : 1;
+                    enemy.x -= pfx * 32;
+                    enemy.y -= pfy * 32;
                     enemy.hp -= 20; // Parry counter damage
                 } else if (!res.parried && res.damageTaken > 0 && this.soundEnabled && this.sfxEnabled) {
                     this.renderer.audio.playTone(160, 'sawtooth', 0.15, 0.1);
@@ -4515,6 +4597,106 @@ class GameApp {
 
             if (enemy.attackCd > 0) enemy.attackCd -= dt;
         }
+    }
+
+    updateMonsterSpawns(dt, isNight) {
+        if (!this.currentMap || this.currentMap.isTown) return; // Peaceful towns! No monster spawning in towns
+        if (!this.player) return;
+
+        this.monsterSpawnTimer = (this.monsterSpawnTimer || 0) + dt;
+        const enemies = this.currentMap.enemies || [];
+        const aliveEnemies = enemies.filter(e => e.hp > 0);
+
+        // 1. Night Monster Frenzy: Fires every night during peak darkness (dayTimer 0.65 to 0.82)
+        const isFrenzyTime = isNight && (this.dayTimer >= 0.65 && this.dayTimer <= 0.82);
+        if (isFrenzyTime && !this.isMonsterFrenzy) {
+            this.isMonsterFrenzy = true;
+            this.renderer.addFloatingText('⚠️ MONSTER FRENZY COMMENCED! DANGER LEVEL CRITICAL! ⚠️', this.player.pos.x, this.player.pos.y - 30, '#ff1744');
+            if (this.soundEnabled && this.sfxEnabled) {
+                this.renderer.audio.playTone(220, 'sawtooth', 0.8, 0.25);
+            }
+            this.spawnMonsterPack(2);
+        } else if (!isFrenzyTime && this.isMonsterFrenzy) {
+            this.isMonsterFrenzy = false;
+            this.renderer.addFloatingText('Dawn approaches... Monster Frenzy subsides.', this.player.pos.x, this.player.pos.y - 30, '#81c784');
+        }
+
+        // 2. Daytime Despawning: If too many monsters during daytime, despawn distant monsters (>250px)
+        if (!isNight) {
+            if (aliveEnemies.length > 8) {
+                for (const enemy of aliveEnemies) {
+                    if (enemy.isBoss) continue;
+                    const d = Math.hypot(this.player.pos.x - enemy.x, this.player.pos.y - enemy.y);
+                    if (d > 250) {
+                        enemy.hp = 0; // Despawn distant monster
+                        break;
+                    }
+                }
+            }
+            // Slower daytime spawn rate (every 9s, capped at 8)
+            if (this.monsterSpawnTimer >= 9.0) {
+                this.monsterSpawnTimer = 0;
+                if (aliveEnemies.length < 8) {
+                    this.spawnWildernessMonster();
+                }
+            }
+        } else {
+            // 3. Nighttime Dynamic Spawns: Higher spawn frequency (3.5s during frenzy, 5.0s normal night)
+            const interval = this.isMonsterFrenzy ? 3.5 : 5.0;
+            const maxCap = this.isMonsterFrenzy ? 18 : 14;
+            if (this.monsterSpawnTimer >= interval) {
+                this.monsterSpawnTimer = 0;
+                if (aliveEnemies.length < maxCap) {
+                    const packSize = this.isMonsterFrenzy ? 2 : 1;
+                    this.spawnMonsterPack(packSize);
+                }
+            }
+        }
+    }
+
+    spawnMonsterPack(count = 1) {
+        if (!this.currentMap || !this.player) return;
+        for (let i = 0; i < count; i++) {
+            this.spawnWildernessMonster();
+        }
+    }
+
+    spawnWildernessMonster() {
+        if (!this.currentMap || !this.player) return;
+        const px = this.player.pos.x;
+        const py = this.player.pos.y;
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 140 + Math.random() * 80;
+        const sx = px + Math.cos(angle) * dist;
+        const sy = py + Math.sin(angle) * dist;
+        const tx = Math.floor(sx / 16);
+        const ty = Math.floor(sy / 16);
+
+        if (tx < 4 || tx >= this.currentMap.width - 4 || ty < 4 || ty >= this.currentMap.height - 4) return;
+        if (this.currentMap.isSolid(tx, ty)) return;
+
+        const isDunes = this.currentAreaId === 'SOLARIUM_DUNES';
+        const isGlacier = this.currentAreaId === 'GLACIAL_STEPPE' || this.currentAreaId === 'FROST_CRYPTS';
+        const isChasm = this.currentAreaId === 'OBSIDIAN_CHASM' || this.currentAreaId === 'ECLIPSE_SANCTUARY';
+
+        const enemyType = isDunes ? 'SCORPION' : isGlacier ? 'WOLF' : isChasm ? 'VOID_STALKER' : 'GOBLIN';
+        const enemyName = this.isMonsterFrenzy ? `Frenzied ${enemyType}` : `Night ${enemyType}`;
+        const baseHp = this.isMonsterFrenzy ? 55 : 40;
+        const baseAtk = this.isMonsterFrenzy ? 16 : 12;
+
+        if (!this.currentMap.enemies) this.currentMap.enemies = [];
+        this.currentMap.enemies.push({
+            id: `spawn_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+            x: sx,
+            y: sy,
+            hp: baseHp,
+            maxHp: baseHp,
+            speed: this.isMonsterFrenzy ? 52 : 38,
+            attackDamage: baseAtk,
+            type: enemyType,
+            name: enemyName,
+            isFrenzied: this.isMonsterFrenzy
+        });
     }
 
     loop(currentTime) {
@@ -4556,6 +4738,8 @@ class GameApp {
             }
             this.updateClockGauge();
 
+            const isNight = (this.dayTimer >= 0.50 && this.dayTimer < 0.85);
+
             // 1. Update Cutscenes or Gameplay
             if (!this.cutscenes.isComplete) {
                 this.cutscenes.update(dt);
@@ -4564,6 +4748,7 @@ class GameApp {
                 this.player.update(dt, this.currentMap);
                 this.player.updateCombat(dt, this.currentMap.enemies);
                 this.updateEnemies(dt);
+                this.updateMonsterSpawns(dt, isNight);
 
                 // Proximity sparkle collection when walking over glints
                 if (this.currentMap && this.currentMap.sparkles) {
@@ -4580,8 +4765,6 @@ class GameApp {
                     }
                 }
             }
-
-            const isNight = (this.dayTimer >= 0.50 && this.dayTimer < 0.85);
 
             // Update Wildlife Critters & Friendly NPCs
             if (this.critters && this.currentMap) {
@@ -4609,6 +4792,11 @@ class GameApp {
 
             // 4. Render Day/Night Lighting Mask (Darkness + Torchlight radial aperture)
             this.renderer.renderLighting(this.dayTimer, this.player, Math.round(this.renderer.camera.x), Math.round(this.renderer.camera.y), this.currentMap);
+
+            // 4.5. Render Monster Frenzy Crimson Vignette & HUD Alert when active
+            if (this.isMonsterFrenzy && this.renderer && this.renderer.renderFrenzyVignette) {
+                this.renderer.renderFrenzyVignette(dt, 0.85);
+            }
 
             // 5. Render Floating Loot & Combat Texts
             this.renderer.renderFloatingTexts(Math.round(this.renderer.camera.x), Math.round(this.renderer.camera.y), dt);

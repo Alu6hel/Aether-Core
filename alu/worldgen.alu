@@ -1,0 +1,69 @@
+// ALU Native Procedural World Generation & Town Distance Verification
+// Written in the ALU language specification (https://github.com/Alu6hel/alu-language.git)
+// Defines deterministic mathematical routines for multi-biome world generation,
+// 2-submap town spacing, and secret quest cryptographic keys.
+
+import "std/math.alu";
+
+// 64-bit deterministic hash mixing for coordinates and world seed
+routine alu_hash2d(int x, int y, int seed) -> int {
+    int h = seed ^ (x * 374761393) ^ (y * 668265263);
+    h = (h ^ (h >> 13)) * 1274126177;
+    return h ^ (h >> 16);
+}
+
+// Bounded integer clamp routine
+routine alu_clamp(int val, int min_val, int max_val) -> int {
+    if (val < min_val) {
+        return min_val;
+    }
+    if (val > max_val) {
+        return max_val;
+    }
+    return val;
+}
+
+// Mathematical distance between sub-map coordinate nodes
+routine alu_manhattan_dist(int x1, int y1, int x2, int y2) -> int {
+    int dx = x1 - x2;
+    int dy = y1 - y2;
+    if (dx < 0) { dx = 0 - dx; }
+    if (dy < 0) { dy = 0 - dy; }
+    return dx + dy;
+}
+
+// Town spacing verification: Ensure each new town is exactly or at least 2 sub-maps away
+routine alu_verify_town_spacing(int town_ax, int town_ay, int town_bx, int town_by) -> int {
+    int dist = alu_manhattan_dist(town_ax, town_ay, town_bx, town_by);
+    // 2 sub-map separation distance constraint
+    if (dist >= 2) {
+        return 1;
+    }
+    return 0;
+}
+
+// Procedural Biome Voronoi Cell assignment based on seed
+routine alu_get_biome_at(int world_x, int world_y, int seed) -> int {
+    int n = alu_hash2d(world_x / 16, world_y / 16, seed);
+    int biome_id = n % 5;
+    if (biome_id < 0) {
+        biome_id = 0 - biome_id;
+    }
+    return biome_id;
+}
+
+// Secret quest cryptographic key derivation
+routine alu_derive_secret_key(int quest_id, int world_seed) -> int {
+    int key = (world_seed * 31) ^ (quest_id * 104729);
+    key = ((key << 7) | (key >> 25)) ^ 0x5A5A5A5A;
+    return key;
+}
+
+routine main() -> int {
+    print("--- ALU Worldgen Mathematical Specification Initialized ---");
+    int valid = alu_verify_town_spacing(0, 0, 2, 0);
+    if (valid == 1) {
+        print("Town spacing constraint satisfied: >= 2 sub-maps.");
+    }
+    return 0;
+}

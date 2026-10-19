@@ -160,45 +160,109 @@ class ScreenManager {
 
     renderMinimap(ctx, width, height) {
         const map = this.game.currentMap;
-        if (!map) return;
+        const player = this.game.player;
+        if (!map || !player) return;
 
         const size = 56;
         const mx = width - size - 8;
         const my = 8;
 
-        // Minimap border
-        ctx.fillStyle = 'rgba(15, 20, 28, 0.85)';
+        // Minimap background & border
+        ctx.fillStyle = 'rgba(12, 16, 24, 0.90)';
         ctx.fillRect(mx, my, size, size);
-        ctx.strokeStyle = '#37474f';
+        ctx.strokeStyle = '#00e5ff';
         ctx.lineWidth = 1;
         ctx.strokeRect(mx, my, size, size);
 
-        // Scale factor
-        const sx = size / map.width;
-        const sy = size / map.height;
+        // Tactical 36x36 scan window: whole sub-map never fits on the radar
+        const ptx = Math.floor(player.pos.x / 16);
+        const pty = Math.floor(player.pos.y / 16);
+        const viewTiles = 36;
+        const startX = Math.max(0, Math.min(map.width - viewTiles, ptx - Math.floor(viewTiles / 2)));
+        const startY = Math.max(0, Math.min(map.height - viewTiles, pty - Math.floor(viewTiles / 2)));
+        const step = size / viewTiles;
 
-        // Draw player dot
-        const px = mx + (this.game.player.pos.x / 16) * sx;
-        const py = my + (this.game.player.pos.y / 16) * sy;
-        ctx.fillStyle = '#ffd54f';
-        ctx.fillRect(px - 1, py - 1, 3, 3);
-
-        // Draw cave entrance
-        if (map.caveEntrance) {
-            const cx = mx + map.caveEntrance.x * sx;
-            const cy = my + map.caveEntrance.y * sy;
-            ctx.fillStyle = '#00e5ff';
-            ctx.fillRect(cx, cy, 2, 2);
+        // Terrain
+        for (let y = 0; y < viewTiles; y += 2) {
+            for (let x = 0; x < viewTiles; x += 2) {
+                const tile = map.get(startX + x, startY + y);
+                if (tile === 1) ctx.fillStyle = '#1e88e5'; // River
+                else if (tile === 5 || tile === 6 || tile === 29) ctx.fillStyle = '#455a64'; // Cliff
+                else if (tile === 11) ctx.fillStyle = '#90a4ae'; // Cobble
+                else if (tile === 14 || tile === 15) ctx.fillStyle = '#d32f2f'; // Building
+                else if (tile === 35) ctx.fillStyle = '#ffd54f'; // Shop sign
+                else if (tile === 36) ctx.fillStyle = '#00e5ff'; // Basement stairs
+                else if (tile >= 30 && tile <= 34) ctx.fillStyle = '#263238'; // Border
+                else continue;
+                ctx.fillRect(Math.floor(mx + x * step), Math.floor(my + y * step), Math.ceil(step * 2), Math.ceil(step * 2));
+            }
         }
 
-        // Draw boss
-        for (const e of map.enemies) {
-            if (e.isBoss && e.hp > 0) {
-                const bx = mx + (e.x / 16) * sx;
-                const by = my + (e.y / 16) * sy;
-                ctx.fillStyle = '#ff1744';
-                ctx.fillRect(bx - 1, by - 1, 3, 3);
+        // Portals & Basements
+        if (map.portals) {
+            ctx.fillStyle = '#e040fb';
+            for (const p of map.portals) {
+                const px = Math.floor(p.x / 16);
+                const py = Math.floor(p.y / 16);
+                if (px >= startX && px < startX + viewTiles && py >= startY && py < startY + viewTiles) {
+                    ctx.fillRect(Math.floor(mx + (px - startX) * step), Math.floor(my + (py - startY) * step), 3, 3);
+                }
             }
+        }
+
+        // NPCs
+        if (this.game.npcs && this.game.npcs.npcs) {
+            ctx.fillStyle = '#ffd54f';
+            for (const n of this.game.npcs.npcs) {
+                const nx = Math.floor(n.x / 16);
+                const ny = Math.floor(n.y / 16);
+                if (nx >= startX && nx < startX + viewTiles && ny >= startY && ny < startY + viewTiles) {
+                    ctx.fillRect(Math.floor(mx + (nx - startX) * step), Math.floor(my + (ny - startY) * step), 3, 3);
+                }
+            }
+        }
+
+        // Enemies
+        if (map.enemies) {
+            ctx.fillStyle = '#ff1744';
+            for (const e of map.enemies) {
+                if (e.hp <= 0) continue;
+                const ex = Math.floor(e.x / 16);
+                const ey = Math.floor(e.y / 16);
+                if (ex >= startX && ex < startX + viewTiles && ey >= startY && ey < startY + viewTiles) {
+                    const esize = e.isBoss ? 4 : 2;
+                    ctx.fillRect(Math.floor(mx + (ex - startX) * step), Math.floor(my + (ey - startY) * step), esize, esize);
+                }
+            }
+        }
+
+        // Player Dot & Cardinal Orientation Pointer
+        const pScreenX = mx + (ptx - startX) * step;
+        const pScreenY = my + (pty - startY) * step;
+        const fx = player.facing ? player.facing.x : 0;
+        const fy = player.facing ? player.facing.y : 1;
+        const angle = Math.atan2(fy, fx);
+
+        if (ctx.beginPath) {
+            // Cardinal Orientation Pointer Arrow
+            ctx.fillStyle = '#00e5ff';
+            ctx.beginPath();
+            if (ctx.moveTo) ctx.moveTo(pScreenX + Math.cos(angle) * 6, pScreenY + Math.sin(angle) * 6);
+            if (ctx.lineTo) {
+                ctx.lineTo(pScreenX + Math.cos(angle + 2.4) * 4, pScreenY + Math.sin(angle + 2.4) * 4);
+                ctx.lineTo(pScreenX + Math.cos(angle - 2.4) * 4, pScreenY + Math.sin(angle - 2.4) * 4);
+            }
+            if (ctx.closePath) ctx.closePath();
+            if (ctx.fill) ctx.fill();
+
+            // Player Center Core Dot
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            if (ctx.arc) ctx.arc(pScreenX, pScreenY, 2, 0, Math.PI * 2);
+            if (ctx.fill) ctx.fill();
+        } else {
+            ctx.fillStyle = '#00e5ff';
+            ctx.fillRect(pScreenX - 1, pScreenY - 1, 3, 3);
         }
     }
 

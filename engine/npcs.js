@@ -142,6 +142,342 @@ class NpcManager {
                 spriteColor: '#00cec9',
                 hairColor: '#74b9ff'
             });
+        } else if (areaId === 'AETHELGARD_CITADEL') {
+            this.npcs.push({
+                id: 'LORD_COMMISSIONER_KRELL',
+                name: 'Commissioner Krell',
+                title: 'High Commander of the Citadel',
+                portrait: 'ELDER',
+                x: 48 * 16 + 8,
+                y: 32 * 16 + 8,
+                facing: 'down',
+                wanderTimer: 3.5,
+                homeX: 48 * 16 + 8,
+                homeY: 32 * 16 + 8,
+                wanderRadius: 14,
+                spriteColor: '#78909c',
+                hairColor: '#eceff1'
+            });
+            this.npcs.push({
+                id: 'ENGINEER_BRUNOR',
+                name: 'Chief Engineer Brunor',
+                title: 'Master Mechanist',
+                portrait: 'SMITH',
+                x: 58 * 16 + 8,
+                y: 36 * 16 + 8,
+                facing: 'left',
+                wanderTimer: 2.5,
+                homeX: 58 * 16 + 8,
+                homeY: 36 * 16 + 8,
+                wanderRadius: 18,
+                spriteColor: '#e65100',
+                hairColor: '#3e2723'
+            });
+            this.npcs.push({
+                id: 'INVENTOR_ZARA',
+                name: 'Inventor Zara',
+                title: 'Quantum Dynamo Specialist',
+                portrait: 'HERBALIST',
+                x: 64 * 16 + 8,
+                y: 44 * 16 + 8,
+                facing: 'down',
+                wanderTimer: 3.0,
+                homeX: 64 * 16 + 8,
+                homeY: 44 * 16 + 8,
+                wanderRadius: 20,
+                spriteColor: '#00e5ff',
+                hairColor: '#ff4081'
+            });
+            this.npcs.push({
+                id: 'QUARTERMASTER_VOLKER',
+                name: 'Quartermaster Volker',
+                title: 'Citadel Armorer',
+                portrait: 'SMITH',
+                x: 40 * 16 + 8,
+                y: 48 * 16 + 8,
+                facing: 'right',
+                wanderTimer: 4.0,
+                homeX: 40 * 16 + 8,
+                homeY: 48 * 16 + 8,
+                wanderRadius: 12,
+                spriteColor: '#d32f2f',
+                hairColor: '#212121'
+            });
+            this.npcs.push({
+                id: 'SCHOLAR_MALACHI',
+                name: 'Scholar Malachi',
+                title: 'Archivist of Aethelgard',
+                portrait: 'ELDER',
+                x: 52 * 16 + 8,
+                y: 56 * 16 + 8,
+                facing: 'up',
+                wanderTimer: 2.8,
+                homeX: 52 * 16 + 8,
+                homeY: 56 * 16 + 8,
+                wanderRadius: 16,
+                spriteColor: '#9c27b0',
+                hairColor: '#b0bec5'
+            });
+        } else if (areaId === 'OASIS_SOLARIS') {
+            this.npcs.push({
+                id: 'MERCHANT_PRINCE_FARUQ',
+                name: 'Prince Faruq',
+                title: 'Master of the Golden Bazaar',
+                portrait: 'SCAVENGER',
+                x: 54 * 16 + 8,
+                y: 48 * 16 + 8,
+                facing: 'down',
+                wanderTimer: 2.4,
+                homeX: 54 * 16 + 8,
+                homeY: 48 * 16 + 8,
+                wanderRadius: 22,
+                spriteColor: '#ffd700',
+                hairColor: '#263238'
+            });
+            this.npcs.push({
+                id: 'ASTRONOMER_NABILAH',
+                name: 'Astronomer Nabilah',
+                title: 'Cosmic Stargazer',
+                portrait: 'HERBALIST',
+                x: 68 * 16 + 8,
+                y: 40 * 16 + 8,
+                facing: 'left',
+                wanderTimer: 3.2,
+                homeX: 68 * 16 + 8,
+                homeY: 40 * 16 + 8,
+                wanderRadius: 16,
+                spriteColor: '#304ffe',
+                hairColor: '#f48fb1'
+            });
+            this.npcs.push({
+                id: 'MIRAGE_WEAVER_SAMIRA',
+                name: 'Samira the Weaver',
+                title: 'Desert Sorceress',
+                portrait: 'RANGER',
+                x: 42 * 16 + 8,
+                y: 52 * 16 + 8,
+                facing: 'right',
+                wanderTimer: 3.5,
+                homeX: 42 * 16 + 8,
+                homeY: 52 * 16 + 8,
+                wanderRadius: 18,
+                spriteColor: '#ff6f00',
+                hairColor: '#ffd54f'
+            });
+            this.npcs.push({
+                id: 'NOMAD_SCOUT_TAHIR',
+                name: 'Nomad Tahir',
+                title: 'Dune Navigator',
+                portrait: 'RANGER',
+                x: 60 * 16 + 8,
+                y: 64 * 16 + 8,
+                facing: 'up',
+                wanderTimer: 2.0,
+                homeX: 60 * 16 + 8,
+                homeY: 64 * 16 + 8,
+                wanderRadius: 24,
+                spriteColor: '#f57c00',
+                hairColor: '#424242'
+            });
+            this.npcs.push({
+                id: 'ALCHEMIST_ZARIUS',
+                name: 'Alchemist Zarius',
+                title: 'Solar Distiller',
+                portrait: 'HERBALIST',
+                x: 50 * 16 + 8,
+                y: 36 * 16 + 8,
+                facing: 'down',
+                wanderTimer: 4.0,
+                homeX: 50 * 16 + 8,
+                homeY: 36 * 16 + 8,
+                wanderRadius: 12,
+                spriteColor: '#ffab00',
+                hairColor: '#ffeb3b'
+            });
+        } else if (areaId === 'FROSTSPIRE_ENCLAVE') {
+            this.npcs.push({
+                id: 'HIGH_PRIESTESS_SYLVA',
+                name: 'High Priestess Sylva',
+                title: 'Guardian of the Glacial Shrine',
+                portrait: 'ELDER',
+                x: 56 * 16 + 8,
+                y: 46 * 16 + 8,
+                facing: 'down',
+                wanderTimer: 3.0,
+                homeX: 56 * 16 + 8,
+                homeY: 46 * 16 + 8,
+                wanderRadius: 14,
+                spriteColor: '#e0f7fa',
+                hairColor: '#ffffff'
+            });
+            this.npcs.push({
+                id: 'FROSTSMITH_GUNNAR',
+                name: 'Frostsmith Gunnar',
+                title: 'Glacial Forgemaster',
+                portrait: 'SMITH',
+                x: 44 * 16 + 8,
+                y: 54 * 16 + 8,
+                facing: 'right',
+                wanderTimer: 3.2,
+                homeX: 44 * 16 + 8,
+                homeY: 54 * 16 + 8,
+                wanderRadius: 16,
+                spriteColor: '#81d4fa',
+                hairColor: '#37474f'
+            });
+            this.npcs.push({
+                id: 'CRYOMANCER_YURA',
+                name: 'Cryomancer Yura',
+                title: 'Frost Astrologer',
+                portrait: 'HERBALIST',
+                x: 66 * 16 + 8,
+                y: 50 * 16 + 8,
+                facing: 'left',
+                wanderTimer: 2.8,
+                homeX: 66 * 16 + 8,
+                homeY: 50 * 16 + 8,
+                wanderRadius: 18,
+                spriteColor: '#4fc3f7',
+                hairColor: '#e1f5fe'
+            });
+            this.npcs.push({
+                id: 'RANGER_ERIK',
+                name: 'Ranger Erik',
+                title: 'Alpine Pass Watchman',
+                portrait: 'RANGER',
+                x: 50 * 16 + 8,
+                y: 64 * 16 + 8,
+                facing: 'up',
+                wanderTimer: 2.5,
+                homeX: 50 * 16 + 8,
+                homeY: 64 * 16 + 8,
+                wanderRadius: 22,
+                spriteColor: '#29b6f6',
+                hairColor: '#b0bec5'
+            });
+            this.npcs.push({
+                id: 'SEERESS_ASTRID',
+                name: 'Seeress Astrid',
+                title: 'Glacial Rune Oracle',
+                portrait: 'HERMIT',
+                x: 58 * 16 + 8,
+                y: 34 * 16 + 8,
+                facing: 'down',
+                wanderTimer: 3.8,
+                homeX: 58 * 16 + 8,
+                homeY: 34 * 16 + 8,
+                wanderRadius: 10,
+                spriteColor: '#b3e5fc',
+                hairColor: '#eceff1'
+            });
+        } else if (areaId === 'VERDANT_CANOPY_HAVEN') {
+            this.npcs.push({
+                id: 'MATRIARCH_ELENORA',
+                name: 'Matriarch Elenora',
+                title: 'Keeper of the Canopy',
+                portrait: 'ELDER',
+                x: 52 * 16 + 8,
+                y: 44 * 16 + 8,
+                facing: 'down',
+                wanderTimer: 3.0,
+                homeX: 52 * 16 + 8,
+                homeY: 44 * 16 + 8,
+                wanderRadius: 15,
+                spriteColor: '#4caf50',
+                hairColor: '#a5d6a7'
+            });
+            this.npcs.push({
+                id: 'BOTANIST_ALDEN',
+                name: 'Botanist Alden',
+                title: 'Canopy Herbalist & Alchemist',
+                portrait: 'HERBALIST',
+                x: 42 * 16 + 8,
+                y: 52 * 16 + 8,
+                facing: 'right',
+                wanderTimer: 2.6,
+                homeX: 42 * 16 + 8,
+                homeY: 52 * 16 + 8,
+                wanderRadius: 18,
+                spriteColor: '#81c784',
+                hairColor: '#558b2f'
+            });
+            this.npcs.push({
+                id: 'GROVE_DEFENDER_KYLE',
+                name: 'Sentinel Kyle',
+                title: 'Grove Defender',
+                portrait: 'RANGER',
+                x: 64 * 16 + 8,
+                y: 48 * 16 + 8,
+                facing: 'left',
+                wanderTimer: 2.2,
+                homeX: 64 * 16 + 8,
+                homeY: 48 * 16 + 8,
+                wanderRadius: 20,
+                spriteColor: '#2e7d32',
+                hairColor: '#33691e'
+            });
+            this.npcs.push({
+                id: 'MYSTIC_ROWAN',
+                name: 'Mystic Rowan',
+                title: 'Druid of the Green',
+                portrait: 'HERMIT',
+                x: 58 * 16 + 8,
+                y: 58 * 16 + 8,
+                facing: 'up',
+                wanderTimer: 3.4,
+                homeX: 58 * 16 + 8,
+                homeY: 58 * 16 + 8,
+                wanderRadius: 12,
+                spriteColor: '#1b5e20',
+                hairColor: '#81c784'
+            });
+            this.npcs.push({
+                id: 'PIONEER_SEEDSMAN_SILAS',
+                name: 'Seedsman Silas',
+                title: 'Ancient Arborist',
+                portrait: 'SCAVENGER',
+                x: 48 * 16 + 8,
+                y: 36 * 16 + 8,
+                facing: 'down',
+                wanderTimer: 3.1,
+                homeX: 48 * 16 + 8,
+                homeY: 36 * 16 + 8,
+                wanderRadius: 16,
+                spriteColor: '#aed581',
+                hairColor: '#f1f8e9'
+            });
+        } else if (areaId === 'SOLARIUM_DUNES') {
+            this.npcs.push({
+                id: 'DESERT_CARTOGRAPHER_OMAR',
+                name: 'Cartographer Omar',
+                title: 'Dune Surveyor',
+                portrait: 'SCAVENGER',
+                x: 40 * 16 + 8,
+                y: 36 * 16 + 8,
+                facing: 'right',
+                wanderTimer: 3.0,
+                homeX: 40 * 16 + 8,
+                homeY: 36 * 16 + 8,
+                wanderRadius: 20,
+                spriteColor: '#ff9800',
+                hairColor: '#5d4037'
+            });
+        } else if (areaId === 'OBSIDIAN_CHASM') {
+            this.npcs.push({
+                id: 'ECLIPSE_ORACLE_NOCTIS',
+                name: 'Oracle Noctis',
+                title: 'Chasm Void Seer',
+                portrait: 'HERMIT',
+                x: 48 * 16 + 8,
+                y: 42 * 16 + 8,
+                facing: 'down',
+                wanderTimer: 4.0,
+                homeX: 48 * 16 + 8,
+                homeY: 42 * 16 + 8,
+                wanderRadius: 8,
+                spriteColor: '#673ab7',
+                hairColor: '#d1c4e9'
+            });
         }
     }
 
@@ -630,6 +966,311 @@ class NpcManager {
                     ]
                 };
             }
+        }
+
+        // ==========================================
+        // AETHELGARD CITADEL NPCS
+        // ==========================================
+        if (npc.id === 'LORD_COMMISSIONER_KRELL') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"Stand tall, Pioneer. You stand within Aethelgard Citadel, the mechanical bulwark of the northern frontier."`,
+                    `"Steam turbines and clockwork valves keep the Dyson power conduit stable, but the subterranean vaults groan at night."`,
+                    `"Our Chief Mechanist Brunor and Inventor Zara are researching the quantum anomalies. Make yourself useful."`
+                ]
+            };
+        }
+
+        if (npc.id === 'ENGINEER_BRUNOR') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"Hear that rhythmic hiss? That's fifty atmospheres of superheated geothermal steam powering our blast forges."`,
+                    `"Deep in our Clockwork Vault, we sealed ancient automaton engines. Do not meddle with the basement stairs unless you're heavily armored."`,
+                    `"If you seek the lost Sub-Core, talk to Zara. Her intellect burns brighter than molten titanium."`
+                ]
+            };
+        }
+
+        if (npc.id === 'INVENTOR_ZARA') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"Eureka! Pioneer, your bio-electric signature matches the 64-bit harmonic frequency of our ALU core!"`,
+                    `"I've compiled the cryptographic matrix needed to override the sealed blast doors leading into the Sub-Bedrock Quantum Core."`,
+                    `"Take this Sub-Bedrock Quantum Cipher. The heavy vault door in Sunken Grotto will open for you. Decommission the rogue Dreadnought!"`
+                ],
+                questUpdate: {
+                    stage: 'QUEST_SUB_BEDROCK_CIPHER',
+                    title: "The Sub-Core Key",
+                    objective: "Breach the Sub-Bedrock Quantum Core using Zara's Quantum Cipher.",
+                    rewardItem: 'SUB_CORE_CIPHER'
+                }
+            };
+        }
+
+        if (npc.id === 'QUARTERMASTER_VOLKER') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"Armor plates, reinforced greaves, kinetic shock absorbers—Aethelgard forged steel will save your life out there."`,
+                    `"Remember this combat rule: parry right before the monster strike lands. A perfect deflection staggers them and opens a lethal counter!"`
+                ]
+            };
+        }
+
+        if (npc.id === 'SCHOLAR_MALACHI') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"The ancient scrolls describe five sanctuaries on Archaea-09, each separated by two wilderness expanses in perfect mathematical harmony."`,
+                    `"The Dyson Sphere above us is not merely a power collector—it is a conscious cosmic clockwork guiding our planetary evolution."`
+                ]
+            };
+        }
+
+        // ==========================================
+        // OASIS SOLARIS NPCS
+        // ==========================================
+        if (npc.id === 'MERCHANT_PRINCE_FARUQ') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"Ahlan wa sahlan! Welcome to Oasis Solaris, jewel of the golden dunes!"`,
+                    `"Trade winds carry fortunes from across the continent. Rest beneath our date palms and replenish your provisions."`,
+                    `"Beware the heat mirages at the borders of the desert—walk into them, and your senses will dissolve in the shimmer."`
+                ]
+            };
+        }
+
+        if (npc.id === 'ASTRONOMER_NABILAH') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"The stars whisper secrets across the desert sky, Pioneer. The Dyson superstructure aligns with the Celestial Zenith Peak!"`,
+                    `"I have focused starlight through a prism of resonant solar quartz to synthesize this Celestial Zenith Keystone."`,
+                    `"Take it. Ascend the cloud stairway in the high mountain pass to pierce the celestial clouds and enter the Zenith."`
+                ],
+                questUpdate: {
+                    stage: 'QUEST_ZENITH_KEYSTONE',
+                    title: "Ascent to the Zenith",
+                    objective: "Unlock the pathway to Celestial Zenith with Nabilah's Astral Keystone.",
+                    rewardItem: 'ASTRAL_KEYSTONE'
+                }
+            };
+        }
+
+        if (npc.id === 'MIRAGE_WEAVER_SAMIRA') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"The sands are alive with memory. Beneath our bazaar lie the Sunken Pharaoh Catacombs."`,
+                    `"Those who descend the basement stairs face ancient desert guardians, but the treasure chests within contain relics of solar glass."`
+                ]
+            };
+        }
+
+        if (npc.id === 'NOMAD_SCOUT_TAHIR') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"Keep water close and your blade sharp. Sand-scorpions and solar sentinels hunt the dunes."`,
+                    `"When night falls and the monster frenzy begins, even seasoned nomads find shelter within the town walls."`
+                ]
+            };
+        }
+
+        if (npc.id === 'ALCHEMIST_ZARIUS') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"I distill the harsh desert heat into restorative sunfire tonics."`,
+                    `"Harvest medicinal herbs and glowing cacti from the oasis borders, and you shall never succumb to venom."`
+                ]
+            };
+        }
+
+        // ==========================================
+        // FROSTSPIRE ENCLAVE NPCS
+        // ==========================================
+        if (npc.id === 'HIGH_PRIESTESS_SYLVA') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"May the crystal snows bring peace to your spirit, traveler."`,
+                    `"Frostspire Enclave preserves the quiet solemnity of the ancient glacier. Beyond our shrine lies the biting blizzard haze."`,
+                    `"Keep your inner flame lit, for the cold tests the soul as fiercely as any blade."`
+                ]
+            };
+        }
+
+        if (npc.id === 'FROSTSMITH_GUNNAR') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"Steel quenched in glacial springwater never dulls and never shatters."`,
+                    `"Deep in our Glacial Crypts beneath the forge, ancient cryo-beasts guard frozen chests of primordial metal."`
+                ]
+            };
+        }
+
+        if (npc.id === 'CRYOMANCER_YURA') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"The ice here does not melt—it holds memories of the first settlers who arrived through the Dyson gate."`,
+                    `"Watch the northern sky during the deep night. The auroras dance with the rhythm of the stellar core."`
+                ]
+            };
+        }
+
+        if (npc.id === 'RANGER_ERIK') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"I patrol the Glacial Steppe. The snow wolves are territorial, but they fear the warmth of campfires."`,
+                    `"Travel during daylight when possible. At night, the cold bite slows your step while the monsters quicken."`
+                ]
+            };
+        }
+
+        if (npc.id === 'SEERESS_ASTRID') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"I have cast the glacial runes. They speak of a great shadow cast upon Archaea-09 by the Eclipse Void."`,
+                    `"A hero must rise with relics of starlight, iron, and green flora to restore planetary balance."`
+                ]
+            };
+        }
+
+        // ==========================================
+        // VERDANT CANOPY HAVEN NPCS
+        // ==========================================
+        if (npc.id === 'MATRIARCH_ELENORA') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"Welcome to the high boughs of Verdant Canopy Haven, where the branches of the living Yggdrasil embrace the clouds."`,
+                    `"Here, nature and quantum technology weave together in perfect symmetry."`,
+                    `"Respect the forest, Pioneer, and the forest will yield its most miraculous secrets."`
+                ]
+            };
+        }
+
+        if (npc.id === 'BOTANIST_ALDEN') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"The sap of the Great Canopy contains bioactive compounds capable of instant cellular rejuvenation."`,
+                    `"Bring me wild berries and herbs from the woodland floor, and I can brew life-saving elixirs."`
+                ]
+            };
+        }
+
+        if (npc.id === 'GROVE_DEFENDER_KYLE') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"The wooden suspension bridges are secured. No corrupted monstrosity crosses into our haven."`,
+                    `"We keep watchful eyes on the enchanted mist surrounding our tree canopy."`
+                ]
+            };
+        }
+
+        if (npc.id === 'MYSTIC_ROWAN') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"Pioneer of the stars... the ancient roots feel a tremor of pure void emanating from the Obsidian Chasm."`,
+                    `"A dimensional fissure has torn reality itself. Without protection, your mind would shatter upon crossing the threshold."`,
+                    `"Take this consecrated Eclipse Void Amulet. With it, the dimensional veil into the Eclipse Void Sanctuary will yield to you."`
+                ],
+                questUpdate: {
+                    stage: 'QUEST_WHISPERING_ECLIPSE',
+                    title: "Secrets of the Void",
+                    objective: "Enter the Eclipse Void Sanctuary in the Obsidian Chasm with Rowan's Amulet.",
+                    rewardItem: 'ECLIPSE_AMULET'
+                }
+            };
+        }
+
+        if (npc.id === 'PIONEER_SEEDSMAN_SILAS') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"Every grand forest begins with a single sacred seed planted in fertile arable soil."`,
+                    `"If you ever encounter an arable plot in your journeys, till it with care. Life will return to even the coldest metal core."`
+                ]
+            };
+        }
+
+        // ==========================================
+        // WILDERNESS OUTPOST NPCS
+        // ==========================================
+        if (npc.id === 'DESERT_CARTOGRAPHER_OMAR') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"Mapping the Solarium Dunes is tricky with the shifting sands and heat mirages."`,
+                    `"Always check your radar minimap—the directional compass arrow points true even when the horizon wavers!"`
+                ]
+            };
+        }
+
+        if (npc.id === 'ECLIPSE_ORACLE_NOCTIS') {
+            return {
+                speaker: npc.name,
+                title: npc.title,
+                portrait: npc.portrait,
+                lines: [
+                    `"You walk along the edge of the bottomless chasm, Pioneer. The cosmic void gazes back at you."`,
+                    `"Only those who bear the sacred amulet from the Canopy Haven may step through the twilight rift unscathed."`
+                ]
+            };
         }
 
         // Default fallback

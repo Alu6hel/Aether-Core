@@ -17,6 +17,7 @@ if (typeof require !== 'undefined' && typeof window === 'undefined') {
     global.AluCoinBondingCurve = _core.AluCoinBondingCurve;
     global.AluNoise = _core.AluNoise;
     global.AluPerlinFbm = _core.AluPerlinFbm;
+    global.AluRunicMath = _core.AluRunicMath;
 }
 
 // Tile Type Indices
@@ -50,75 +51,248 @@ const TILE = {
     CELESTIAL_GLASS: 26,// Translucent luminescent glass walkway (walkable)
     STONE_RAMP: 27,     // Walkable carved stone ramp connecting elevation levels
     WOODEN_STAIRS: 28,  // Walkable wooden stairs connecting cliffs
-    CLIFF_FACE: 29      // Vertical cliff rock facade
+    CLIFF_FACE: 29,     // Vertical cliff rock facade
+    ENCHANTED_MIST: 30, // Whispering Woods & Canopy boundary mist (soft repulsion + swirls)
+    HEAT_MIRAGE: 31,    // Solarium Dunes boundary heat shimmer
+    BLIZZARD_HAZE: 32,  // Frostspire Glacial Steppe frozen blizzard boundary
+    CHASM_DROP: 33,     // Bottomless abyss chasm boundary for caverns/canyons
+    COSMIC_VOID: 34,    // Celestial Zenith deep starfield edge with distant nebulae
+    BUILDING_SIGN: 35,  // Purposeful building shop sign (Anvil, Flask, Mug, Tome, etc.)
+    BASEMENT_STAIRS: 36 // Enterable cellar / secret basement stairs
+};
+
+const BUILDING_TYPE = {
+    FORGE: 'FORGE',           // Blacksmith / weapon upgrades
+    APOTHECARY: 'APOTHECARY', // Potions, tonics, herbs
+    INN: 'INN',               // Rest, food, rumor board
+    ARCHIVES: 'ARCHIVES',     // Lore, codex, secret maps
+    SHRINE: 'SHRINE',         // Astral / Runic blessings
+    TOWN_HALL: 'TOWN_HALL'    // Mayor, regional bounties & quests
 };
 
 const AREA_CONFIG = {
+    // 5 Towns (Each 2 sub-maps apart):
     CINDERWATCH_HAMLET: {
         id: 'CINDERWATCH_HAMLET',
         name: 'CINDERWATCH HAMLET',
-        width: 64,
-        height: 64,
+        width: 128,
+        height: 128,
         bgMusic: 'TOWN_THEME',
-        ambientLight: 1.0
+        ambientLight: 1.0,
+        isTown: true
     },
+    AETHELGARD_CITADEL: {
+        id: 'AETHELGARD_CITADEL',
+        name: 'AETHELGARD CITADEL',
+        width: 128,
+        height: 128,
+        bgMusic: 'TOWN_THEME',
+        ambientLight: 0.95,
+        isTown: true
+    },
+    OASIS_SOLARIS: {
+        id: 'OASIS_SOLARIS',
+        name: 'OASIS OF SOLARIS',
+        width: 128,
+        height: 128,
+        bgMusic: 'DUNES_THEME',
+        ambientLight: 1.0,
+        isTown: true
+    },
+    FROSTSPIRE_ENCLAVE: {
+        id: 'FROSTSPIRE_ENCLAVE',
+        name: 'FROSTSPIRE ENCLAVE',
+        width: 128,
+        height: 128,
+        bgMusic: 'TOWN_THEME',
+        ambientLight: 0.90,
+        isTown: true
+    },
+    VERDANT_CANOPY_HAVEN: {
+        id: 'VERDANT_CANOPY_HAVEN',
+        name: 'VERDANT CANOPY HAVEN',
+        width: 128,
+        height: 128,
+        bgMusic: 'FOREST_THEME',
+        ambientLight: 0.95,
+        isTown: true
+    },
+
+    // Wilderness & Dungeon Sub-Maps:
     WHISPERING_WOODS: {
         id: 'WHISPERING_WOODS',
         name: 'WHISPERING WOODS',
-        width: 80,
-        height: 80,
+        width: 140,
+        height: 140,
         bgMusic: 'FOREST_THEME',
         ambientLight: 0.95
     },
-    SUNKEN_GROTTO: {
-        id: 'SUNKEN_GROTTO',
-        name: 'SUNKEN GROTTO',
-        width: 64,
-        height: 64,
-        bgMusic: 'CAVERN_THEME',
-        ambientLight: 0.45
-    },
-    SUB_BEDROCK_CORE: {
-        id: 'SUB_BEDROCK_CORE',
-        name: 'SUB-BEDROCK QUANTUM CORE',
-        width: 64,
-        height: 64,
+    CONDUIT_VALLEY: {
+        id: 'CONDUIT_VALLEY',
+        name: 'CONDUIT VALLEY',
+        width: 128,
+        height: 128,
         bgMusic: 'CORE_THEME',
-        ambientLight: 0.70
+        ambientLight: 0.85
+    },
+    ASHEN_CRAGS: {
+        id: 'ASHEN_CRAGS',
+        name: 'ASHEN CRAGS',
+        width: 128,
+        height: 128,
+        bgMusic: 'CAVERN_THEME',
+        ambientLight: 0.80
+    },
+    OBSIDIAN_CHASM: {
+        id: 'OBSIDIAN_CHASM',
+        name: 'OBSIDIAN CHASM',
+        width: 128,
+        height: 128,
+        bgMusic: 'CAVERN_THEME',
+        ambientLight: 0.60
     },
     SOLARIUM_DUNES: {
         id: 'SOLARIUM_DUNES',
         name: 'SOLARIUM WASTES & DUNES',
-        width: 64,
-        height: 64,
+        width: 140,
+        height: 140,
         bgMusic: 'DUNES_THEME',
         ambientLight: 1.0
+    },
+    CRYSTAL_CAVERNS: {
+        id: 'CRYSTAL_CAVERNS',
+        name: 'CRYSTAL CAVERNS',
+        width: 128,
+        height: 128,
+        bgMusic: 'CAVERN_THEME',
+        ambientLight: 0.50
+    },
+    GLACIAL_STEPPE: {
+        id: 'GLACIAL_STEPPE',
+        name: 'GLACIAL STEPPE',
+        width: 140,
+        height: 140,
+        bgMusic: 'ZENITH_THEME',
+        ambientLight: 0.90
+    },
+    MYSTIC_MARSH: {
+        id: 'MYSTIC_MARSH',
+        name: 'MYSTIC MARSH',
+        width: 128,
+        height: 128,
+        bgMusic: 'FOREST_THEME',
+        ambientLight: 0.75
+    },
+    SUNKEN_GROTTO: {
+        id: 'SUNKEN_GROTTO',
+        name: 'SUNKEN GROTTO',
+        width: 128,
+        height: 128,
+        bgMusic: 'CAVERN_THEME',
+        ambientLight: 0.45
+    },
+
+    // Secret Sub-Maps:
+    SUB_BEDROCK_CORE: {
+        id: 'SUB_BEDROCK_CORE',
+        name: 'SUB-BEDROCK QUANTUM CORE',
+        width: 128,
+        height: 128,
+        bgMusic: 'CORE_THEME',
+        ambientLight: 0.70,
+        isSecret: true
     },
     CELESTIAL_ZENITH: {
         id: 'CELESTIAL_ZENITH',
         name: 'CELESTIAL ZENITH PEAK',
-        width: 70,
-        height: 70,
+        width: 140,
+        height: 140,
         bgMusic: 'ZENITH_THEME',
-        ambientLight: 1.0
+        ambientLight: 1.0,
+        isSecret: true
+    },
+    ECLIPSE_SANCTUARY: {
+        id: 'ECLIPSE_SANCTUARY',
+        name: 'ECLIPSE VOID SANCTUARY',
+        width: 128,
+        height: 128,
+        bgMusic: 'CORE_THEME',
+        ambientLight: 0.40,
+        isSecret: true
+    },
+
+    // Purposeful Building Underground Basements:
+    HAMLET_CELLAR: {
+        id: 'HAMLET_CELLAR',
+        name: 'APOTHECARY SECRET CELLAR',
+        width: 64,
+        height: 64,
+        bgMusic: 'CAVERN_THEME',
+        ambientLight: 0.40,
+        isBasement: true
+    },
+    CITADEL_VAULT: {
+        id: 'CITADEL_VAULT',
+        name: 'AETHELGARD CLOCKWORK VAULT',
+        width: 64,
+        height: 64,
+        bgMusic: 'CORE_THEME',
+        ambientLight: 0.50,
+        isBasement: true
+    },
+    OASIS_CATACOMBS: {
+        id: 'OASIS_CATACOMBS',
+        name: 'SUNKEN PHARAOH CATACOMBS',
+        width: 64,
+        height: 64,
+        bgMusic: 'CAVERN_THEME',
+        ambientLight: 0.35,
+        isBasement: true
+    },
+    FROST_CRYPTS: {
+        id: 'FROST_CRYPTS',
+        name: 'FROSTSPIRE GLACIAL CRYPTS',
+        width: 64,
+        height: 64,
+        bgMusic: 'ZENITH_THEME',
+        ambientLight: 0.45,
+        isBasement: true
     }
 };
 
 class WorldMap {
-    constructor(seed, width = 64, height = 64, layer = 'CINDERWATCH_HAMLET') {
+    constructor(seed, width = null, height = null, layer = 'CINDERWATCH_HAMLET') {
         this.seed = seed;
         
-        // Resolve legacy layer names
+        // Resolve legacy layer names and parameter ordering
         let resolvedArea = layer;
-        if (layer === 'SURFACE') resolvedArea = 'CINDERWATCH_HAMLET';
-        if (layer === 'SUB_CORE') resolvedArea = 'SUB_BEDROCK_CORE';
+        if (typeof seed === 'string') {
+            resolvedArea = seed;
+            this.seed = 0x1337BEEF;
+        }
+
+        if (typeof seed === 'number' && typeof width === 'number' && typeof height === 'number' && arguments.length === 3) {
+            // Legacy signature: new WorldMap(width, height, seed)
+            this.width = seed;
+            this.height = width;
+            this.seed = height;
+            resolvedArea = 'CINDERWATCH_HAMLET';
+        } else {
+            if (layer === 'SURFACE') resolvedArea = 'CINDERWATCH_HAMLET';
+            if (layer === 'SUB_CORE') resolvedArea = 'SUB_BEDROCK_CORE';
+            const cfg = AREA_CONFIG[resolvedArea] || AREA_CONFIG.CINDERWATCH_HAMLET;
+            // Respect explicitly passed positive dimensions from legacy unit tests, otherwise use AREA_CONFIG expanded sizes
+            this.width = (typeof width === 'number' && width > 0) ? width : cfg.width;
+            this.height = (typeof height === 'number' && height > 0) ? height : cfg.height;
+        }
 
         this.areaId = resolvedArea;
         const cfg = AREA_CONFIG[resolvedArea] || AREA_CONFIG.CINDERWATCH_HAMLET;
         this.areaName = cfg.name;
-        this.layer = (resolvedArea === 'SUB_BEDROCK_CORE' || resolvedArea === 'SUNKEN_GROTTO') ? 'SUB_CORE' : 'SURFACE';
-        this.width = cfg.width;
-        this.height = cfg.height;
+        this.layer = (resolvedArea === 'SUB_BEDROCK_CORE' || resolvedArea === 'SUNKEN_GROTTO' || cfg.isBasement) ? 'SUB_CORE' : 'SURFACE';
+        this.isTown = !!cfg.isTown;
+        this.isBasement = !!cfg.isBasement;
+        this.isSecret = !!cfg.isSecret;
         this.tileSize = 16;
         
         this.tiles = new Uint8Array(this.width * this.height);
@@ -127,9 +301,9 @@ class WorldMap {
         this.heightStep = 10;   // Pixels per elevation tier
         this.ramps = [];        // Carved ramp markers
         this.decor = new Uint8Array(this.width * this.height);
-        this.palette = AluPaletteGenerator.generate(seed);
-        this.bondingCurve = new AluCoinBondingCurve(seed);
-        this.spawnPoint = { x: 28 * 16 + 8, y: 26 * 16 + 8 };
+        this.palette = AluPaletteGenerator.generate(this.seed);
+        this.bondingCurve = new AluCoinBondingCurve(this.seed);
+        this.spawnPoint = { x: Math.floor(this.width / 2) * 16 + 8, y: Math.floor(this.height / 2) * 16 + 8 };
         this.caveEntrance = null;
         this.secretSoilArea = null;
         this.enemies = [];
@@ -140,6 +314,7 @@ class WorldMap {
         this.resourceNodes = [];
         this.portals = [];
         this.chimneys = [];
+        this.buildings = [];
 
         this.generate();
     }
@@ -186,7 +361,7 @@ class WorldMap {
     isSolid(tx, ty) {
         const t = this.get(tx, ty);
         // Ramps and stairs are explicitly walkable transitions
-        if (t === TILE.STONE_RAMP || t === TILE.WOODEN_STAIRS) {
+        if (t === TILE.STONE_RAMP || t === TILE.WOODEN_STAIRS || t === TILE.BASEMENT_STAIRS) {
             return false;
         }
         if (
@@ -200,7 +375,13 @@ class WorldMap {
             t === TILE.BUILDING_ROOF ||
             t === TILE.BUILDING_WINDOW ||
             t === TILE.SANDSTONE_RUIN ||
-            t === TILE.QUICKSAND
+            t === TILE.QUICKSAND ||
+            t === TILE.ENCHANTED_MIST ||
+            t === TILE.HEAT_MIRAGE ||
+            t === TILE.BLIZZARD_HAZE ||
+            t === TILE.CHASM_DROP ||
+            t === TILE.COSMIC_VOID ||
+            t === TILE.BUILDING_SIGN
         ) {
             return true;
         }
@@ -241,20 +422,113 @@ class WorldMap {
         }
     }
 
+    applyCreativeBorders(borderTile, depth = 3) {
+        for (let d = 0; d < depth; d++) {
+            for (let x = 0; x < this.width; x++) {
+                this.set(x, d, borderTile);
+                this.set(x, this.height - 1 - d, borderTile);
+            }
+            for (let y = 0; y < this.height; y++) {
+                this.set(d, y, borderTile);
+                this.set(this.width - 1 - d, y, borderTile);
+            }
+        }
+    }
+
+    buildPurposefulBuilding(type, x, y, w, h, doorX, doorY, winX, winY, signX, signY, basementStairs = null) {
+        // Roof top
+        for (let cx = x; cx < x + w; cx++) {
+            for (let cy = y; cy < y + Math.floor(h / 2); cy++) {
+                this.set(cx, cy, TILE.BUILDING_ROOF);
+            }
+        }
+        // Walls
+        for (let cx = x; cx < x + w; cx++) {
+            for (let cy = y + Math.floor(h / 2); cy < y + h; cy++) {
+                this.set(cx, cy, TILE.BUILDING_WALL);
+            }
+        }
+        // Door
+        this.set(doorX, doorY, TILE.BUILDING_DOOR);
+        // Window
+        if (winX !== undefined && winY !== undefined) this.set(winX, winY, TILE.BUILDING_WINDOW);
+        // Shop signpost
+        if (signX !== undefined && signY !== undefined) this.set(signX, signY, TILE.BUILDING_SIGN);
+
+        // Register chimney at top-right of roof
+        this.chimneys.push({ x: (x + w - 1) * 16 + 8, y: y * 16 + 4 });
+
+        // Basement stairs and portal
+        if (basementStairs) {
+            this.set(basementStairs.x, basementStairs.y, TILE.BASEMENT_STAIRS);
+            this.portals.push({
+                id: `portal_to_${basementStairs.targetArea.toLowerCase()}`,
+                x: basementStairs.x * 16 + 8,
+                y: basementStairs.y * 16 + 8,
+                targetArea: basementStairs.targetArea,
+                targetSpawn: basementStairs.targetSpawn || { x: 32 * 16 + 8, y: 28 * 16 + 8 },
+                label: `DESCEND TO ${basementStairs.name || 'CELLAR'}`
+            });
+        }
+
+        this.buildings.push({
+            type,
+            x, y, w, h,
+            door: { x: doorX, y: doorY },
+            sign: (signX !== undefined) ? { x: signX, y: signY } : null,
+            basement: basementStairs
+        });
+    }
+
     generate() {
         const prng = new AluPrng(this.seed + (this.areaId === 'WHISPERING_WOODS' ? 0x1111 : 
                                                this.areaId === 'SUNKEN_GROTTO' ? 0x5555 : 
                                                this.areaId === 'SUB_BEDROCK_CORE' ? 0x9999 : 
                                                this.areaId === 'SOLARIUM_DUNES' ? 0x3333 :
-                                               this.areaId === 'CELESTIAL_ZENITH' ? 0x7777 : 0x0000));
+                                               this.areaId === 'CELESTIAL_ZENITH' ? 0x7777 :
+                                               this.areaId === 'AETHELGARD_CITADEL' ? 0x2222 :
+                                               this.areaId === 'OASIS_SOLARIS' ? 0x4444 :
+                                               this.areaId === 'FROSTSPIRE_ENCLAVE' ? 0x6666 :
+                                               this.areaId === 'VERDANT_CANOPY_HAVEN' ? 0x8888 :
+                                               this.areaId === 'ECLIPSE_SANCTUARY' ? 0xAAAA : 0x0000));
 
         switch (this.areaId) {
             case 'CINDERWATCH_HAMLET':
                 this.generateHamlet(prng);
                 break;
+            case 'AETHELGARD_CITADEL':
+                this.generateAethelgard(prng);
+                break;
+            case 'OASIS_SOLARIS':
+                this.generateOasisSolaris(prng);
+                break;
+            case 'FROSTSPIRE_ENCLAVE':
+                this.generateFrostspire(prng);
+                break;
+            case 'VERDANT_CANOPY_HAVEN':
+                this.generateCanopyHaven(prng);
+                break;
             case 'WHISPERING_WOODS':
             case 'SURFACE':
                 this.generateWoods(prng);
+                break;
+            case 'CONDUIT_VALLEY':
+                this.generateConduitValley(prng);
+                break;
+            case 'ASHEN_CRAGS':
+                this.generateAshenCrags(prng);
+                break;
+            case 'OBSIDIAN_CHASM':
+                this.generateObsidianChasm(prng);
+                break;
+            case 'CRYSTAL_CAVERNS':
+                this.generateCrystalCaverns(prng);
+                break;
+            case 'GLACIAL_STEPPE':
+                this.generateGlacialSteppe(prng);
+                break;
+            case 'MYSTIC_MARSH':
+                this.generateMysticMarsh(prng);
                 break;
             case 'SUNKEN_GROTTO':
                 this.generateGrotto(prng);
@@ -268,6 +542,21 @@ class WorldMap {
                 break;
             case 'CELESTIAL_ZENITH':
                 this.generateCelestialZenith(prng);
+                break;
+            case 'ECLIPSE_SANCTUARY':
+                this.generateEclipseSanctuary(prng);
+                break;
+            case 'HAMLET_CELLAR':
+                this.generateHamletCellar(prng);
+                break;
+            case 'CITADEL_VAULT':
+                this.generateCitadelVault(prng);
+                break;
+            case 'OASIS_CATACOMBS':
+                this.generateOasisCatacombs(prng);
+                break;
+            case 'FROST_CRYPTS':
+                this.generateFrostCrypts(prng);
                 break;
             default:
                 this.generateHamlet(prng);
@@ -383,15 +672,21 @@ class WorldMap {
         // Town Square Ancient Well / Altar
         this.set(28, 24, TILE.ANCIENT_TERMINAL);
 
-        // Build Cottages with roofs, walls, doors, windows, and chimneys
-        // 1. Elder's Hall (North-West: x = 18 to 23, y = 12 to 17)
-        this.buildCottage(18, 12, 6, 6, 21, 17, 20, 16);
-        // 2. Blacksmith Thorne's Forge (East: x = 38 to 44, y = 12 to 17)
-        this.buildCottage(38, 12, 7, 6, 41, 17, 43, 16);
-        // 3. Herbalist Maeve's Apothecary (South-West: x = 12 to 18, y = 30 to 35)
-        this.buildCottage(12, 30, 7, 6, 15, 35, 17, 34);
-        // 4. Scavenger's Workshop (South-East: x = 36 to 41, y = 36 to 41)
-        this.buildCottage(36, 36, 6, 6, 39, 41, 38, 40);
+        // Build Purposeful Buildings with roofs, walls, doors, windows, chimneys, signs, and basements
+        // 1. Elder's Hall (North-West: Town Hall / Patriarch)
+        this.buildPurposefulBuilding(BUILDING_TYPE.TOWN_HALL, 18, 12, 6, 6, 21, 17, 20, 16, 22, 17);
+        // 2. Blacksmith Thorne's Forge (East: Forge / Anvil)
+        this.buildPurposefulBuilding(BUILDING_TYPE.FORGE, 38, 12, 7, 6, 41, 17, 43, 16, 40, 17);
+        // 3. Herbalist Maeve's Apothecary (South-West: Apothecary + Cellar Descent)
+        this.buildPurposefulBuilding(BUILDING_TYPE.APOTHECARY, 12, 30, 7, 6, 15, 35, 17, 34, 14, 35, {
+            x: 19,
+            y: 34,
+            targetArea: 'HAMLET_CELLAR',
+            name: 'APOTHECARY CELLAR',
+            targetSpawn: { x: 32 * 16 + 8, y: 28 * 16 + 8 }
+        });
+        // 4. Scavenger Jax's Workshop & Inn (South-East: Inn / Tavern)
+        this.buildPurposefulBuilding(BUILDING_TYPE.INN, 36, 36, 6, 6, 39, 41, 38, 40, 38, 41);
 
         // Fences around flower beds and pastures
         for (let fx = 12; fx <= 22; fx++) {
@@ -414,6 +709,9 @@ class WorldMap {
             }
         }
 
+        // Apply organic creative borders (Enchanted Mist instead of flat grey wall)
+        this.applyCreativeBorders(TILE.ENCHANTED_MIST, 2);
+
         // Portals / Gateways
         // North Gate leads to WHISPERING_WOODS (also serves as cave entrance)
         this.set(28, 1, TILE.PORTAL_EXIT);
@@ -427,15 +725,39 @@ class WorldMap {
             label: 'NORTH TO WHISPERING WOODS'
         });
 
-        // South Gate leads to SOLARIUM_DUNES
-        this.set(28, 62, TILE.PORTAL_EXIT);
+        // South Gate leads to SOLARIUM_DUNES & GLACIAL_STEPPE
+        const southGateY = this.height - 2;
+        this.set(28, southGateY, TILE.PORTAL_EXIT);
         this.portals.push({
             id: 'portal_to_dunes',
             x: 28 * 16 + 8,
-            y: 62 * 16 + 8,
+            y: southGateY * 16 + 8,
             targetArea: 'SOLARIUM_DUNES',
             targetSpawn: { x: 32 * 16 + 8, y: 5 * 16 + 8 },
             label: 'SOUTH TO SOLARIUM WASTES'
+        });
+
+        // East Gate leads to CONDUIT_VALLEY (towards Aethelgard Citadel)
+        const eastGateX = this.width - 2;
+        this.set(eastGateX, 27, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_to_conduit_valley',
+            x: eastGateX * 16 + 8,
+            y: 27 * 16 + 8,
+            targetArea: 'CONDUIT_VALLEY',
+            targetSpawn: { x: 8 * 16 + 8, y: 64 * 16 + 8 },
+            label: 'EAST TO CONDUIT VALLEY'
+        });
+
+        // West Gate leads to MYSTIC_MARSH
+        this.set(2, 27, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_to_mystic_marsh',
+            x: 2 * 16 + 8,
+            y: 27 * 16 + 8,
+            targetArea: 'MYSTIC_MARSH',
+            targetSpawn: { x: 120 * 16 + 8, y: 64 * 16 + 8 },
+            label: 'WEST TO MYSTIC MARSH'
         });
 
         // Ancient cracked sci-fi terminal near boundary
@@ -612,16 +934,8 @@ class WorldMap {
             });
         }
 
-        // Supply Pod in square
-        this.chests.push({
-            id: 'hamlet_chest',
-            x: 25 * 16 + 8,
-            y: 22 * 16 + 8,
-            opened: false,
-            itemId: 'PRIMITIVE_TORCH',
-            count: 1,
-            coins: 25
-        });
+        // Zero free chests in open town squares!
+        // The chest is now safely hidden in HAMLET_CELLAR!
 
         // Foraging sparkles
         this.sparkles.push({
@@ -645,8 +959,8 @@ class WorldMap {
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 if (x === 0 || x === this.width - 1 || y === 0 || y === this.height - 1) {
-                    this.set(x, y, TILE.CLIFF_LOW);
-                    this.setElevation(x, y, 2);
+                    this.set(x, y, TILE.ENCHANTED_MIST);
+                    this.setElevation(x, y, 1);
                     continue;
                 }
 
@@ -1160,8 +1474,8 @@ class WorldMap {
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < this.width; x++) {
                 if (x === 0 || x === this.width - 1 || y === 0 || y === this.height - 1) {
-                    this.set(x, y, TILE.CLIFF_HIGH);
-                    this.setElevation(x, y, 3);
+                    this.set(x, y, TILE.HEAT_MIRAGE);
+                    this.setElevation(x, y, 1);
                 } else {
                     this.set(x, y, TILE.SAND_DUNE);
                     this.setElevation(x, y, 1);
@@ -1484,6 +1798,1038 @@ class WorldMap {
             count: 2,
             coins: 60
         }];
+
+        // Apply deep cosmic starfield void borders
+        this.applyCreativeBorders(TILE.COSMIC_VOID, 3);
+    }
+
+    /**
+     * Basement 1: HAMLET CELLAR (Under Herbalist Maeve's Apothecary)
+     */
+    generateHamletCellar(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                if (x === 0 || x === this.width - 1 || y === 0 || y === this.height - 1) {
+                    this.set(x, y, TILE.CLIFF_LOW);
+                } else {
+                    this.set(x, y, TILE.PATH_COBBLE);
+                }
+            }
+        }
+        // Glowing alchemy fluid pools
+        for (let y = 14; y < 22; y++) {
+            for (let x = 14; x < 22; x++) {
+                if (x % 2 === 0) this.set(x, y, TILE.MUSHROOM_GLOW);
+            }
+        }
+        // Exit stairs back to Hamlet
+        this.set(32, 28, TILE.BASEMENT_STAIRS);
+        this.portals.push({
+            id: 'portal_cellar_exit',
+            x: 32 * 16 + 8,
+            y: 28 * 16 + 8,
+            targetArea: 'CINDERWATCH_HAMLET',
+            targetSpawn: { x: 19 * 16 + 8, y: 35 * 16 + 8 },
+            label: 'CLIMB TO APOTHECARY'
+        });
+        this.spawnPoint = { x: 32 * 16 + 8, y: 30 * 16 + 8 };
+
+        // Miniboss: Corrupted Homunculus and Guards
+        this.enemies = [
+            {
+                id: 'cellar_homunculus_boss',
+                x: 32 * 16 + 8,
+                y: 45 * 16 + 8,
+                hp: 180,
+                maxHp: 180,
+                speed: 50,
+                attackDamage: 18,
+                isBoss: true,
+                type: 'BOSS',
+                name: 'Corrupted Homunculus'
+            },
+            {
+                id: 'cellar_ooze_1',
+                x: 26 * 16 + 8,
+                y: 42 * 16 + 8,
+                hp: 45,
+                maxHp: 45,
+                speed: 35,
+                attackDamage: 10,
+                type: 'GOBLIN',
+                name: 'Alchemy Slime'
+            },
+            {
+                id: 'cellar_ooze_2',
+                x: 38 * 16 + 8,
+                y: 42 * 16 + 8,
+                hp: 45,
+                maxHp: 45,
+                speed: 35,
+                attackDamage: 10,
+                type: 'GOBLIN',
+                name: 'Caustic Homunculus'
+            }
+        ];
+
+        // Hidden Treasure Chest (No open chest in town square!)
+        this.chests = [{
+            id: 'hamlet_cellar_chest',
+            x: 32 * 16 + 8,
+            y: 52 * 16 + 8,
+            opened: false,
+            itemId: 'NANITE_REPAIR_KIT',
+            count: 2,
+            coins: 75
+        }];
+
+        this.sparkles = [{
+            id: 'cellar_sparkle_1',
+            x: 20 * 16 + 8,
+            y: 18 * 16 + 8,
+            collected: false,
+            coins: 15,
+            itemId: 'MEDICINAL_HERB'
+        }];
+    }
+
+    /**
+     * Town 2: AETHELGARD CITADEL (Mechanical Iron & Steam Fortress)
+     * Spaced 2 sub-maps away from Cinderwatch Hamlet (via Whispering Woods & Conduit Valley)
+     */
+    generateAethelgard(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
+        // Base terrain: iron plate cobble and industrial stone
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                this.set(x, y, (x % 8 === 0 || y % 8 === 0) ? TILE.SCIFI_CONDUIT : TILE.PATH_COBBLE);
+            }
+        }
+        // Creative border: Industrial Chasm Drop
+        this.applyCreativeBorders(TILE.CHASM_DROP, 3);
+
+        // Purposeful Buildings
+        // 1. High Command Citadel (Town Hall)
+        this.buildPurposefulBuilding(BUILDING_TYPE.TOWN_HALL, 56, 32, 16, 12, 64, 44, 60, 42, 62, 44);
+        // 2. Master Smith Vane's Blast Forge (Forge + Vault Descent)
+        this.buildPurposefulBuilding(BUILDING_TYPE.FORGE, 34, 56, 14, 10, 41, 66, 37, 64, 39, 66, {
+            x: 45,
+            y: 65,
+            targetArea: 'CITADEL_VAULT',
+            name: 'CLOCKWORK VAULT',
+            targetSpawn: { x: 32 * 16 + 8, y: 28 * 16 + 8 }
+        });
+        // 3. Steam Apothecary (Apothecary)
+        this.buildPurposefulBuilding(BUILDING_TYPE.APOTHECARY, 80, 56, 12, 10, 86, 66, 82, 64, 84, 66);
+        // 4. Iron Gear Inn (Inn)
+        this.buildPurposefulBuilding(BUILDING_TYPE.INN, 34, 76, 14, 10, 41, 86, 37, 84, 39, 86);
+        // 5. Chrono Archives (Archives)
+        this.buildPurposefulBuilding(BUILDING_TYPE.ARCHIVES, 80, 76, 14, 10, 87, 86, 83, 84, 85, 86);
+
+        // Central Clockwork Monument Altar
+        this.set(64, 64, TILE.ANCIENT_TERMINAL);
+        this.terminals.push({
+            x: 64 * 16 + 8,
+            y: 64 * 16 + 8,
+            name: "Aethelgard High Command Steam Governor",
+            log: "STATUS: Geared pistons synchronized at 120 PSI. Defense perimeter fortified against Chasm corruption."
+        });
+
+        // Portals
+        // West Gate leads to WHISPERING_WOODS (separated by 1 wilderness map)
+        this.set(3, 64, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_aethel_to_woods',
+            x: 3 * 16 + 8,
+            y: 64 * 16 + 8,
+            targetArea: 'WHISPERING_WOODS',
+            targetSpawn: { x: 134 * 16 + 8, y: 70 * 16 + 8 },
+            label: 'WEST TO WHISPERING WOODS'
+        });
+
+        // South Gate leads to ASHEN_CRAGS (towards Oasis Solaris)
+        const southY = this.height - 4;
+        this.set(64, southY, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_aethel_to_ashen',
+            x: 64 * 16 + 8,
+            y: southY * 16 + 8,
+            targetArea: 'ASHEN_CRAGS',
+            targetSpawn: { x: 64 * 16 + 8, y: 6 * 16 + 8 },
+            label: 'SOUTH TO ASHEN CRAGS'
+        });
+
+        this.spawnPoint = { x: 64 * 16 + 8, y: 52 * 16 + 8 };
+        // Resource nodes: Runic Totem, Flint boulders
+        this.resourceNodes = [{
+            id: 'citadel_totem',
+            type: 'RUNIC_TOTEM',
+            x: 60 * 16 + 8,
+            y: 50 * 16 + 8,
+            hp: 999,
+            maxHp: 999,
+            drops: 'OVERCLOCK_CELL',
+            dropCount: 1,
+            dropCoins: 10,
+            name: 'Citadel Runic Pillar'
+        }];
+        // NO open chests in town center!
+    }
+
+    /**
+     * Basement 2: CITADEL VAULT (Clockwork Security Vault)
+     */
+    generateCitadelVault(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                if (x === 0 || x === this.width - 1 || y === 0 || y === this.height - 1) {
+                    this.set(x, y, TILE.BUILDING_WALL);
+                } else {
+                    this.set(x, y, TILE.SCIFI_CONDUIT);
+                }
+            }
+        }
+        // Return portal back to Aethelgard Citadel
+        this.set(32, 28, TILE.BASEMENT_STAIRS);
+        this.portals.push({
+            id: 'portal_citadel_vault_exit',
+            x: 32 * 16 + 8,
+            y: 28 * 16 + 8,
+            targetArea: 'AETHELGARD_CITADEL',
+            targetSpawn: { x: 41 * 16 + 8, y: 67 * 16 + 8 },
+            label: 'SURFACE TO CITADEL FORGE'
+        });
+        this.spawnPoint = { x: 32 * 16 + 8, y: 30 * 16 + 8 };
+
+        // Miniboss: Steam Clockwork Juggernaut
+        this.enemies = [{
+            id: 'vault_juggernaut_boss',
+            x: 32 * 16 + 8,
+            y: 44 * 16 + 8,
+            hp: 240,
+            maxHp: 240,
+            speed: 40,
+            attackDamage: 22,
+            isBoss: true,
+            type: 'BOSS',
+            name: 'Clockwork Juggernaut'
+        }];
+
+        // Hidden Vault Chest
+        this.chests = [{
+            id: 'citadel_vault_chest',
+            x: 32 * 16 + 8,
+            y: 52 * 16 + 8,
+            opened: false,
+            itemId: 'OVERCLOCK_CELL',
+            count: 2,
+            coins: 100
+        }];
+    }
+
+    /**
+     * Town 3: OASIS SOLARIS (Sun-Gilded Desert Bazaar)
+     * Spaced 2 sub-maps away from Aethelgard Citadel (via Ashen Crags & Obsidian Chasm)
+     */
+    generateOasisSolaris(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
+        // Base terrain: golden sand dunes
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                this.set(x, y, TILE.SAND_DUNE);
+            }
+        }
+        // Creative border: Shimmering Heat Mirage
+        this.applyCreativeBorders(TILE.HEAT_MIRAGE, 3);
+
+        // Central Oasis Water Lake
+        for (let y = 58; y <= 70; y++) {
+            for (let x = 58; x <= 70; x++) {
+                const dist = Math.hypot(x - 64, y - 64);
+                if (dist <= 6) {
+                    this.set(x, y, TILE.DEEP_WATER);
+                    this.setElevation(x, y, 0);
+                } else if (dist <= 8) {
+                    this.set(x, y, TILE.WATER_FOAM);
+                    this.setElevation(x, y, 0);
+                }
+            }
+        }
+
+        // Paved Sandstone Bazaar Plaza surrounding lake
+        for (let y = 50; y <= 78; y++) {
+            for (let x = 50; x <= 78; x++) {
+                if (this.get(x, y) === TILE.SAND_DUNE) {
+                    this.set(x, y, TILE.PATH_COBBLE);
+                }
+            }
+        }
+
+        // Purposeful Buildings
+        // 1. Solar Bazaar Pavilion (Town Hall / Sultan)
+        this.buildPurposefulBuilding(BUILDING_TYPE.TOWN_HALL, 56, 32, 16, 10, 64, 42, 60, 40, 62, 42);
+        // 2. Sunstone Smithy (Forge)
+        this.buildPurposefulBuilding(BUILDING_TYPE.FORGE, 34, 52, 12, 10, 40, 62, 36, 60, 38, 62);
+        // 3. Desert Alchemist Dome (Apothecary)
+        this.buildPurposefulBuilding(BUILDING_TYPE.APOTHECARY, 82, 52, 12, 10, 88, 62, 84, 60, 86, 62);
+        // 4. Mirage Inn (Inn)
+        this.buildPurposefulBuilding(BUILDING_TYPE.INN, 34, 72, 12, 10, 40, 82, 36, 80, 38, 82);
+        // 5. Grand Sun Shrine (Shrine + Catacombs Descent)
+        this.buildPurposefulBuilding(BUILDING_TYPE.SHRINE, 82, 72, 14, 10, 88, 82, 84, 80, 86, 82, {
+            x: 93,
+            y: 81,
+            targetArea: 'OASIS_CATACOMBS',
+            name: 'SUNKEN PHARAOH CATACOMBS',
+            targetSpawn: { x: 32 * 16 + 8, y: 28 * 16 + 8 }
+        });
+
+        // Portals
+        // North Gate leads to OBSIDIAN_CHASM
+        this.set(64, 3, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_oasis_to_chasm',
+            x: 64 * 16 + 8,
+            y: 3 * 16 + 8,
+            targetArea: 'OBSIDIAN_CHASM',
+            targetSpawn: { x: 64 * 16 + 8, y: 122 * 16 + 8 },
+            label: 'NORTH TO OBSIDIAN CHASM'
+        });
+
+        // West Gate leads to SOLARIUM_DUNES
+        this.set(3, 64, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_oasis_to_dunes',
+            x: 3 * 16 + 8,
+            y: 64 * 16 + 8,
+            targetArea: 'SOLARIUM_DUNES',
+            targetSpawn: { x: 132 * 16 + 8, y: 70 * 16 + 8 },
+            label: 'WEST TO SOLARIUM WASTES'
+        });
+
+        this.spawnPoint = { x: 64 * 16 + 8, y: 48 * 16 + 8 };
+        // NO open chests in town center!
+    }
+
+    /**
+     * Basement 3: OASIS CATACOMBS (Sunken Pharaoh Catacombs)
+     */
+    generateOasisCatacombs(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                if (x === 0 || x === this.width - 1 || y === 0 || y === this.height - 1) {
+                    this.set(x, y, TILE.SANDSTONE_RUIN);
+                } else {
+                    this.set(x, y, TILE.SAND_DUNE);
+                }
+            }
+        }
+        // Quicksand hazards
+        for (let i = 0; i < 4; i++) {
+            this.set(24 + i * 4, 38, TILE.QUICKSAND);
+        }
+
+        // Return portal back to Oasis Solaris
+        this.set(32, 28, TILE.BASEMENT_STAIRS);
+        this.portals.push({
+            id: 'portal_oasis_catacombs_exit',
+            x: 32 * 16 + 8,
+            y: 28 * 16 + 8,
+            targetArea: 'OASIS_SOLARIS',
+            targetSpawn: { x: 88 * 16 + 8, y: 83 * 16 + 8 },
+            label: 'SURFACE TO OASIS SUN SHRINE'
+        });
+        this.spawnPoint = { x: 32 * 16 + 8, y: 30 * 16 + 8 };
+
+        // Miniboss: Solar Mummy Pharaoh
+        this.enemies = [{
+            id: 'pharaoh_boss',
+            x: 32 * 16 + 8,
+            y: 44 * 16 + 8,
+            hp: 260,
+            maxHp: 260,
+            speed: 45,
+            attackDamage: 24,
+            isBoss: true,
+            type: 'BOSS',
+            name: 'Solar Mummy Pharaoh'
+        }];
+
+        // Hidden Catacomb Sarcophagus Chest
+        this.chests = [{
+            id: 'oasis_catacombs_chest',
+            x: 32 * 16 + 8,
+            y: 52 * 16 + 8,
+            opened: false,
+            itemId: 'SUNSTONE_AMULET',
+            count: 1,
+            coins: 120
+        }];
+    }
+
+    /**
+     * Town 4: FROSTSPIRE ENCLAVE (Glacial Alpine Sanctuary)
+     * Spaced 2 sub-maps away from Oasis Solaris (via Solarium Dunes & Crystal Caverns)
+     * and 2 sub-maps away from Cinderwatch Hamlet (via Glacial Steppe)
+     */
+    generateFrostspire(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
+        // Base terrain: frost grass ground with ice sheets
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                this.set(x, y, TILE.GROUND);
+            }
+        }
+        // Creative border: Swirling Blizzard Haze
+        this.applyCreativeBorders(TILE.BLIZZARD_HAZE, 3);
+
+        // Cobblestone town avenues
+        for (let y = 40; y <= 90; y++) {
+            for (let x = 40; x <= 90; x++) {
+                if (x % 16 === 0 || y % 16 === 0) {
+                    this.set(x, y, TILE.PATH_COBBLE);
+                }
+            }
+        }
+
+        // Purposeful Buildings
+        // 1. Frost Council Hall (Town Hall)
+        this.buildPurposefulBuilding(BUILDING_TYPE.TOWN_HALL, 56, 32, 16, 10, 64, 42, 60, 40, 62, 42);
+        // 2. Rime-Forge (Forge)
+        this.buildPurposefulBuilding(BUILDING_TYPE.FORGE, 34, 52, 12, 10, 40, 62, 36, 60, 38, 62);
+        // 3. Glacial Apothecary (Apothecary)
+        this.buildPurposefulBuilding(BUILDING_TYPE.APOTHECARY, 82, 52, 12, 10, 88, 62, 84, 60, 86, 62);
+        // 4. Blizzard Inn (Inn)
+        this.buildPurposefulBuilding(BUILDING_TYPE.INN, 34, 72, 12, 10, 40, 82, 36, 80, 38, 82);
+        // 5. Grand Observatory & Starlight Shrine (Shrine + Crypt Descent)
+        this.buildPurposefulBuilding(BUILDING_TYPE.SHRINE, 82, 72, 14, 10, 88, 82, 84, 80, 86, 82, {
+            x: 93,
+            y: 81,
+            targetArea: 'FROST_CRYPTS',
+            name: 'FROSTSPIRE GLACIAL CRYPTS',
+            targetSpawn: { x: 32 * 16 + 8, y: 28 * 16 + 8 }
+        });
+
+        // Portals
+        // East Gate leads to CRYSTAL_CAVERNS
+        const eastX = this.width - 4;
+        this.set(eastX, 64, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_frost_to_crystals',
+            x: eastX * 16 + 8,
+            y: 64 * 16 + 8,
+            targetArea: 'CRYSTAL_CAVERNS',
+            targetSpawn: { x: 6 * 16 + 8, y: 64 * 16 + 8 },
+            label: 'EAST TO CRYSTAL CAVERNS'
+        });
+
+        // North Gate leads to GLACIAL_STEPPE (towards Hamlet & Canopy)
+        this.set(64, 3, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_frost_to_steppe',
+            x: 64 * 16 + 8,
+            y: 3 * 16 + 8,
+            targetArea: 'GLACIAL_STEPPE',
+            targetSpawn: { x: 70 * 16 + 8, y: 134 * 16 + 8 },
+            label: 'NORTH TO GLACIAL STEPPE'
+        });
+
+        this.spawnPoint = { x: 64 * 16 + 8, y: 48 * 16 + 8 };
+        // NO open chests in town center!
+    }
+
+    /**
+     * Basement 4: FROST CRYPTS (Glacial Alpine Crypts)
+     */
+    generateFrostCrypts(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                if (x === 0 || x === this.width - 1 || y === 0 || y === this.height - 1) {
+                    this.set(x, y, TILE.CLIFF_LOW);
+                } else {
+                    this.set(x, y, TILE.GROUND);
+                }
+            }
+        }
+        // Frozen ice patches
+        for (let y = 16; y < 24; y++) {
+            for (let x = 16; x < 24; x++) {
+                if ((x + y) % 2 === 0) this.set(x, y, TILE.WATER_FOAM);
+            }
+        }
+
+        // Return portal back to Frostspire
+        this.set(32, 28, TILE.BASEMENT_STAIRS);
+        this.portals.push({
+            id: 'portal_frost_crypts_exit',
+            x: 32 * 16 + 8,
+            y: 28 * 16 + 8,
+            targetArea: 'FROSTSPIRE_ENCLAVE',
+            targetSpawn: { x: 88 * 16 + 8, y: 83 * 16 + 8 },
+            label: 'SURFACE TO OBSERVATORY'
+        });
+        this.spawnPoint = { x: 32 * 16 + 8, y: 30 * 16 + 8 };
+
+        // Miniboss: Glacial Wight King
+        this.enemies = [{
+            id: 'wight_king_boss',
+            x: 32 * 16 + 8,
+            y: 44 * 16 + 8,
+            hp: 280,
+            maxHp: 280,
+            speed: 50,
+            attackDamage: 26,
+            isBoss: true,
+            type: 'BOSS',
+            name: 'Glacial Wight King'
+        }];
+
+        // Hidden Glacial Relic Chest
+        this.chests = [{
+            id: 'frost_crypts_chest',
+            x: 32 * 16 + 8,
+            y: 52 * 16 + 8,
+            opened: false,
+            itemId: 'AETHER_SHARD',
+            count: 2,
+            coins: 140
+        }];
+    }
+
+    /**
+     * Town 5: VERDANT CANOPY HAVEN (Living Yggdrasil Treehouse Settlement)
+     * Located in the heart of the world at Grid (1, 1), separated by wilderness buffers
+     */
+    generateCanopyHaven(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
+        // Base terrain: lush mossy ground and foil grass
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                const isFoil = (prng.range(0, 100) < 20);
+                this.set(x, y, isFoil ? TILE.FOIL_GRASS : TILE.GROUND);
+            }
+        }
+        // Creative border: Ancient Canopy Enchanted Mist
+        this.applyCreativeBorders(TILE.ENCHANTED_MIST, 3);
+
+        // Network of elevated wooden walkways connecting treetop boughs
+        for (let y = 30; y <= 98; y++) {
+            this.set(64, y, TILE.WOODEN_BRIDGE);
+            this.set(65, y, TILE.WOODEN_BRIDGE);
+        }
+        for (let x = 30; x <= 98; x++) {
+            this.set(x, 64, TILE.WOODEN_BRIDGE);
+            this.set(x, 65, TILE.WOODEN_BRIDGE);
+        }
+
+        // Flower gardens on platforms
+        for (let y = 56; y <= 62; y++) {
+            for (let x = 56; x <= 62; x++) {
+                if ((x + y) % 2 === 0) this.set(x, y, TILE.FLOWER_BED);
+            }
+        }
+
+        // Purposeful Buildings
+        // 1. Archdruid Sanctum (Town Hall)
+        this.buildPurposefulBuilding(BUILDING_TYPE.TOWN_HALL, 56, 34, 16, 10, 64, 44, 60, 42, 62, 44);
+        // 2. Tree-Shaper Forge (Forge)
+        this.buildPurposefulBuilding(BUILDING_TYPE.FORGE, 36, 52, 12, 10, 42, 62, 38, 60, 40, 62);
+        // 3. Herbalist Willow's Apothecary (Apothecary)
+        this.buildPurposefulBuilding(BUILDING_TYPE.APOTHECARY, 80, 52, 12, 10, 86, 62, 82, 60, 84, 62);
+        // 4. Treetop Canopy Inn (Inn)
+        this.buildPurposefulBuilding(BUILDING_TYPE.INN, 36, 72, 12, 10, 42, 82, 38, 80, 40, 82);
+        // 5. Verdant Ancient Archives (Archives)
+        this.buildPurposefulBuilding(BUILDING_TYPE.ARCHIVES, 80, 72, 14, 10, 87, 82, 83, 80, 85, 82);
+
+        // Portals
+        // West: to GLACIAL_STEPPE
+        this.set(3, 64, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_canopy_to_steppe',
+            x: 3 * 16 + 8,
+            y: 64 * 16 + 8,
+            targetArea: 'GLACIAL_STEPPE',
+            targetSpawn: { x: 134 * 16 + 8, y: 70 * 16 + 8 },
+            label: 'WEST TO GLACIAL STEPPE'
+        });
+
+        // North: to MYSTIC_MARSH
+        this.set(64, 3, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_canopy_to_marsh',
+            x: 64 * 16 + 8,
+            y: 3 * 16 + 8,
+            targetArea: 'MYSTIC_MARSH',
+            targetSpawn: { x: 64 * 16 + 8, y: 122 * 16 + 8 },
+            label: 'NORTH TO MYSTIC MARSH'
+        });
+
+        // East: to CONDUIT_VALLEY
+        const eastX = this.width - 4;
+        this.set(eastX, 64, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_canopy_to_conduit',
+            x: eastX * 16 + 8,
+            y: 64 * 16 + 8,
+            targetArea: 'CONDUIT_VALLEY',
+            targetSpawn: { x: 6 * 16 + 8, y: 64 * 16 + 8 },
+            label: 'EAST TO CONDUIT VALLEY'
+        });
+
+        // Secret Gateway: to ECLIPSE_SANCTUARY (Secret Sub-Area, unlocked via Eclipse Amulet quest)
+        this.set(64, this.height - 4, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_to_eclipse_sanctuary',
+            x: 64 * 16 + 8,
+            y: (this.height - 4) * 16 + 8,
+            targetArea: 'ECLIPSE_SANCTUARY',
+            targetSpawn: { x: 64 * 16 + 8, y: 110 * 16 + 8 },
+            label: 'ANCIENT CANOPY HOLLOW (ECLIPSE SANCTUARY)',
+            requiresSecretItem: 'ECLIPSE_AMULET'
+        });
+
+        this.spawnPoint = { x: 64 * 16 + 8, y: 50 * 16 + 8 };
+        // NO open chests in town center!
+    }
+
+    /**
+     * Wilderness: CONDUIT VALLEY (Iron pipelines & overgrown gorges)
+     */
+    generateConduitValley(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                this.set(x, y, (x % 12 === 0) ? TILE.SCIFI_CONDUIT : TILE.GROUND);
+            }
+        }
+        this.applyCreativeBorders(TILE.CHASM_DROP, 3);
+
+        // Portals
+        // West to Hamlet
+        this.set(3, 64, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_conduit_to_hamlet',
+            x: 3 * 16 + 8,
+            y: 64 * 16 + 8,
+            targetArea: 'CINDERWATCH_HAMLET',
+            targetSpawn: { x: 26 * 16 + 8, y: 27 * 16 + 8 },
+            label: 'WEST TO CINDERWATCH HAMLET'
+        });
+
+        // East to Aethelgard
+        const eastX = this.width - 4;
+        this.set(eastX, 64, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_conduit_to_aethel',
+            x: eastX * 16 + 8,
+            y: 64 * 16 + 8,
+            targetArea: 'AETHELGARD_CITADEL',
+            targetSpawn: { x: 6 * 16 + 8, y: 64 * 16 + 8 },
+            label: 'EAST TO AETHELGARD CITADEL'
+        });
+
+        this.spawnPoint = { x: 10 * 16 + 8, y: 64 * 16 + 8 };
+
+        // Hidden Wilderness Chest in a conduit ravine
+        this.chests = [{
+            id: 'conduit_hidden_pod',
+            x: 64 * 16 + 8,
+            y: 20 * 16 + 8,
+            opened: false,
+            itemId: 'OVERCLOCK_CELL',
+            count: 1,
+            coins: 45
+        }];
+
+        // Enemies
+        this.enemies = [];
+        for (let i = 0; i < 6; i++) {
+            this.enemies.push({
+                id: `conduit_drone_${i}`,
+                x: (30 + (i % 3) * 25) * 16 + 8,
+                y: (30 + Math.floor(i / 3) * 35) * 16 + 8,
+                hp: 65,
+                maxHp: 65,
+                speed: 45,
+                attackDamage: 14,
+                type: 'CYBER_DRONE',
+                name: 'Conduit Sentry Drone'
+            });
+        }
+    }
+
+    /**
+     * Wilderness: ASHEN CRAGS (Volcanic ridges connecting Aethelgard to Obsidian Chasm)
+     */
+    generateAshenCrags(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                this.set(x, y, (x % 6 === 0 && y % 6 === 0) ? TILE.CLIFF_LOW : TILE.GROUND);
+            }
+        }
+        this.applyCreativeBorders(TILE.CHASM_DROP, 3);
+
+        // North to Aethelgard Citadel
+        this.set(64, 3, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_ashen_to_aethel',
+            x: 64 * 16 + 8,
+            y: 3 * 16 + 8,
+            targetArea: 'AETHELGARD_CITADEL',
+            targetSpawn: { x: 64 * 16 + 8, y: 120 * 16 + 8 },
+            label: 'NORTH TO AETHELGARD CITADEL'
+        });
+
+        // South to Obsidian Chasm
+        const southY = this.height - 4;
+        this.set(64, southY, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_ashen_to_chasm',
+            x: 64 * 16 + 8,
+            y: southY * 16 + 8,
+            targetArea: 'OBSIDIAN_CHASM',
+            targetSpawn: { x: 64 * 16 + 8, y: 6 * 16 + 8 },
+            label: 'SOUTH TO OBSIDIAN CHASM'
+        });
+
+        this.spawnPoint = { x: 64 * 16 + 8, y: 10 * 16 + 8 };
+
+        // Hidden Ashen Chest in volcanic crag
+        this.chests = [{
+            id: 'ashen_relic_chest',
+            x: 95 * 16 + 8,
+            y: 64 * 16 + 8,
+            opened: false,
+            itemId: 'PRIMITIVE_TORCH',
+            count: 3,
+            coins: 55
+        }];
+
+        // Enemies
+        this.enemies = [];
+        for (let i = 0; i < 6; i++) {
+            this.enemies.push({
+                id: `ashen_imp_${i}`,
+                x: (25 + (i % 3) * 30) * 16 + 8,
+                y: (40 + Math.floor(i / 3) * 25) * 16 + 8,
+                hp: 70,
+                maxHp: 70,
+                speed: 50,
+                attackDamage: 16,
+                type: 'IMP',
+                name: 'Ashen Fire-Imp'
+            });
+        }
+    }
+
+    /**
+     * Wilderness: OBSIDIAN CHASM (Volcanic basalt chasm connecting Ashen Crags to Oasis Solaris)
+     * Contains secret portal to SUB_BEDROCK_CORE (unlocked via Cipher quest)
+     */
+    generateObsidianChasm(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                this.set(x, y, TILE.CLIFF_LOW);
+            }
+        }
+        // Basalt walkways
+        for (let y = 10; y < this.height - 10; y++) {
+            this.set(64, y, TILE.PATH_COBBLE);
+            this.set(65, y, TILE.PATH_COBBLE);
+        }
+        this.applyCreativeBorders(TILE.CHASM_DROP, 3);
+
+        // North to Ashen Crags
+        this.set(64, 3, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_chasm_to_ashen',
+            x: 64 * 16 + 8,
+            y: 3 * 16 + 8,
+            targetArea: 'ASHEN_CRAGS',
+            targetSpawn: { x: 64 * 16 + 8, y: 120 * 16 + 8 },
+            label: 'NORTH TO ASHEN CRAGS'
+        });
+
+        // South to Oasis Solaris
+        const southY = this.height - 4;
+        this.set(64, southY, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_chasm_to_oasis',
+            x: 64 * 16 + 8,
+            y: southY * 16 + 8,
+            targetArea: 'OASIS_SOLARIS',
+            targetSpawn: { x: 64 * 16 + 8, y: 8 * 16 + 8 },
+            label: 'SOUTH TO OASIS SOLARIS'
+        });
+
+        // Secret Fissure Portal to SUB_BEDROCK_CORE
+        this.set(20, 64, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_chasm_to_subcore',
+            x: 20 * 16 + 8,
+            y: 64 * 16 + 8,
+            targetArea: 'SUB_BEDROCK_CORE',
+            targetSpawn: { x: 32 * 16 + 8, y: 10 * 16 + 8 },
+            label: 'OBSIDIAN CORE FISSURE (SUB-BEDROCK CORE)',
+            requiresSecretItem: 'SUB_CORE_CIPHER'
+        });
+
+        this.spawnPoint = { x: 64 * 16 + 8, y: 10 * 16 + 8 };
+
+        // Guarded Miniboss: Obsidian Hellkite
+        this.enemies = [{
+            id: 'obsidian_hellkite_boss',
+            x: 64 * 16 + 8,
+            y: 64 * 16 + 8,
+            hp: 250,
+            maxHp: 250,
+            speed: 55,
+            attackDamage: 22,
+            isBoss: true,
+            type: 'BOSS',
+            name: 'Obsidian Hellkite'
+        }];
+
+        // Guarded Chasm Chest
+        this.chests = [{
+            id: 'obsidian_chasm_chest',
+            x: 64 * 16 + 8,
+            y: 75 * 16 + 8,
+            opened: false,
+            itemId: 'NANITE_REPAIR_KIT',
+            count: 2,
+            coins: 80
+        }];
+    }
+
+    /**
+     * Wilderness: CRYSTAL CAVERNS (Connecting Solarium Dunes to Frostspire Enclave)
+     */
+    generateCrystalCaverns(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                this.set(x, y, ((x + y) % 5 === 0) ? TILE.MUSHROOM_GLOW : TILE.GROUND);
+            }
+        }
+        this.applyCreativeBorders(TILE.CHASM_DROP, 3);
+
+        // East to Solarium Dunes
+        const eastX = this.width - 4;
+        this.set(eastX, 64, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_crystals_to_dunes',
+            x: eastX * 16 + 8,
+            y: 64 * 16 + 8,
+            targetArea: 'SOLARIUM_DUNES',
+            targetSpawn: { x: 8 * 16 + 8, y: 64 * 16 + 8 },
+            label: 'EAST TO SOLARIUM WASTES'
+        });
+
+        // West to Frostspire Enclave
+        this.set(3, 64, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_crystals_to_frostspire',
+            x: 3 * 16 + 8,
+            y: 64 * 16 + 8,
+            targetArea: 'FROSTSPIRE_ENCLAVE',
+            targetSpawn: { x: 122 * 16 + 8, y: 64 * 16 + 8 },
+            label: 'WEST TO FROSTSPIRE ENCLAVE'
+        });
+
+        this.spawnPoint = { x: 10 * 16 + 8, y: 64 * 16 + 8 };
+
+        // Hidden Geode Chest
+        this.chests = [{
+            id: 'crystal_geode_chest',
+            x: 64 * 16 + 8,
+            y: 30 * 16 + 8,
+            opened: false,
+            itemId: 'AETHER_SHARD',
+            count: 2,
+            coins: 65
+        }];
+    }
+
+    /**
+     * Wilderness: GLACIAL STEPPE (Connecting Frostspire to Cinderwatch Hamlet & Canopy Haven)
+     */
+    generateGlacialSteppe(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                this.set(x, y, TILE.GROUND);
+            }
+        }
+        this.applyCreativeBorders(TILE.BLIZZARD_HAZE, 3);
+
+        // South to Frostspire Enclave
+        const southY = this.height - 4;
+        this.set(70, southY, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_steppe_to_frostspire',
+            x: 70 * 16 + 8,
+            y: southY * 16 + 8,
+            targetArea: 'FROSTSPIRE_ENCLAVE',
+            targetSpawn: { x: 64 * 16 + 8, y: 8 * 16 + 8 },
+            label: 'SOUTH TO FROSTSPIRE ENCLAVE'
+        });
+
+        // North to Cinderwatch Hamlet
+        this.set(70, 3, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_steppe_to_hamlet',
+            x: 70 * 16 + 8,
+            y: 3 * 16 + 8,
+            targetArea: 'CINDERWATCH_HAMLET',
+            targetSpawn: { x: 28 * 16 + 8, y: 120 * 16 + 8 },
+            label: 'NORTH TO CINDERWATCH HAMLET'
+        });
+
+        // East to Verdant Canopy Haven
+        const eastX = this.width - 4;
+        this.set(eastX, 70, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_steppe_to_canopy',
+            x: eastX * 16 + 8,
+            y: 70 * 16 + 8,
+            targetArea: 'VERDANT_CANOPY_HAVEN',
+            targetSpawn: { x: 8 * 16 + 8, y: 64 * 16 + 8 },
+            label: 'EAST TO VERDANT CANOPY HAVEN'
+        });
+
+        this.spawnPoint = { x: 70 * 16 + 8, y: 20 * 16 + 8 };
+
+        // Hidden Icebound Chest
+        this.chests = [{
+            id: 'steppe_ice_chest',
+            x: 35 * 16 + 8,
+            y: 70 * 16 + 8,
+            opened: false,
+            itemId: 'NANITE_REPAIR_KIT',
+            count: 2,
+            coins: 60
+        }];
+    }
+
+    /**
+     * Wilderness: MYSTIC MARSH (Connecting Cinderwatch Hamlet and Verdant Canopy Haven)
+     */
+    generateMysticMarsh(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                const isWater = (x + y) % 7 === 0;
+                this.set(x, y, isWater ? TILE.WATER_FOAM : TILE.GROUND);
+            }
+        }
+        this.applyCreativeBorders(TILE.ENCHANTED_MIST, 3);
+
+        // East to Cinderwatch Hamlet
+        const eastX = this.width - 4;
+        this.set(eastX, 64, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_marsh_to_hamlet',
+            x: eastX * 16 + 8,
+            y: 64 * 16 + 8,
+            targetArea: 'CINDERWATCH_HAMLET',
+            targetSpawn: { x: 6 * 16 + 8, y: 27 * 16 + 8 },
+            label: 'EAST TO CINDERWATCH HAMLET'
+        });
+
+        // South to Verdant Canopy Haven
+        const southY = this.height - 4;
+        this.set(64, southY, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_marsh_to_canopy',
+            x: 64 * 16 + 8,
+            y: southY * 16 + 8,
+            targetArea: 'VERDANT_CANOPY_HAVEN',
+            targetSpawn: { x: 64 * 16 + 8, y: 8 * 16 + 8 },
+            label: 'SOUTH TO VERDANT CANOPY HAVEN'
+        });
+
+        this.spawnPoint = { x: 20 * 16 + 8, y: 64 * 16 + 8 };
+
+        // Hidden Sunken Chest in marsh
+        this.chests = [{
+            id: 'marsh_sunken_chest',
+            x: 64 * 16 + 8,
+            y: 40 * 16 + 8,
+            opened: false,
+            itemId: 'DYSON_SEED_RELIC',
+            count: 1,
+            coins: 50
+        }];
+    }
+
+    /**
+     * Secret Sub-Area: ECLIPSE SANCTUARY (Unlocked via Whispering Eclipse Quest)
+     */
+    generateEclipseSanctuary(prng = null) {
+        if (!prng) prng = new AluPrng(this.seed);
+        for (let y = 0; y < this.height; y++) {
+            for (let x = 0; x < this.width; x++) {
+                this.set(x, y, TILE.VOID);
+            }
+        }
+        this.applyCreativeBorders(TILE.COSMIC_VOID, 3);
+
+        // Floating Void Sanctuary Platform (Center)
+        for (let y = 40; y <= 88; y++) {
+            for (let x = 40; x <= 88; x++) {
+                const dist = Math.hypot(x - 64, y - 64);
+                if (dist <= 20) {
+                    this.set(x, y, TILE.CELESTIAL_GLASS);
+                    this.setElevation(x, y, 2);
+                } else if (dist <= 22) {
+                    this.set(x, y, TILE.CLOUD_TURF);
+                    this.setElevation(x, y, 1);
+                }
+            }
+        }
+
+        // Return portal back to Verdant Canopy Haven
+        this.set(64, 82, TILE.PORTAL_EXIT);
+        this.portals.push({
+            id: 'portal_eclipse_exit',
+            x: 64 * 16 + 8,
+            y: 82 * 16 + 8,
+            targetArea: 'VERDANT_CANOPY_HAVEN',
+            targetSpawn: { x: 64 * 16 + 8, y: 115 * 16 + 8 },
+            label: 'ASCEND TO VERDANT CANOPY'
+        });
+        this.spawnPoint = { x: 64 * 16 + 8, y: 80 * 16 + 8 };
+
+        // Secret Final Boss: Void Eclipse Avatar
+        this.enemies = [{
+            id: 'void_eclipse_boss',
+            x: 64 * 16 + 8,
+            y: 56 * 16 + 8,
+            hp: 350,
+            maxHp: 350,
+            speed: 60,
+            attackDamage: 30,
+            isBoss: true,
+            type: 'BOSS',
+            name: 'Avatar of the Void Eclipse'
+        }];
+
+        // Master Starlight Chest awarding GENESIS_STARMANTLE!
+        this.chests = [{
+            id: 'eclipse_master_chest',
+            x: 64 * 16 + 8,
+            y: 48 * 16 + 8,
+            opened: false,
+            itemId: 'GENESIS_STARMANTLE',
+            count: 1,
+            coins: 250
+        }];
     }
 
     findNearbyNode(x, y, radius = 26) {
@@ -1540,5 +2886,5 @@ class WorldMap {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { TILE, AREA_CONFIG, WorldMap };
+    module.exports = { TILE, BUILDING_TYPE, AREA_CONFIG, WorldMap };
 }

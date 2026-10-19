@@ -1612,6 +1612,7 @@ class Character extends KinematicBody {
         // Collect ALU world coin fragments & grant EXP
         let loot = enemy.isBoss ? 50 : 8;
         if (this.hasSkill('farmer_bountiful_earth')) loot *= 4;
+        if (this.game && this.game.isMonsterFrenzy) loot *= 2; // Double loot during Monster Frenzy!
         this.coinsCollected += loot;
 
         if (enemy.isBoss && this.game) {
@@ -1619,10 +1620,11 @@ class Character extends KinematicBody {
             try { localStorage.setItem('aether_boss_slain', this.game.bossSlainCount); } catch (e) {}
         }
 
-        const expGain = enemy.isBoss ? 500 : 35;
+        let expGain = enemy.isBoss ? 500 : 35;
+        if (this.game && this.game.isMonsterFrenzy) expGain *= 2; // Double EXP during Monster Frenzy!
         const leveledUp = this.gainExp(expGain);
 
-        this.addSpark(enemy.x, enemy.y, '#ffd700', 18);
+        this.addSpark(enemy.x, enemy.y, (this.game && this.game.isMonsterFrenzy) ? '#ff1744' : '#ffd700', 18);
         return { coins: loot, exp: expGain, leveledUp };
     }
 

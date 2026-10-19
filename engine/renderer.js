@@ -890,6 +890,141 @@ class RetroRenderer {
                 this.drawCliffFacade(sx, sy, 16, pal, tx, ty, map);
                 break;
             }
+
+            case 30: { // ENCHANTED_MIST (Whispering Woods & Canopy boundary mist)
+                const t = Date.now() / 1000;
+                // Layer 1: soft deep twilight mist backdrop
+                ctx.fillStyle = '#0f2b26';
+                ctx.fillRect(sx, sy, 16, 16);
+                // Swirling pale jade translucent fog ribbons
+                const swirl1 = Math.sin(t * 1.8 + tx * 0.7 + ty * 0.5) * 3;
+                const swirl2 = Math.cos(t * 1.4 + tx * 0.4 - ty * 0.8) * 3;
+                ctx.fillStyle = 'rgba(78, 205, 196, 0.45)';
+                ctx.fillRect(sx, sy + 3 + swirl1, 16, 5);
+                ctx.fillStyle = 'rgba(129, 230, 217, 0.35)';
+                ctx.fillRect(sx + 2 + swirl2, sy + 8, 12, 6);
+                // Drifting ethereal spores
+                ctx.fillStyle = '#a7f3d0';
+                const px1 = (Math.floor(t * 6 + tx * 5) % 14) + 1;
+                const py1 = (Math.floor(t * 4 + ty * 7) % 14) + 1;
+                ctx.fillRect(sx + px1, sy + py1, 1.5, 1.5);
+                break;
+            }
+
+            case 31: { // HEAT_MIRAGE (Solarium Dunes golden desert heat shimmer)
+                const t = Date.now() / 1000;
+                // Warm desert sand base
+                ctx.fillStyle = '#b45309';
+                ctx.fillRect(sx, sy, 16, 16);
+                // Shimmering wavy amber heat distortion lines
+                const shimmer1 = Math.sin(t * 3.5 + ty * 1.2) * 2;
+                const shimmer2 = Math.cos(t * 2.8 + tx * 1.1) * 2;
+                ctx.fillStyle = 'rgba(251, 191, 36, 0.40)';
+                ctx.fillRect(sx, sy + 2 + shimmer1, 16, 3);
+                ctx.fillStyle = 'rgba(245, 158, 11, 0.35)';
+                ctx.fillRect(sx, sy + 9 + shimmer2, 16, 4);
+                // Sunlit dust fleck
+                ctx.fillStyle = '#fef08a';
+                ctx.fillRect(sx + 7 + Math.floor(shimmer1), sy + 6, 2, 1);
+                break;
+            }
+
+            case 32: { // BLIZZARD_HAZE (Frostspire frozen blizzard boundary)
+                const t = Date.now() / 1000;
+                // Dark frosty indigo backdrop
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(sx, sy, 16, 16);
+                // Howling cyan/white snow gusts
+                const gust = Math.sin(t * 4.2 + tx * 0.9 + ty * 1.3) * 3;
+                ctx.fillStyle = 'rgba(186, 230, 253, 0.50)';
+                ctx.fillRect(sx, sy + 4 + gust, 16, 4);
+                ctx.fillStyle = 'rgba(224, 242, 254, 0.40)';
+                ctx.fillRect(sx, sy + 10 - gust, 16, 3);
+                // Crystalline falling snowflake
+                ctx.fillStyle = '#ffffff';
+                const sfx = (Math.floor(t * 12 + tx * 4) % 15);
+                const sfy = (Math.floor(t * 9 + ty * 3) % 15);
+                ctx.fillRect(sx + sfx, sy + sfy, 1.5, 1.5);
+                break;
+            }
+
+            case 33: { // CHASM_DROP (Bottomless abyss chasm boundary)
+                // Pitch-black abyssal void
+                ctx.fillStyle = '#05070a';
+                ctx.fillRect(sx, sy, 16, 16);
+                // Jagged basalt rock rim along top
+                ctx.fillStyle = '#1c1917';
+                ctx.fillRect(sx, sy, 16, 3);
+                ctx.fillStyle = '#292524';
+                ctx.fillRect(sx + 2, sy, 4, 2);
+                ctx.fillRect(sx + 9, sy, 5, 2);
+                // Faint purple abyssal depth glow
+                ctx.fillStyle = 'rgba(88, 28, 135, 0.18)';
+                ctx.fillRect(sx, sy + 10, 16, 6);
+                break;
+            }
+
+            case 34: { // COSMIC_VOID (Celestial Zenith & Eclipse deep starfield)
+                const t = Date.now() / 1000;
+                // Deep midnight void
+                ctx.fillStyle = '#030712';
+                ctx.fillRect(sx, sy, 16, 16);
+                // Faint nebula gas wisps
+                ctx.fillStyle = 'rgba(147, 51, 234, 0.15)';
+                ctx.fillRect(sx, sy, 16, 16);
+                // Multi-colored twinkling starlight
+                const starHash = Math.imul(tx * 31 + ty * 73, 1) >>> 0;
+                if (starHash % 3 === 0) {
+                    const twinkle = (Math.sin(t * 2.5 + starHash) + 1) * 0.5;
+                    ctx.fillStyle = (starHash % 2 === 0) ? `rgba(56, 189, 248, ${0.4 + twinkle * 0.6})` : `rgba(250, 204, 21, ${0.4 + twinkle * 0.6})`;
+                    ctx.fillRect(sx + (starHash % 12) + 2, sy + ((starHash >> 4) % 12) + 2, 1.5, 1.5);
+                }
+                break;
+            }
+
+            case 35: { // BUILDING_SIGN (Purposeful building shop sign)
+                // Ground under sign
+                ctx.fillStyle = (pal && pal[2]) ? pal[2] : '#2e7d32';
+                ctx.fillRect(sx, sy, 16, 16);
+                // Wooden signpost pole
+                ctx.fillStyle = '#4e342e';
+                ctx.fillRect(sx + 7, sy + 6, 2, 10);
+                // Hanging wooden plaque board
+                ctx.fillStyle = '#8d6e63';
+                ctx.fillRect(sx + 3, sy + 1, 10, 8);
+                ctx.fillStyle = '#3e2723';
+                ctx.strokeRect(sx + 3.5, sy + 1.5, 9, 7);
+                // Golden insignia emblem on board
+                ctx.fillStyle = '#ffd54f';
+                ctx.fillRect(sx + 6, sy + 3, 4, 3);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx + 7, sy + 4, 2, 1);
+                break;
+            }
+
+            case 36: { // BASEMENT_STAIRS (Enterable cellar / secret basement stairs)
+                // Dark stone masonry surround
+                ctx.fillStyle = '#263238';
+                ctx.fillRect(sx, sy, 16, 16);
+                // Descending stone stairs in perspective
+                ctx.fillStyle = '#102027';
+                ctx.fillRect(sx + 2, sy + 2, 12, 12);
+                for (let step = 0; step < 4; step++) {
+                    const stepY = sy + 3 + step * 3;
+                    const shade = Math.floor(90 - step * 20);
+                    ctx.fillStyle = `rgb(${shade}, ${shade + 8}, ${shade + 12})`;
+                    ctx.fillRect(sx + 3, stepY, 10, 2);
+                    ctx.fillStyle = '#050a0d';
+                    ctx.fillRect(sx + 3, stepY + 2, 10, 1);
+                }
+                // Wooden handrail on right
+                ctx.fillStyle = '#ffb300';
+                ctx.fillRect(sx + 13, sy + 2, 1, 12);
+                // Lantern glow at top
+                ctx.fillStyle = 'rgba(255, 179, 0, 0.45)';
+                ctx.fillRect(sx + 1, sy + 1, 3, 3);
+                break;
+            }
         }
     }
 
@@ -3054,6 +3189,37 @@ class RetroRenderer {
         }
     }
 
+    renderFrenzyVignette(dt, intensity = 1.0) {
+        const ctx = this.ctx;
+        if (!ctx) return;
+        const w = this.width || 480;
+        const h = this.height || 320;
+        const t = Date.now() / 1000;
+        const pulse = 0.55 + Math.sin(t * 5.0) * 0.25;
+
+        ctx.save();
+        // Pulsing blood-crimson radial vignette
+        const grad = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.35, w / 2, h / 2, Math.max(w, h) * 0.72);
+        grad.addColorStop(0, 'rgba(180, 0, 0, 0)');
+        grad.addColorStop(0.65, `rgba(180, 0, 20, ${0.28 * pulse * intensity})`);
+        grad.addColorStop(1, `rgba(230, 0, 0, ${0.68 * pulse * intensity})`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Frenzy Alert Banner at top of viewport
+        ctx.fillStyle = 'rgba(15, 0, 4, 0.85)';
+        ctx.fillRect(w / 2 - 120, 6, 240, 16);
+        ctx.strokeStyle = '#ff1744';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(w / 2 - 120, 6, 240, 16);
+
+        ctx.font = '8px "Press Start 2P", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = (Math.floor(t * 4) % 2 === 0) ? '#ff5252' : '#ffffff';
+        ctx.fillText('⚠️ NIGHT MONSTER FRENZY ⚠️', w / 2, 17);
+        ctx.restore();
+    }
+
     renderTitleBackdrop(dt) {
         this.titleAnimTimer = Math.max(0, (this.titleAnimTimer || 0) + Math.max(0, (dt || 0.016)));
         const ctx = this.ctx;
@@ -3062,7 +3228,16 @@ class RetroRenderer {
         const h = this.height || (this.canvas ? this.canvas.height : 320);
         const t = this.titleAnimTimer;
 
-        // 1. Dynamic Celestial Sky & Horizon (Dyson Luminary & Mountain Backdrop)
+        // 1. Unified Dyson Luminary Celestial Engine (Sun & Moon as One)
+        // Dynamic Celestial Sky & Horizon (Dyson Luminary & Mountain Backdrop)
+        // Phases:
+        // ECLIPSE // SHUTTERS ENGAGED
+        // WAXING CRESCENT // LUNAR APERTURE
+        // SOLAR DAWN // APERTURE VENTING
+        // SOLAR ZENITH // THERMAL MAXIMUM
+        // RED GIANT // CORONAL SHIELDING
+        // Render Dyson Sphere Megastructure Orbital Lattice Rings
+        // Render Solar Rays / Corona Flares
         const cycleDuration = 32.0; // 32 seconds full celestial cycle
         let cycle = ((t * 0.1) % cycleDuration) / cycleDuration;
         if (isNaN(cycle) || cycle < 0) cycle = 0;

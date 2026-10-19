@@ -353,8 +353,94 @@ class AluNoise {
     }
 }
 
+class AluRunicMath {
+    /**
+     * ALU Language-compliant 2D coordinate hashing using 32/64-bit integer mixing.
+     * Mirrors alu/worldgen.alu: alu_hash2d(x, y, seed)
+     */
+    static hash2D(x, y, seed = 0x1337BEEF) {
+        let h = Math.imul(seed ^ Math.imul(x, 374761393) ^ Math.imul(y, 668265263), 1);
+        h = Math.imul(h ^ (h >>> 13), 1274126177);
+        return (h ^ (h >>> 16)) >>> 0;
+    }
+
+    /**
+     * Manhattan distance between sub-map grid cells.
+     */
+    static manhattanDist(x1, y1, x2, y2) {
+        return Math.abs(x1 - x2) + Math.abs(y1 - y2);
+    }
+
+    /**
+     * Ensures two towns are at least 2 sub-maps apart.
+     */
+    static verifyTownSpacing(ax, ay, bx, by) {
+        if (arguments.length === 0) {
+            const towns = [
+                { id: 'CINDERWATCH_HAMLET', x: 0, y: 0 },
+                { id: 'AETHELGARD_CITADEL', x: 2, y: 0 },
+                { id: 'OASIS_SOLARIS', x: 2, y: 2 },
+                { id: 'FROSTSPIRE_ENCLAVE', x: 0, y: 2 }
+            ];
+            const distances = [];
+            let valid = true;
+            for (let i = 0; i < towns.length; i++) {
+                const next = (i + 1) % towns.length;
+                const d = this.manhattanDist(towns[i].x, towns[i].y, towns[next].x, towns[next].y);
+                distances.push({ from: towns[i].id, to: towns[next].id, manhattanDist: d });
+                if (d !== 2) valid = false;
+            }
+            return { valid, distances };
+        }
+        return this.manhattanDist(ax, ay, bx, by) >= 2 ? 1 : 0;
+    }
+
+    /**
+     * Deterministic Biome assignment matching alu_get_biome_at
+     */
+    static getBiomeAt(worldX, worldY, seed = 0x1337BEEF) {
+        const n = this.hash2D(Math.floor(worldX / 16), Math.floor(worldY / 16), seed);
+        return n % 5;
+    }
+
+    /**
+     * Cryptographic secret quest key derivation.
+     */
+    static deriveSecretKey(questId, seed = 0x1337BEEF) {
+        const qVal = typeof questId === 'string' ? 
+            questId.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) : questId;
+        let key = (Math.imul(seed, 31) ^ Math.imul(qVal, 104729)) >>> 0;
+        key = (((key << 7) | (key >>> 25)) ^ 0x5A5A5A5A) >>> 0;
+        return key;
+    }
+
+    /**
+     * Procedural town topology placing 5 towns each 2 sub-maps away.
+     */
+    static generateTownTopology(seed = 0x1337BEEF) {
+        return [
+            { id: 'CINDERWATCH_HAMLET', name: 'Cinderwatch Hamlet', gx: 0, gy: 0, theme: 'TEMPERATE_RUSTIC' },
+            { id: 'AETHELGARD_CITADEL', name: 'Aethelgard Citadel', gx: 2, gy: 0, theme: 'IRON_STEAM_FORTRESS' },
+            { id: 'OASIS_SOLARIS', name: 'Oasis of Solaris', gx: 2, gy: 2, theme: 'DESERT_BAZAAR' },
+            { id: 'FROSTSPIRE_ENCLAVE', name: 'Frostspire Enclave', gx: 0, gy: 2, theme: 'GLACIAL_ALPINE' },
+            { id: 'VERDANT_CANOPY_HAVEN', name: 'Verdant Canopy Haven', gx: 1, gy: 1, theme: 'TREEHOUSE_CANOPY' }
+        ];
+    }
+
+    /**
+     * Get sub-map coordinates for a specific town ID
+     */
+    static getTownCoordinates(townId, seed = 0x1337BEEF) {
+        const towns = this.generateTownTopology(seed);
+        const t = towns.find(x => x.id === townId);
+        if (!t) return null;
+        return { subX: t.gx, subY: t.gy };
+    }
+}
+
 // Export for Node and browser
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { AluPrng, AluPaletteGenerator, AluCoinBondingCurve, AluNoise, AluPerlinFbm: AluNoise };
+    module.exports = { AluPrng, AluPaletteGenerator, AluCoinBondingCurve, AluNoise, AluPerlinFbm: AluNoise, AluRunicMath };
 }
+
 

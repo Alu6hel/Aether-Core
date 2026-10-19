@@ -1151,6 +1151,50 @@ const BASE_ITEMS = {
         isCraftable: false,
         source: 'Exclusive to Primordial Singularity Remains (Day 6 / 100 Pity Points)',
         desc: 'The primordial origin shard from which all planetary matter condensed.'
+    },
+
+    // Secret Sub-Map Quest Key Items
+    SUB_CORE_CIPHER: {
+        id: 'SUB_CORE_CIPHER',
+        name: 'Sub-Bedrock Quantum Cipher',
+        tier: ITEM_TIER.EPIC,
+        tierName: 'Epic',
+        tierBadge: 'T4',
+        tierColor: '#ba68c8',
+        category: ITEM_CATEGORY.MATERIALS_KEYS,
+        type: ITEM_TYPE.KEY_ITEM,
+        icon: '💾',
+        isCraftable: false,
+        source: 'Awarded by Inventor Zara in Aethelgard Citadel',
+        desc: 'Decryption matrix matching the 64-bit ALU core. Unlocks the blast door to the Sub-Bedrock Quantum Core.'
+    },
+    ASTRAL_KEYSTONE: {
+        id: 'ASTRAL_KEYSTONE',
+        name: 'Celestial Zenith Keystone',
+        tier: ITEM_TIER.LEGENDARY,
+        tierName: 'Legendary',
+        tierBadge: 'T5',
+        tierColor: '#ffb300',
+        category: ITEM_CATEGORY.MATERIALS_KEYS,
+        type: ITEM_TYPE.KEY_ITEM,
+        icon: '💎',
+        isCraftable: false,
+        source: 'Awarded by Astronomer Nabilah in Oasis Solaris',
+        desc: 'Resonant stellar prism attuned to Dyson frequencies. Unlocks the ascent into the Celestial Zenith Peak.'
+    },
+    ECLIPSE_AMULET: {
+        id: 'ECLIPSE_AMULET',
+        name: 'Eclipse Void Amulet',
+        tier: ITEM_TIER.MYTHIC,
+        tierName: 'Mythic',
+        tierBadge: 'T6',
+        tierColor: '#ff1744',
+        category: ITEM_CATEGORY.MATERIALS_KEYS,
+        type: ITEM_TYPE.KEY_ITEM,
+        icon: '🧿',
+        isCraftable: false,
+        source: 'Awarded by Mystic Rowan in Verdant Canopy Haven',
+        desc: 'Twilight relic that stabilizes human consciousness against the abyss. Unlocks the Eclipse Void Sanctuary.'
     }
 };
 
