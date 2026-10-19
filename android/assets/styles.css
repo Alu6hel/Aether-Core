@@ -194,7 +194,7 @@ body, html {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 100;
+    z-index: 150;
 }
 
 .game-modal.hidden {
@@ -319,18 +319,59 @@ body, html {
 }
 
 /* Inventory Modal */
+.inventory-content {
+    max-width: 440px;
+    width: 95%;
+}
+
+.equipped-gear-bar {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    background: #090e15;
+    border: 1px solid #1f2d3d;
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-bottom: 10px;
+}
+
+.gear-slot-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 8px;
+    color: #90a4ae;
+}
+
+.gear-slot-chip .gear-label {
+    color: #ffd54f;
+    font-weight: bold;
+}
+
+.gear-slot-chip .gear-name {
+    color: #00e5ff;
+    font-weight: bold;
+    max-width: 130px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .inventory-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-    margin-bottom: 12px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 8px;
+    max-height: 125px;
+    overflow-y: auto;
+    padding-right: 2px;
 }
 
 .inv-slot {
-    aspect-ratio: 1;
-    background: #0d121a;
-    border: 2px solid #2a3748;
-    border-radius: 4px;
+    height: 50px;
+    background: #0c121b;
+    border: 2px solid #222d3d;
+    border-radius: 6px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -339,24 +380,151 @@ body, html {
     cursor: pointer;
     font-family: 'Press Start 2P', monospace;
     font-size: 7px;
-    padding: 4px;
+    padding: 2px;
     text-align: center;
-    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.08), 0 2px 0px #000;
+    box-shadow: inset 1px 1px 0px rgba(255,255,255,0.06), 0 2px 4px rgba(0,0,0,0.6);
+    user-select: none;
+    transition: transform 0.1s ease, border-color 0.15s ease;
+}
+
+.inv-slot:active {
+    transform: scale(0.96);
+}
+
+.inv-slot.empty {
+    border-style: dashed;
+    border-color: #1a2330;
+    opacity: 0.35;
+    cursor: default;
 }
 
 .inv-slot.selected {
+    border-color: #00e5ff !important;
+    box-shadow: inset 1px 1px 0px #fff, 0 0 10px rgba(0, 229, 255, 0.7) !important;
+}
+
+.inv-slot .slot-icon {
+    font-size: 15px;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.inv-slot .slot-name {
+    font-size: 6px;
+    color: #eceff1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90%;
+    margin-top: 1px;
+}
+
+.inv-slot .slot-count {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 7px;
+    color: #81c784;
+    font-weight: bold;
+    text-shadow: 0 1px 2px #000;
+}
+
+.inv-slot .slot-equipped-badge {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: 6px;
+    background: #ffb300;
+    color: #000;
+    font-weight: bold;
+    padding: 1px 3px;
+    border-radius: 2px;
+    line-height: 1;
+}
+
+.inv-slot.rarity-common {
+    border-color: #37474f;
+}
+
+.inv-slot.rarity-rare {
+    border-color: #00b0ff;
+    box-shadow: 0 0 6px rgba(0, 176, 255, 0.25);
+}
+
+.inv-slot.rarity-epic {
+    border-color: #ab47bc;
+    box-shadow: 0 0 6px rgba(171, 71, 188, 0.3);
+}
+
+.inv-slot.rarity-legendary {
     border-color: #ffd54f;
-    box-shadow: inset 1px 1px 0px #fff, 0 0 10px rgba(255, 213, 79, 0.5);
+    box-shadow: 0 0 8px rgba(255, 213, 79, 0.45);
 }
 
 .item-details {
-    background: #0d121a;
-    border: 2px solid #202b3c;
+    background: #090e15;
+    border: 1px solid #1f2d3d;
     padding: 10px;
-    font-size: 9px;
+    font-size: 8px;
     color: #cfd8dc;
+    border-radius: 6px;
+    min-height: 52px;
+    line-height: 1.4;
+}
+
+.item-details .item-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.item-details .item-detail-title {
+    font-size: 9px;
+    font-weight: bold;
+}
+
+.item-details .item-detail-type {
+    font-size: 7px;
+    color: #90a4ae;
+    background: #141f2d;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+.item-details .item-detail-stats {
+    color: #81c784;
+    font-weight: bold;
+    margin: 3px 0;
+}
+
+.item-details .item-detail-desc {
+    color: #b0bec5;
+    font-size: 8px;
+    margin-bottom: 6px;
+}
+
+.item-details .item-act-btn {
+    background: #1b5e20;
+    color: #fff;
+    border: 1px solid #4caf50;
     border-radius: 4px;
-    min-height: 44px;
+    padding: 5px 12px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    margin-top: 4px;
+    transition: background 0.1s ease;
+}
+
+.item-details .item-act-btn:active {
+    background: #2e7d32;
+}
+
+.item-details .item-act-btn.unequip-btn {
+    background: #b71c1c;
+    border-color: #f44336;
 }
 
 /* Touch Controls Virtual Overlay */
@@ -368,7 +536,7 @@ body, html {
     justify-content: space-between;
     align-items: flex-end;
     padding: 16px 20px;
-    z-index: 120;
+    z-index: 90;
 }
 
 #touch-controls.controls-hidden {
@@ -428,19 +596,20 @@ body, html {
 
 /* Right Action Buttons (SP = Class Ability, C = Dash, B = Parry, A = Attack/Examine) */
 #action-buttons {
-    display: flex;
-    align-items: flex-end;
-    gap: 12px;
+    position: relative;
+    width: 210px;
+    height: 190px;
     margin-bottom: 6px;
     opacity: 0.95;
+    pointer-events: none;
     transform: scale(var(--touch-scale, 1.0));
     transform-origin: bottom right;
     transition: transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
 }
 
 .action-btn {
-    width: 56px;
-    height: 56px;
+    position: absolute;
+    pointer-events: auto;
     border-radius: 50%;
     color: #fff;
     display: flex;
@@ -453,46 +622,30 @@ body, html {
     transition: transform 0.04s, filter 0.04s, box-shadow 0.04s;
 }
 
-#btn-sp {
-    background: #4a148c;
-    border: 3px solid #ab47bc;
-    margin-bottom: 42px;
+#btn-a {
+    width: 68px;
+    height: 68px;
+    right: 4px;
+    bottom: 8px;
+    background: #004d40;
+    border: 3px solid #26a69a;
+    z-index: 5;
 }
 
-#btn-sp:active, #btn-sp.pressed {
-    background: #7b1fa2;
-    transform: translateY(3px) scale(0.96);
-    box-shadow: inset 2px 2px 0px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6);
-}
-
-#btn-jump {
-    background: #0277bd;
-    border: 3px solid #29b6f6;
-    margin-bottom: 24px;
-}
-
-#btn-jump:active, #btn-jump.pressed {
-    background: #039be5;
-    transform: translateY(3px) scale(0.96);
-    box-shadow: inset 2px 2px 0px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6);
-}
-
-#btn-c {
-    background: #bf360c;
-    border: 3px solid #ff7043;
-    margin-bottom: 30px;
-}
-
-#btn-c:active, #btn-c.pressed {
-    background: #ff5722;
+#btn-a:active, #btn-a.pressed {
+    background: #00897b;
     transform: translateY(3px) scale(0.96);
     box-shadow: inset 2px 2px 0px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6);
 }
 
 #btn-b {
+    width: 52px;
+    height: 52px;
+    right: 84px;
+    bottom: 6px;
     background: #1a237e;
     border: 3px solid #5c6bc0;
-    margin-bottom: 8px;
+    z-index: 4;
 }
 
 #btn-b:active, #btn-b.pressed {
@@ -501,14 +654,50 @@ body, html {
     box-shadow: inset 2px 2px 0px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6);
 }
 
-#btn-a {
-    background: #004d40;
-    border: 3px solid #26a69a;
-    margin-bottom: 22px;
+#btn-c {
+    width: 52px;
+    height: 52px;
+    right: 90px;
+    bottom: 68px;
+    background: #bf360c;
+    border: 3px solid #ff7043;
+    z-index: 4;
 }
 
-#btn-a:active, #btn-a.pressed {
-    background: #00897b;
+#btn-c:active, #btn-c.pressed {
+    background: #ff5722;
+    transform: translateY(3px) scale(0.96);
+    box-shadow: inset 2px 2px 0px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6);
+}
+
+#btn-jump {
+    width: 52px;
+    height: 52px;
+    right: 12px;
+    bottom: 88px;
+    background: #0277bd;
+    border: 3px solid #29b6f6;
+    z-index: 4;
+}
+
+#btn-jump:active, #btn-jump.pressed {
+    background: #039be5;
+    transform: translateY(3px) scale(0.96);
+    box-shadow: inset 2px 2px 0px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6);
+}
+
+#btn-sp {
+    width: 50px;
+    height: 50px;
+    right: 82px;
+    bottom: 130px;
+    background: #4a148c;
+    border: 3px solid #ab47bc;
+    z-index: 3;
+}
+
+#btn-sp:active, #btn-sp.pressed {
+    background: #7b1fa2;
     transform: translateY(3px) scale(0.96);
     box-shadow: inset 2px 2px 0px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6);
 }
@@ -1275,9 +1464,10 @@ body, html {
 /* 1. Distinct Circular Setting for Company Logo (User Requirement) */
 .splash-logo-setting {
     position: relative;
-    width: 104px;
-    height: 104px;
+    width: 108px;
+    height: 108px;
     border-radius: 50%;
+    overflow: hidden;
     background: radial-gradient(circle at center, #0e1e30 0%, #060b14 75%, #020408 100%);
     border: 3.5px solid #00e5ff;
     box-shadow: 
@@ -1306,9 +1496,11 @@ body, html {
 }
 
 .splash-logo {
-    width: 72px;
-    height: 72px;
-    object-fit: contain;
+    width: 78px;
+    height: 78px;
+    border-radius: 50%;
+    overflow: hidden;
+    object-fit: cover;
     filter: drop-shadow(0 0 12px rgba(0, 229, 255, 0.9));
     z-index: 6;
 }

@@ -1,13 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:v="https://svgstorm.com"
-viewBox = "0 0 360 290"
-width="360"
+<svg xmlns="http://www.w3.org/2000/svg"
+viewBox = "35 0 290 290"
+width="290"
 height="290">
+<defs>
+    <clipPath id="circle-logo-clip">
+        <circle cx="180" cy="145" r="140" />
+    </clipPath>
+</defs>
+<circle cx="180" cy="145" r="140" fill="#0d141e" stroke="#00e5ff" stroke-width="4"/>
+<g clip-path="url(#circle-logo-clip)">
 <g fill="None" fill-opacity="0.0" stroke="#FDFDFD" stroke-opacity="1.00" stroke-width="0.3"><path d="
-M 0.00 290.00 
-L 360.00 290.00
-L 360.00 0.00
-L 0.00 0.00
-L 0.00 290.00
 M 90.00 194.00 
 C 89.59 194.83 89.03 195.87 88.00 196.00
 C 88.00 184.00 88.00 172.00 88.00 160.00
@@ -83,13 +85,7 @@ M 220.00 193.00
 C 235.85 192.34 252.91 194.33 268.00 192.00
 C 252.15 192.66 235.09 190.67 220.00 193.00 Z"/>
 </g>
-<g fill="#FDFDFD" fill-opacity="1.00" stroke="None"><path d="
-M 0.00 290.00 
-L 360.00 290.00
-L 360.00 0.00
-L 0.00 0.00
-L 0.00 290.00 Z"/>
-</g>
+
 <g fill="#000000" fill-opacity="1.00" stroke="None"><path d="
 M 88.00 160.00 
 C 90.98 170.26 87.01 183.81 90.00 194.00
@@ -140,5 +136,6 @@ C 207.00 184.00 206.96 185.00 207.00 185.00 Z"/>
 M 220.00 193.00 
 C 235.85 192.34 252.91 194.33 268.00 192.00
 C 252.15 192.66 235.09 190.67 220.00 193.00 Z"/>
+</g>
 </g>
 </svg>

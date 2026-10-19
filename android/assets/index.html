@@ -278,11 +278,6 @@
                     </button>
                 </div>
 
-                <!-- Center Controls (Settings & Menu) -->
-                <div id="center-buttons">
-                    <button class="meta-btn" id="btn-touch-settings" title="Game & Controls Settings">⚙️ SETTINGS</button>
-                    <button class="meta-btn" id="btn-start" title="Open In-Game Menu">☰ MENU</button>
-                </div>
             </div>
 
             <!-- Character Creation / Setup Modal -->
@@ -795,14 +790,25 @@
 
             <!-- Inventory / Bag Modal -->
             <div id="inventory-modal" class="game-modal hidden">
-                <div class="modal-content">
+                <div class="modal-content inventory-content">
                     <div class="modal-header">
                         <h3>🎒 PIONEER INVENTORY</h3>
                         <button class="modal-close" id="inv-close">✕</button>
                     </div>
                     <div class="modal-body">
+                        <!-- Equipped Gear Bar -->
+                        <div class="equipped-gear-bar" id="equipped-gear-bar">
+                            <div class="gear-slot-chip" id="gear-slot-weapon" title="Equipped Weapon">
+                                <span class="gear-label">⚔️ WEP:</span>
+                                <span class="gear-name" id="gear-name-weapon">NONE</span>
+                            </div>
+                            <div class="gear-slot-chip" id="gear-slot-armor" title="Equipped Armor">
+                                <span class="gear-label">🛡️ ARM:</span>
+                                <span class="gear-name" id="gear-name-armor">NONE</span>
+                            </div>
+                        </div>
                         <div id="inventory-grid" class="inventory-grid"></div>
-                        <div id="item-details" class="item-details">Select an item to inspect or use.</div>
+                        <div id="item-details" class="item-details">Select an item to inspect, equip, or consume.</div>
                     </div>
                 </div>
             </div>
@@ -830,31 +836,7 @@
             </div>
         </main>
 
-        <!-- Player HUD Footer (Clean & Streamlined, with Settings button) -->
-        <footer id="game-footer">
-            <div class="player-bars">
-                <div class="bar-row">
-                    <span class="bar-label">HP</span>
-                    <div class="bar-track"><div id="hp-bar" class="bar-fill hp-fill" style="width: 100%;"></div></div>
-                    <span id="hp-text" class="bar-num">140/140</span>
-                </div>
-                <div class="bar-row">
-                    <span class="bar-label">NRG</span>
-                    <div class="bar-track"><div id="energy-bar" class="bar-fill energy-fill" style="width: 100%;"></div></div>
-                    <span id="energy-text" class="bar-num">90/90</span>
-                </div>
-            </div>
 
-            <div class="pioneer-status" id="pioneer-status">
-                <canvas id="canvas-pioneer-icon" width="20" height="20" class="pioneer-mini-canvas"></canvas>
-                <span class="pioneer-callsign" id="pioneer-callsign">ALU-01</span>
-                <span class="pioneer-class-tag" id="pioneer-class-tag">WARRIOR</span>
-            </div>
-
-            <div class="footer-actions">
-                <button id="btn-settings-footer" class="footer-settings-btn" title="Open Game & Controls Settings">⚙️ SETTINGS</button>
-            </div>
-        </footer>
     </div>
 
     <!-- Engine Scripts -->

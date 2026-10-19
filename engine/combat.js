@@ -467,10 +467,18 @@ class Character extends KinematicBody {
         this.dashSpawnTimer = 0;
         this.attackSwing = null;
 
-        // Inventory bag
+        // Inventory bag & Equipment Stats
         if (typeof Inventory !== 'undefined') {
             this.inventory = new Inventory();
         }
+        this.defenseBonus = 0;
+        this.attackDamageBonus = 0;
+        this.weaponSpeedBonus = 0;
+        this.stasisTimer = 0;
+        this.berserkerTimer = 0;
+        this.barrierShield = 0;
+        this.regenTimer = 0;
+        this.regenRate = 0;
 
         // Parry & Deflection System (Nine-Sols inspired)
         this.isParryActive = false;
@@ -539,6 +547,12 @@ class Character extends KinematicBody {
         if (this.attackCooldown > 0) this.attackCooldown -= dt;
         if (this.dashCooldown > 0) this.dashCooldown -= dt;
         if (this.invulnerableTimer > 0) this.invulnerableTimer -= dt;
+        if (this.stasisTimer > 0) this.stasisTimer -= dt;
+        if (this.berserkerTimer > 0) this.berserkerTimer -= dt;
+        if (this.regenTimer > 0) {
+            this.regenTimer -= dt;
+            this.hp = Math.min(this.maxHp, this.hp + (this.regenRate || 8.0) * dt);
+        }
         for (let i = 0; i < this.abilityCooldowns.length; i++) {
             if (this.abilityCooldowns[i] > 0) this.abilityCooldowns[i] -= dt;
         }
@@ -743,7 +757,9 @@ class Character extends KinematicBody {
 
             const splashRad = this.hasSkill('mage_nanite_infusion') ? 42 : 28;
             const boltSpeed = this.hasSkill('mage_nanite_infusion') ? 440 : 320;
-            const boltDmg = this.hasSkill('mage_nanite_infusion') ? 34 : 24;
+            const wepBonus = (this.attackDamageBonus || 0) + ((this.inventory && this.inventory.equippedWeapon) ? (this.inventory.equippedWeapon.damageBonus || 0) : 0);
+            let boltDmg = (this.hasSkill('mage_nanite_infusion') ? 34 : 24) + wepBonus;
+            if (this.berserkerTimer > 0) boltDmg = Math.floor(boltDmg * 1.5);
 
             // Bolt 1
             this.projectiles.push({
@@ -775,9 +791,13 @@ class Character extends KinematicBody {
             // Ultrasonic Broadsword Heavy Cleave: Wide frontal arc slash
             const currentSpeed = this.vel.length();
             const momentumBonus = Math.floor(currentSpeed * 0.18);
-            let totalDamage = 34 + momentumBonus;
+            const wepBonus = (this.attackDamageBonus || 0) + ((this.inventory && this.inventory.equippedWeapon) ? (this.inventory.equippedWeapon.damageBonus || 0) : 0);
+            let totalDamage = 34 + momentumBonus + wepBonus;
             if (this.hasSkill('warrior_titan_edge')) {
                 totalDamage = Math.floor(totalDamage * 1.35);
+            }
+            if (this.berserkerTimer > 0) {
+                totalDamage = Math.floor(totalDamage * 1.5);
             }
             const slashRange = this.hasSkill('warrior_titan_edge') ? 44 : 36;
             const slashArc = this.hasSkill('warrior_titan_edge') ? Math.PI * 1.1 : Math.PI * 0.8;
@@ -828,11 +848,15 @@ class Character extends KinematicBody {
                 maxTimer: 0.24
             };
 
+            const wepBonus = (this.attackDamageBonus || 0) + ((this.inventory && this.inventory.equippedWeapon) ? (this.inventory.equippedWeapon.damageBonus || 0) : 0);
+            let reapDamage = 90 + wepBonus;
+            if (this.berserkerTimer > 0) reapDamage = Math.floor(reapDamage * 1.5);
+
             for (const enemy of enemies) {
                 if (enemy.hp <= 0) continue;
                 const dist = Math.hypot(enemy.x - this.pos.x, enemy.y - this.pos.y);
                 if (dist <= 50) {
-                    enemy.hp -= 90;
+                    enemy.hp -= reapDamage;
                     enemy.x += dir.x * 24;
                     enemy.y += dir.y * 24;
                     this.addSpark(enemy.x, enemy.y, '#76ff03', 18);
@@ -1208,6 +1232,12 @@ class Character extends KinematicBody {
     takeDamage(amount, isParryable = true) {
         if (this.invulnerableTimer > 0) return { parried: false, damageTaken: 0 };
 
+        // 0. Chrono Stasis Invulnerability Check
+        if (this.stasisTimer > 0) {
+            this.addSpark(this.pos.x, this.pos.y, '#ffd54f', 6);
+            return { parried: false, damageTaken: 0, stasisImmune: true };
+        }
+
         // Check if player executed a clean parry during the active window
         if (this.isParryActive && isParryable) {
             this.parrySuccessTimer = 0.3;
@@ -1220,6 +1250,26 @@ class Character extends KinematicBody {
                 this.addSpark(this.pos.x, this.pos.y, '#ffd54f', 20);
             }
             return { parried: true, damageTaken: 0, reflectDamage };
+        }
+
+        // Apply Armor / Equipment Defense Bonus
+        const totalDefense = (this.defenseBonus || 0) + ((this.inventory && this.inventory.equippedArmor) ? (this.inventory.equippedArmor.defenseBonus || 0) : 0);
+        if (totalDefense > 0) {
+            amount = Math.max(1, amount - Math.floor(totalDefense * 0.5));
+        }
+
+        // Apply Barrier Shield Absorption (Aegis Flask)
+        if (this.barrierShield > 0) {
+            if (this.barrierShield >= amount) {
+                this.barrierShield -= amount;
+                this.addSpark(this.pos.x, this.pos.y, '#00e5ff', 10);
+                this.invulnerableTimer = 0.3;
+                return { parried: false, damageTaken: 0, barrierAbsorbed: amount };
+            } else {
+                amount -= this.barrierShield;
+                this.barrierShield = 0;
+                this.addSpark(this.pos.x, this.pos.y, '#00e5ff', 12);
+            }
         }
 
         // Hit confirmed

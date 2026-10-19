@@ -320,11 +320,11 @@ class GameApp {
         const touchControls = document.getElementById('touch-controls');
         if (!touchControls) return;
 
-        // Hide touch controls if on START_SCREEN or if character setup modal is actively open
-        const setupModal = document.getElementById('setup-modal');
-        const isSetupOpen = setupModal && !setupModal.classList.contains('hidden');
+        // Hide touch controls if on START_SCREEN, SPLASH, or if any modal, start menu, or dialogue is open
+        const activeModal = document.querySelector('.game-modal:not(.hidden), .gba-dialogue-capsule:not(.hidden), .dialogue-modal:not(.hidden), #gba-start-menu:not(.hidden)');
+        const isModalOpen = !!activeModal;
 
-        if (this.gameState === 'START_SCREEN' || isSetupOpen) {
+        if (this.gameState === 'START_SCREEN' || this.gameState === 'SPLASH' || isModalOpen) {
             touchControls.classList.add('controls-hidden');
         } else {
             touchControls.classList.remove('controls-hidden');
@@ -2697,32 +2697,107 @@ class GameApp {
 
     renderInventoryModal() {
         const grid = document.getElementById('inventory-grid');
+        if (!grid) return;
         grid.innerHTML = '';
 
-        this.inventory.slots.forEach(slot => {
+        // Update Equipped Gear Bar
+        const gearNameWep = document.getElementById('gear-name-weapon');
+        const gearNameArm = document.getElementById('gear-name-armor');
+        if (gearNameWep) {
+            gearNameWep.innerText = (this.inventory && this.inventory.equippedWeapon) ? this.inventory.equippedWeapon.name : 'NONE';
+        }
+        if (gearNameArm) {
+            gearNameArm.innerText = (this.inventory && this.inventory.equippedArmor) ? this.inventory.equippedArmor.name : 'NONE';
+        }
+
+        const totalSlots = Math.max(16, (this.inventory && this.inventory.maxSlots) || 16);
+
+        for (let i = 0; i < totalSlots; i++) {
+            const slot = this.inventory && this.inventory.slots ? this.inventory.slots[i] : null;
             const el = document.createElement('div');
-            el.className = 'inv-slot';
-            el.innerHTML = `<strong>${slot.item.name}</strong><span style="color:#81c784;margin-top:2px;">x${slot.count}</span>`;
-            this.bindTap(el, () => {
-                document.getElementById('item-details').innerHTML = `
-                    <strong style="color:#ffd54f;">${slot.item.name}</strong> (${slot.item.type})<br>
-                    ${slot.item.desc}<br>
-                    ${slot.item.type === 'CONSUMABLE' ? '<button id="btn-use-item" class="gba-btn-sm" style="margin-top:6px;">USE ITEM</button>' : ''}
+
+            if (slot && slot.item) {
+                const item = slot.item;
+                const isEquipped = (this.inventory.equippedWeapon && this.inventory.equippedWeapon.id === item.id) ||
+                                   (this.inventory.equippedArmor && this.inventory.equippedArmor.id === item.id);
+                const rarity = item.rarity || 'common';
+
+                el.className = `inv-slot rarity-${rarity}`;
+                el.innerHTML = `
+                    ${isEquipped ? '<span class="slot-equipped-badge">EQUIPPED</span>' : ''}
+                    <div class="slot-icon">${item.icon || '📦'}</div>
+                    <div class="slot-name">${item.name}</div>
+                    ${slot.count > 1 ? `<span class="slot-count">x${slot.count}</span>` : ''}
                 `;
-                const useBtn = document.getElementById('btn-use-item');
-                if (useBtn) {
-                    this.bindTap(useBtn, () => {
-                        if (this.inventory.useItem(slot.item.id, this.player)) {
-                            this.renderInventoryModal();
-                            this.updateHUD();
-                            if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(660, 'sine', 0.2, 0.1);
+
+                this.bindTap(el, () => {
+                    grid.querySelectorAll('.inv-slot').forEach(s => s.classList.remove('selected'));
+                    el.classList.add('selected');
+
+                    let statsHtml = '';
+                    if (item.damageBonus) statsHtml += `<span style="color:#ffb74d;">ATK +${item.damageBonus} </span>`;
+                    if (item.defenseBonus) statsHtml += `<span style="color:#64b5f6;">DEF +${item.defenseBonus} </span>`;
+                    if (item.speedBonus) statsHtml += `<span style="color:#81c784;">SPD +${item.speedBonus} </span>`;
+                    if (item.maxHpBonus) statsHtml += `<span style="color:#e57373;">MAX HP +${item.maxHpBonus} </span>`;
+                    if (item.maxEnergyBonus) statsHtml += `<span style="color:#4dd0e1;">MAX NRG +${item.maxEnergyBonus} </span>`;
+                    if (item.healAmount) statsHtml += `<span style="color:#81c784;">HEAL +${item.healAmount} HP </span>`;
+                    if (item.energyAmount) statsHtml += `<span style="color:#4dd0e1;">NRG +${item.energyAmount} </span>`;
+                    if (item.stasisDuration) statsHtml += `<span style="color:#ffd54f;">STASIS ${item.stasisDuration}s </span>`;
+                    if (item.berserkDuration) statsHtml += `<span style="color:#ff5252;">BERSERK +50% ATK (${item.berserkDuration}s) </span>`;
+                    if (item.barrierHp) statsHtml += `<span style="color:#40c4ff;">SHIELD +${item.barrierHp} </span>`;
+                    if (item.regenDuration) statsHtml += `<span style="color:#69f0ae;">REGEN +8 HP/s (${item.regenDuration}s) </span>`;
+
+                    let actionBtnHtml = '';
+                    if (item.type === 'WEAPON' || item.type === 'ARMOR' || item.type === 'RELIC') {
+                        if (isEquipped) {
+                            actionBtnHtml = `<button id="btn-inv-action" class="item-act-btn unequip-btn">UNEQUIP</button>`;
+                        } else {
+                            actionBtnHtml = `<button id="btn-inv-action" class="item-act-btn">EQUIP</button>`;
                         }
-                    });
-                }
-                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuMove();
-            });
+                    } else if (item.type === 'CONSUMABLE' || item.type === 'FOOD' || item.id === 'MEDICINAL_HERB') {
+                        actionBtnHtml = `<button id="btn-inv-action" class="item-act-btn">USE ITEM</button>`;
+                    } else if (item.id === 'PRIMITIVE_TORCH' || item.id === 'TORCH') {
+                        actionBtnHtml = `<button id="btn-inv-action" class="item-act-btn">${this.player && this.player.hasTorchActive ? 'DOUSE TORCH' : 'LIGHT TORCH'}</button>`;
+                    } else if (item.id === 'CAMPFIRE_KIT') {
+                        actionBtnHtml = `<button id="btn-inv-action" class="item-act-btn">DEPLOY CAMPFIRE</button>`;
+                    }
+
+                    const detailsEl = document.getElementById('item-details');
+                    if (detailsEl) {
+                        detailsEl.innerHTML = `
+                            <div class="item-detail-header">
+                                <span class="item-detail-title" style="color:${rarity === 'legendary' ? '#ffd54f' : rarity === 'epic' ? '#ba68c8' : rarity === 'rare' ? '#4fc3f7' : '#eceff1'};">${item.icon || ''} ${item.name}</span>
+                                <span class="item-detail-type">${item.type}</span>
+                            </div>
+                            ${statsHtml ? `<div class="item-detail-stats">${statsHtml}</div>` : ''}
+                            <div class="item-detail-desc">${item.desc}</div>
+                            ${actionBtnHtml}
+                        `;
+
+                        const actBtn = document.getElementById('btn-inv-action');
+                        if (actBtn) {
+                            this.bindTap(actBtn, () => {
+                                const res = this.inventory.useItem(item.id, this.player);
+                                if (res && (res.success || res === true)) {
+                                    this.renderInventoryModal();
+                                    this.updateHUD();
+                                    if (this.soundEnabled && this.sfxEnabled) {
+                                        this.renderer.audio.playTone(720, 'sine', 0.22, 0.12);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playMenuMove();
+                });
+            } else {
+                // Empty slot
+                el.className = 'inv-slot empty';
+                el.innerHTML = '<span style="font-size:12px;opacity:0.3;">·</span>';
+            }
+
             grid.appendChild(el);
-        });
+        }
     }
 
     getNearestInteractable() {
