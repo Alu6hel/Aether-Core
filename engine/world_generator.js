@@ -1411,7 +1411,7 @@ class WorldMap {
             x: 35 * 16 + 8,
             y: 35 * 16 + 8,
             name: "Zenith Star Altar: Aether Conduit",
-            log: "LOG: High atmospheric stellar focus operational. You stand at the pinnacle of the Dyson sphere atmosphere."
+            log: "LOG: High atmospheric stellar focus operational. You stand at the pinnacle of the Dyson core atmosphere."
         });
 
         // Enemies: Sky Wyverns and Storm Sentinels

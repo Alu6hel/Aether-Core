@@ -595,7 +595,7 @@ const CLASS_SKILL_TREES = {
         {
             id: 'architect_dyson_sovereign',
             name: 'Dyson Core Sovereign',
-            desc: 'Crown Pinnacle [Lv. 100]: Commands the orbital energy grid of the Dyson Sphere. Hard-light constructs are indestructible, shields never collapse.',
+            desc: 'Crown Pinnacle [Lv. 100]: Commands the orbital energy grid of the Dyson Core. Hard-light constructs are indestructible, shields never collapse.',
             tier: 5,
             cost: 4,
             unlockLevel: 100,

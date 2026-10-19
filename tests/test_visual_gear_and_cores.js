@@ -54,8 +54,10 @@ console.log("--- TEST 2: Remains Cores & Renamed Orb/Sphere to Core ---");
     assert.ok(html.includes('ASTRAL VAPOR CORE'), "Astral Vapor Core renamed");
     assert.ok(html.includes('RESONANT NEBULA CORE'), "Resonant Nebula Core renamed");
     assert.ok(html.includes('PRIMORDIAL SINGULARITY CORE'), "Primordial Singularity Core renamed");
+    assert.ok(html.includes('CELESTIAL CORE UNBOXED'), "Celestial Core Unboxed renamed");
     assert.ok(!html.includes('ASTRAL VAPOR SPHERE'), "No old Astral Vapor Sphere");
     assert.ok(!html.includes('RESONANT NEBULA ORB'), "No old Resonant Nebula Orb");
+    assert.ok(!html.includes('CELESTIAL ORB UNBOXED'), "No old Celestial Orb Unboxed");
 
     // Renderer method exists and is callable
     const dummyCanvas = { width: 100, height: 100, getContext: () => null };

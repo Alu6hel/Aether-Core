@@ -260,7 +260,7 @@ const BASE_ITEMS = {
         type: ITEM_TYPE.WEAPON,
         icon: '🌾',
         isCraftable: false,
-        source: 'Exclusive drop from Void Grotto Guardians and Resonant Nebula Orbs',
+        source: 'Exclusive drop from Void Grotto Guardians and Resonant Nebula Cores',
         damageBonus: 40,
         lifeSteal: 0.15,
         desc: 'Dark energy curved scythe. +40 Damage, siphons 15% damage dealt as restored health.'
@@ -1089,7 +1089,7 @@ const BASE_ITEMS = {
         type: ITEM_TYPE.MATERIAL,
         icon: '🌌',
         isCraftable: false,
-        source: 'Dropped by Void Aberrations and Resonant Nebula Orbs',
+        source: 'Dropped by Void Aberrations and Resonant Nebula Cores',
         desc: 'Oscillating fragment of broken spacetime. Used to concoct stasis potions.'
     },
     CELESTIAL_KEY: {

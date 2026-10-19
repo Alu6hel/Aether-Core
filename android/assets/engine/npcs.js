@@ -265,7 +265,7 @@ class NpcManager {
                     portrait: npc.portrait,
                     lines: [
                         `"*Bows head in reverence*... A Master Architect of the Dyson Luminary walks among us."`,
-                        `"The grand sphere above is struggling to balance its diurnal solar transitions. The core mechanisms deep below have fallen into discord."`,
+                        `"The grand core above is struggling to balance its diurnal solar transitions. The core mechanisms deep below have fallen into discord."`,
                         `"Deploy your hard-light prisms and restore geometric balance to our world. Seek Wanderer Lyra in the Woods."`
                     ],
                     questUpdate: {
@@ -614,7 +614,7 @@ class NpcManager {
                     portrait: npc.portrait,
                     lines: [
                         `"[RECOGNITION]: Master Architect credentials validated. Access level: ALPHA PRIME."`,
-                        `"[STATUS REPORT]: Dyson Sphere Luminary containment rings operating at 62% efficiency."`,
+                        `"[STATUS REPORT]: Dyson Core Luminary containment rings operating at 62% efficiency."`,
                         `"[SUB-SYSTEM PURGE]: Commandeer orbital hard-light emitters. Overwrite the rogue Dreadnought subroutines."`
                     ]
                 };
