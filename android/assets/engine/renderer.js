@@ -893,6 +893,408 @@ class RetroRenderer {
         }
     }
 
+    drawEquippedArmorBack(ctx, char, armId, sx, sy, bob, facing, walkCycle) {
+        if (!armId) return;
+        ctx.save();
+        const t = Date.now() / 1000;
+
+        if (armId === 'GENESIS_STARMANTLE') {
+            // Flowing celestial starlight cape behind character
+            if (facing === 'DOWN' || facing === 'LEFT' || facing === 'RIGHT') {
+                const flutter = Math.sin(t * 3.5) * 1.5;
+                ctx.fillStyle = '#0a1026';
+                ctx.fillRect(sx - 6, sy - 5 + bob, 12, 13);
+                // Glowing cosmic stardust flecks on cape
+                ctx.fillStyle = '#00e5ff';
+                ctx.fillRect(sx - 4 + flutter, sy + 1 + bob, 1.5, 1.5);
+                ctx.fillStyle = '#ffd54f';
+                ctx.fillRect(sx + 3 - flutter, sy + 3 + bob, 1.5, 1.5);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx - 1, sy + 5 + bob, 1.5, 1.5);
+            }
+        }
+        ctx.restore();
+    }
+
+    drawEquippedArmorFront(ctx, char, armId, sx, sy, bob, facing, walkCycle) {
+        if (!armId) return;
+        ctx.save();
+
+        if (armId === 'GENESIS_STARMANTLE') {
+            if (facing === 'UP') {
+                ctx.fillStyle = '#0a1026';
+                ctx.fillRect(sx - 6, sy - 8 + bob, 12, 16);
+                ctx.fillStyle = '#ffd54f';
+                ctx.fillRect(sx - 6, sy - 8 + bob, 12, 2);
+                ctx.fillStyle = '#00e5ff';
+                ctx.fillRect(sx - 3, sy - 3 + bob, 1.5, 1.5);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx + 2, sy - 1 + bob, 1.5, 1.5);
+                ctx.fillStyle = '#ffd54f';
+                ctx.fillRect(sx - 1, sy + 3 + bob, 1.5, 1.5);
+            } else {
+                ctx.fillStyle = '#ffd54f';
+                ctx.fillRect(sx - 6, sy - 7 + bob, 3, 3);
+                ctx.fillRect(sx + 3, sy - 7 + bob, 3, 3);
+                ctx.fillStyle = '#00e5ff';
+                ctx.fillRect(sx - 1, sy - 6 + bob, 2, 2);
+            }
+        } else if (armId === 'VANGUARD_CHESTPLATE') {
+            ctx.fillStyle = '#455a64';
+            if (facing === 'DOWN') {
+                ctx.fillRect(sx - 4, sy - 6 + bob, 8, 8);
+                ctx.fillStyle = '#00e5ff';
+                ctx.fillRect(sx - 1, sy - 4 + bob, 2, 3);
+                ctx.fillStyle = '#90a4ae';
+                ctx.fillRect(sx - 6, sy - 7 + bob, 2, 4);
+                ctx.fillRect(sx + 4, sy - 7 + bob, 2, 4);
+            } else if (facing === 'UP') {
+                ctx.fillRect(sx - 4, sy - 6 + bob, 8, 8);
+                ctx.fillStyle = '#37474f';
+                ctx.fillRect(sx - 2, sy - 4 + bob, 4, 5);
+            } else if (facing === 'LEFT') {
+                ctx.fillRect(sx - 4, sy - 6 + bob, 6, 8);
+                ctx.fillStyle = '#90a4ae';
+                ctx.fillRect(sx - 5, sy - 7 + bob, 3, 4);
+            } else if (facing === 'RIGHT') {
+                ctx.fillRect(sx - 2, sy - 6 + bob, 6, 8);
+                ctx.fillStyle = '#90a4ae';
+                ctx.fillRect(sx + 2, sy - 7 + bob, 3, 4);
+            }
+        } else if (armId === 'DREADNOUGHT_WARPLATE' || armId === 'IRON_AEGIS_PLATE') {
+            ctx.fillStyle = '#263238';
+            if (facing === 'DOWN') {
+                ctx.fillRect(sx - 5, sy - 6 + bob, 10, 9);
+                ctx.fillStyle = '#ffd54f';
+                ctx.fillRect(sx - 4, sy - 3 + bob, 8, 2);
+                ctx.fillStyle = '#37474f';
+                ctx.fillRect(sx - 7, sy - 7 + bob, 3, 5);
+                ctx.fillRect(sx + 4, sy - 7 + bob, 3, 5);
+            } else if (facing === 'UP') {
+                ctx.fillRect(sx - 5, sy - 6 + bob, 10, 9);
+                ctx.fillStyle = '#37474f';
+                ctx.fillRect(sx - 7, sy - 7 + bob, 3, 5);
+                ctx.fillRect(sx + 4, sy - 7 + bob, 3, 5);
+            } else if (facing === 'LEFT') {
+                ctx.fillRect(sx - 5, sy - 6 + bob, 8, 9);
+                ctx.fillStyle = '#ffd54f';
+                ctx.fillRect(sx - 4, sy - 3 + bob, 3, 2);
+            } else if (facing === 'RIGHT') {
+                ctx.fillRect(sx - 3, sy - 6 + bob, 8, 9);
+                ctx.fillStyle = '#ffd54f';
+                ctx.fillRect(sx + 1, sy - 3 + bob, 3, 2);
+            }
+        } else if (armId === 'AEGIS_KINETIC_SHIELD' || armId === 'WOODEN_BUCKLER') {
+            const isEnergy = armId === 'AEGIS_KINETIC_SHIELD';
+            const shieldColor = isEnergy ? '#00e5ff' : '#795548';
+            const rimColor = isEnergy ? '#ffffff' : '#37474f';
+
+            if (facing === 'DOWN') {
+                ctx.fillStyle = shieldColor;
+                ctx.fillRect(sx - 9, sy - 7 + bob, 4, 8);
+                ctx.fillStyle = rimColor;
+                ctx.fillRect(sx - 10, sy - 6 + bob, 1, 6);
+            } else if (facing === 'UP') {
+                ctx.fillStyle = shieldColor;
+                ctx.fillRect(sx - 9, sy - 8 + bob, 4, 8);
+            } else if (facing === 'LEFT') {
+                ctx.fillStyle = shieldColor;
+                ctx.fillRect(sx + 3, sy - 6 + bob, 3, 7);
+            } else if (facing === 'RIGHT') {
+                ctx.fillStyle = shieldColor;
+                ctx.fillRect(sx - 6, sy - 6 + bob, 3, 7);
+            }
+        } else if (armId === 'PIONEER_BAND') {
+            ctx.fillStyle = '#00e5ff';
+            if (facing === 'DOWN') {
+                ctx.fillRect(sx - 6, sy - 2 + bob, 2, 2);
+                ctx.fillRect(sx + 4, sy - 2 + bob, 2, 2);
+            } else if (facing === 'LEFT') {
+                ctx.fillRect(sx - 4, sy - 2 + bob, 2, 2);
+            } else if (facing === 'RIGHT') {
+                ctx.fillRect(sx + 2, sy - 2 + bob, 2, 2);
+            }
+        }
+        ctx.restore();
+    }
+
+    drawEquippedWeapon(ctx, char, wepId, sx, sy, bob, facing, walkCycle) {
+        ctx.save();
+        switch (wepId) {
+            case 'PRIMORDIAL_VOID_SCYTHE':
+            case 'VOID_SCYTHE': {
+                const isMythic = wepId === 'PRIMORDIAL_VOID_SCYTHE';
+                const eyeColor = isMythic ? '#ff1744' : '#e040fb';
+                const bladeGrad = isMythic ? '#d50000' : '#7b1fa2';
+
+                if (facing === 'DOWN') {
+                    ctx.fillStyle = '#212121';
+                    ctx.fillRect(sx + 6, sy - 14 + bob, 2, 20);
+                    ctx.fillStyle = bladeGrad;
+                    ctx.fillRect(sx + 3, sy - 16 + bob, 7, 3);
+                    ctx.fillRect(sx + 1, sy - 14 + bob, 3, 4);
+                    ctx.fillStyle = eyeColor;
+                    ctx.fillRect(sx + 6, sy - 15 + bob, 2, 2);
+                } else if (facing === 'UP') {
+                    ctx.fillStyle = '#212121';
+                    ctx.fillRect(sx + 5, sy - 16 + bob, 2, 20);
+                    ctx.fillStyle = bladeGrad;
+                    ctx.fillRect(sx + 2, sy - 18 + bob, 7, 3);
+                    ctx.fillRect(sx, sy - 16 + bob, 3, 4);
+                    ctx.fillStyle = eyeColor;
+                    ctx.fillRect(sx + 5, sy - 17 + bob, 2, 2);
+                } else if (facing === 'LEFT') {
+                    ctx.fillStyle = '#212121';
+                    ctx.fillRect(sx - 7, sy - 12 + bob, 2, 18);
+                    ctx.fillStyle = bladeGrad;
+                    ctx.fillRect(sx - 12, sy - 14 + bob, 7, 3);
+                    ctx.fillRect(sx - 14, sy - 12 + bob, 3, 5);
+                    ctx.fillStyle = eyeColor;
+                    ctx.fillRect(sx - 7, sy - 13 + bob, 2, 2);
+                } else if (facing === 'RIGHT') {
+                    ctx.fillStyle = '#212121';
+                    ctx.fillRect(sx + 6, sy - 12 + bob, 2, 18);
+                    ctx.fillStyle = bladeGrad;
+                    ctx.fillRect(sx + 7, sy - 14 + bob, 7, 3);
+                    ctx.fillRect(sx + 12, sy - 12 + bob, 3, 5);
+                    ctx.fillStyle = eyeColor;
+                    ctx.fillRect(sx + 6, sy - 13 + bob, 2, 2);
+                }
+                break;
+            }
+
+            case 'DYSON_STELLAR_SABER':
+            case 'SOLARION_BROADSWORD': {
+                const bladeGold = '#ffd54f';
+                const coreWhite = '#ffffff';
+                const guardAmber = '#ff6f00';
+
+                if (facing === 'DOWN') {
+                    ctx.fillStyle = guardAmber;
+                    ctx.fillRect(sx + 4, sy - 7 + bob, 6, 2);
+                    ctx.fillStyle = bladeGold;
+                    ctx.fillRect(sx + 5, sy - 14 + bob, 4, 8);
+                    ctx.fillStyle = coreWhite;
+                    ctx.fillRect(sx + 6, sy - 13 + bob, 2, 6);
+                } else if (facing === 'UP') {
+                    ctx.fillStyle = guardAmber;
+                    ctx.fillRect(sx + 4, sy - 8 + bob, 6, 2);
+                    ctx.fillStyle = bladeGold;
+                    ctx.fillRect(sx + 5, sy - 16 + bob, 4, 9);
+                    ctx.fillStyle = coreWhite;
+                    ctx.fillRect(sx + 6, sy - 15 + bob, 2, 7);
+                } else if (facing === 'LEFT') {
+                    ctx.fillStyle = guardAmber;
+                    ctx.fillRect(sx - 6, sy - 6 + bob, 2, 5);
+                    ctx.fillStyle = bladeGold;
+                    ctx.fillRect(sx - 12, sy - 8 + bob, 7, 3);
+                    ctx.fillStyle = coreWhite;
+                    ctx.fillRect(sx - 11, sy - 7 + bob, 5, 1);
+                } else if (facing === 'RIGHT') {
+                    ctx.fillStyle = guardAmber;
+                    ctx.fillRect(sx + 4, sy - 6 + bob, 2, 5);
+                    ctx.fillStyle = bladeGold;
+                    ctx.fillRect(sx + 5, sy - 8 + bob, 7, 3);
+                    ctx.fillStyle = coreWhite;
+                    ctx.fillRect(sx + 6, sy - 7 + bob, 5, 1);
+                }
+                break;
+            }
+
+            case 'RUNIC_WARHAMMER': {
+                const stoneGrey = '#455a64';
+                const runeViolet = '#ba68c8';
+                const haftWood = '#795548';
+
+                if (facing === 'DOWN') {
+                    ctx.fillStyle = haftWood;
+                    ctx.fillRect(sx + 6, sy - 11 + bob, 2, 16);
+                    ctx.fillStyle = stoneGrey;
+                    ctx.fillRect(sx + 4, sy - 16 + bob, 6, 6);
+                    ctx.fillStyle = runeViolet;
+                    ctx.fillRect(sx + 6, sy - 15 + bob, 2, 4);
+                } else if (facing === 'UP') {
+                    ctx.fillStyle = haftWood;
+                    ctx.fillRect(sx + 5, sy - 13 + bob, 2, 16);
+                    ctx.fillStyle = stoneGrey;
+                    ctx.fillRect(sx + 3, sy - 18 + bob, 6, 6);
+                    ctx.fillStyle = runeViolet;
+                    ctx.fillRect(sx + 5, sy - 17 + bob, 2, 4);
+                } else if (facing === 'LEFT') {
+                    ctx.fillStyle = haftWood;
+                    ctx.fillRect(sx - 8, sy - 8 + bob, 2, 14);
+                    ctx.fillStyle = stoneGrey;
+                    ctx.fillRect(sx - 12, sy - 12 + bob, 6, 6);
+                    ctx.fillStyle = runeViolet;
+                    ctx.fillRect(sx - 10, sy - 11 + bob, 2, 4);
+                } else if (facing === 'RIGHT') {
+                    ctx.fillStyle = haftWood;
+                    ctx.fillRect(sx + 6, sy - 8 + bob, 2, 14);
+                    ctx.fillStyle = stoneGrey;
+                    ctx.fillRect(sx + 6, sy - 12 + bob, 6, 6);
+                    ctx.fillStyle = runeViolet;
+                    ctx.fillRect(sx + 8, sy - 11 + bob, 2, 4);
+                }
+                break;
+            }
+
+            case 'ULTRASONIC_SWORD': {
+                const vibroCyan = '#00e5ff';
+                const hiltBlack = '#1a237e';
+
+                if (facing === 'DOWN') {
+                    ctx.fillStyle = hiltBlack;
+                    ctx.fillRect(sx + 6, sy - 6 + bob, 2, 4);
+                    ctx.fillStyle = vibroCyan;
+                    ctx.fillRect(sx + 6, sy - 15 + bob, 2, 10);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(sx + 7, sy - 14 + bob, 1, 8);
+                } else if (facing === 'UP') {
+                    ctx.fillStyle = hiltBlack;
+                    ctx.fillRect(sx + 5, sy - 6 + bob, 2, 4);
+                    ctx.fillStyle = vibroCyan;
+                    ctx.fillRect(sx + 5, sy - 16 + bob, 2, 11);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(sx + 6, sy - 15 + bob, 1, 9);
+                } else if (facing === 'LEFT') {
+                    ctx.fillStyle = hiltBlack;
+                    ctx.fillRect(sx - 6, sy - 7 + bob, 3, 2);
+                    ctx.fillStyle = vibroCyan;
+                    ctx.fillRect(sx - 14, sy - 8 + bob, 9, 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(sx - 13, sy - 8 + bob, 7, 1);
+                } else if (facing === 'RIGHT') {
+                    ctx.fillStyle = hiltBlack;
+                    ctx.fillRect(sx + 3, sy - 7 + bob, 3, 2);
+                    ctx.fillStyle = vibroCyan;
+                    ctx.fillRect(sx + 5, sy - 8 + bob, 9, 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(sx + 6, sy - 8 + bob, 7, 1);
+                }
+                break;
+            }
+
+            case 'HUNTER_SPEAR': {
+                const spearWood = '#8d6e63';
+                const copperTip = '#ff7043';
+
+                if (facing === 'DOWN') {
+                    ctx.fillStyle = spearWood;
+                    ctx.fillRect(sx + 6, sy - 14 + bob, 2, 22);
+                    ctx.fillStyle = '#d32f2f';
+                    ctx.fillRect(sx + 5, sy - 14 + bob, 4, 2);
+                    ctx.fillStyle = copperTip;
+                    ctx.fillRect(sx + 6, sy - 18 + bob, 2, 5);
+                } else if (facing === 'UP') {
+                    ctx.fillStyle = spearWood;
+                    ctx.fillRect(sx + 5, sy - 16 + bob, 2, 22);
+                    ctx.fillStyle = '#d32f2f';
+                    ctx.fillRect(sx + 4, sy - 16 + bob, 4, 2);
+                    ctx.fillStyle = copperTip;
+                    ctx.fillRect(sx + 5, sy - 20 + bob, 2, 5);
+                } else if (facing === 'LEFT') {
+                    ctx.fillStyle = spearWood;
+                    ctx.fillRect(sx - 14, sy - 6 + bob, 16, 2);
+                    ctx.fillStyle = '#d32f2f';
+                    ctx.fillRect(sx - 14, sy - 5 + bob, 2, 3);
+                    ctx.fillStyle = copperTip;
+                    ctx.fillRect(sx - 18, sy - 7 + bob, 5, 3);
+                } else if (facing === 'RIGHT') {
+                    ctx.fillStyle = spearWood;
+                    ctx.fillRect(sx - 2, sy - 6 + bob, 16, 2);
+                    ctx.fillStyle = '#d32f2f';
+                    ctx.fillRect(sx + 12, sy - 5 + bob, 2, 3);
+                    ctx.fillStyle = copperTip;
+                    ctx.fillRect(sx + 13, sy - 7 + bob, 5, 3);
+                }
+                break;
+            }
+
+            case 'COPPER_SHORTSWORD': {
+                const bladeCop = '#ff7043';
+                const guardGold = '#ffd54f';
+                if (facing === 'DOWN') {
+                    ctx.fillStyle = guardGold;
+                    ctx.fillRect(sx + 4, sy - 6 + bob, 6, 2);
+                    ctx.fillStyle = bladeCop;
+                    ctx.fillRect(sx + 5, sy - 13 + bob, 4, 8);
+                } else if (facing === 'UP') {
+                    ctx.fillStyle = guardGold;
+                    ctx.fillRect(sx + 4, sy - 7 + bob, 6, 2);
+                    ctx.fillStyle = bladeCop;
+                    ctx.fillRect(sx + 5, sy - 14 + bob, 4, 8);
+                } else if (facing === 'LEFT') {
+                    ctx.fillStyle = guardGold;
+                    ctx.fillRect(sx - 6, sy - 6 + bob, 2, 5);
+                    ctx.fillStyle = bladeCop;
+                    ctx.fillRect(sx - 11, sy - 7 + bob, 6, 3);
+                } else if (facing === 'RIGHT') {
+                    ctx.fillStyle = guardGold;
+                    ctx.fillRect(sx + 4, sy - 6 + bob, 2, 5);
+                    ctx.fillStyle = bladeCop;
+                    ctx.fillRect(sx + 5, sy - 7 + bob, 6, 3);
+                }
+                break;
+            }
+
+            case 'CRUDE_DAGGER':
+            case 'PLASMA_DAGGER': {
+                const bladeCol = wepId === 'PLASMA_DAGGER' ? '#ff007f' : '#b0bec5';
+                if (facing === 'DOWN') {
+                    ctx.fillStyle = '#37474f';
+                    ctx.fillRect(sx + 6, sy - 6 + bob, 2, 3);
+                    ctx.fillStyle = bladeCol;
+                    ctx.fillRect(sx + 6, sy - 11 + bob, 2, 6);
+                } else if (facing === 'UP') {
+                    ctx.fillStyle = '#37474f';
+                    ctx.fillRect(sx + 5, sy - 7 + bob, 2, 3);
+                    ctx.fillStyle = bladeCol;
+                    ctx.fillRect(sx + 5, sy - 12 + bob, 2, 6);
+                } else if (facing === 'LEFT') {
+                    ctx.fillStyle = '#37474f';
+                    ctx.fillRect(sx - 6, sy - 7 + bob, 3, 2);
+                    ctx.fillStyle = bladeCol;
+                    ctx.fillRect(sx - 10, sy - 7 + bob, 5, 2);
+                } else if (facing === 'RIGHT') {
+                    ctx.fillStyle = '#37474f';
+                    ctx.fillRect(sx + 3, sy - 7 + bob, 3, 2);
+                    ctx.fillStyle = bladeCol;
+                    ctx.fillRect(sx + 5, sy - 7 + bob, 5, 2);
+                }
+                break;
+            }
+
+            case 'PINE_CLUB':
+            default: {
+                const woodTone = '#8d6e63';
+                const ironBand = '#37474f';
+                if (facing === 'DOWN') {
+                    ctx.fillStyle = woodTone;
+                    ctx.fillRect(sx + 5, sy - 12 + bob, 4, 14);
+                    ctx.fillStyle = ironBand;
+                    ctx.fillRect(sx + 4, sy - 10 + bob, 6, 2);
+                } else if (facing === 'UP') {
+                    ctx.fillStyle = woodTone;
+                    ctx.fillRect(sx + 4, sy - 14 + bob, 4, 15);
+                    ctx.fillStyle = ironBand;
+                    ctx.fillRect(sx + 3, sy - 12 + bob, 6, 2);
+                } else if (facing === 'LEFT') {
+                    ctx.fillStyle = woodTone;
+                    ctx.fillRect(sx - 9, sy - 9 + bob, 11, 4);
+                    ctx.fillStyle = ironBand;
+                    ctx.fillRect(sx - 7, sy - 10 + bob, 2, 6);
+                } else if (facing === 'RIGHT') {
+                    ctx.fillStyle = woodTone;
+                    ctx.fillRect(sx - 1, sy - 9 + bob, 11, 4);
+                    ctx.fillStyle = ironBand;
+                    ctx.fillRect(sx + 5, sy - 10 + bob, 2, 6);
+                }
+                break;
+            }
+        }
+        ctx.restore();
+    }
+
     renderCharacter(char, pal, map = null) {
         const ctx = this.ctx;
         const camX = Math.round(this.camera.x);
@@ -923,6 +1325,13 @@ class RetroRenderer {
         const isMoving = char.vel && char.vel.length() > 5.0;
         const walkCycle = isMoving ? (Math.floor(char.walkTimer || 0) % 2) : 0;
         const bob = (isMoving && walkCycle === 1) ? -1 : 0;
+        const effBob = bob + (isMoving ? 0 : (Math.sin(Date.now() / 240) > 0.4 ? -1 : 0));
+
+        const equippedWep = (char.inventory && char.inventory.equippedWeapon) ? char.inventory.equippedWeapon.id : null;
+        const equippedArm = (char.inventory && char.inventory.equippedArmor) ? char.inventory.equippedArmor.id : null;
+
+        // Draw back armor layer (Genesis Starmantle flowing cape behind body)
+        this.drawEquippedArmorBack(ctx, char, equippedArm, sx, sy, effBob, facing, walkCycle);
 
         // 1. TECHNO-MAGE (Arcane Arcanist with Nanite Orb & Staff)
         if (char.charClass === 'TECHNO_MAGE') {
@@ -939,30 +1348,32 @@ class RetroRenderer {
 
                 // Robe
                 ctx.fillStyle = robeColor;
-                ctx.fillRect(sx - 4, sy - 7 + bob, 8, 11);
+                ctx.fillRect(sx - 4, sy - 7 + effBob, 8, 11);
                 ctx.fillStyle = cyanAccent;
-                ctx.fillRect(sx - 1, sy - 6 + bob, 2, 9); // Central cyan circuit trim
+                ctx.fillRect(sx - 1, sy - 6 + effBob, 2, 9); // Central cyan circuit trim
 
                 // Hood & Face
                 ctx.fillStyle = hoodColor;
-                ctx.fillRect(sx - 4, sy - 13 + bob, 8, 7);
+                ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 7);
                 ctx.fillStyle = skinColor;
-                ctx.fillRect(sx - 2, sy - 11 + bob, 4, 3);
+                ctx.fillRect(sx - 2, sy - 11 + effBob, 4, 3);
                 ctx.fillStyle = cyanAccent;
-                ctx.fillRect(sx - 2, sy - 10 + bob, 1, 1);
-                ctx.fillRect(sx + 1, sy - 10 + bob, 1, 1);
+                ctx.fillRect(sx - 2, sy - 10 + effBob, 1, 1);
+                ctx.fillRect(sx + 1, sy - 10 + effBob, 1, 1);
 
-                // Floating Nanite Orb (Left Hand)
-                ctx.fillStyle = cyanAccent;
-                ctx.beginPath();
-                ctx.arc(sx - 7, sy - 4 + bob, 2.5, 0, Math.PI * 2);
-                ctx.fill();
+                if (!equippedWep) {
+                    // Floating Nanite Orb (Left Hand)
+                    ctx.fillStyle = cyanAccent;
+                    ctx.beginPath();
+                    ctx.arc(sx - 7, sy - 4 + effBob, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
 
-                // Gold Staff (Right Hand)
-                ctx.fillStyle = '#ffb300';
-                ctx.fillRect(sx + 5, sy - 13 + bob, 2, 17);
-                ctx.fillStyle = '#ea80fc';
-                ctx.fillRect(sx + 4, sy - 16 + bob, 4, 3);
+                    // Gold Staff (Right Hand)
+                    ctx.fillStyle = '#ffb300';
+                    ctx.fillRect(sx + 5, sy - 13 + effBob, 2, 17);
+                    ctx.fillStyle = '#ea80fc';
+                    ctx.fillRect(sx + 4, sy - 16 + effBob, 4, 3);
+                }
 
             } else if (facing === 'UP') {
                 // Boots
@@ -972,20 +1383,22 @@ class RetroRenderer {
 
                 // Robe Back
                 ctx.fillStyle = robeColor;
-                ctx.fillRect(sx - 4, sy - 7 + bob, 8, 11);
+                ctx.fillRect(sx - 4, sy - 7 + effBob, 8, 11);
                 ctx.fillStyle = cyanAccent;
-                ctx.fillRect(sx - 1, sy - 6 + bob, 2, 7); // Spine line
+                ctx.fillRect(sx - 1, sy - 6 + effBob, 2, 7); // Spine line
 
                 // Back of Hood
                 ctx.fillStyle = hoodColor;
-                ctx.fillRect(sx - 4, sy - 13 + bob, 8, 7);
-                ctx.fillRect(sx - 1, sy - 14 + bob, 2, 2); // Hood peak
+                ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 7);
+                ctx.fillRect(sx - 1, sy - 14 + effBob, 2, 2); // Hood peak
 
-                // Staff over shoulder
-                ctx.fillStyle = '#ffb300';
-                ctx.fillRect(sx + 5, sy - 14 + bob, 2, 17);
-                ctx.fillStyle = '#ea80fc';
-                ctx.fillRect(sx + 4, sy - 16 + bob, 4, 3);
+                if (!equippedWep) {
+                    // Staff over shoulder
+                    ctx.fillStyle = '#ffb300';
+                    ctx.fillRect(sx + 5, sy - 14 + effBob, 2, 17);
+                    ctx.fillStyle = '#ea80fc';
+                    ctx.fillRect(sx + 4, sy - 16 + effBob, 4, 3);
+                }
 
             } else if (facing === 'LEFT') {
                 // Boots side step
@@ -995,27 +1408,29 @@ class RetroRenderer {
 
                 // Robe Side
                 ctx.fillStyle = robeColor;
-                ctx.fillRect(sx - 4, sy - 7 + bob, 7, 11);
+                ctx.fillRect(sx - 4, sy - 7 + effBob, 7, 11);
 
                 // Hood Profile
                 ctx.fillStyle = hoodColor;
-                ctx.fillRect(sx - 4, sy - 13 + bob, 7, 7);
+                ctx.fillRect(sx - 4, sy - 13 + effBob, 7, 7);
                 ctx.fillStyle = skinColor;
-                ctx.fillRect(sx - 4, sy - 11 + bob, 2, 3);
+                ctx.fillRect(sx - 4, sy - 11 + effBob, 2, 3);
                 ctx.fillStyle = cyanAccent;
-                ctx.fillRect(sx - 4, sy - 10 + bob, 1, 1);
+                ctx.fillRect(sx - 4, sy - 10 + effBob, 1, 1);
 
-                // Floating Orb Forward
-                ctx.fillStyle = cyanAccent;
-                ctx.beginPath();
-                ctx.arc(sx - 8, sy - 4 + bob, 2.5, 0, Math.PI * 2);
-                ctx.fill();
+                if (!equippedWep) {
+                    // Floating Orb Forward
+                    ctx.fillStyle = cyanAccent;
+                    ctx.beginPath();
+                    ctx.arc(sx - 8, sy - 4 + effBob, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
 
-                // Staff Trailing
-                ctx.fillStyle = '#ffb300';
-                ctx.fillRect(sx + 2, sy - 12 + bob, 2, 16);
-                ctx.fillStyle = '#ea80fc';
-                ctx.fillRect(sx + 1, sy - 15 + bob, 4, 3);
+                    // Staff Trailing
+                    ctx.fillStyle = '#ffb300';
+                    ctx.fillRect(sx + 2, sy - 12 + effBob, 2, 16);
+                    ctx.fillStyle = '#ea80fc';
+                    ctx.fillRect(sx + 1, sy - 15 + effBob, 4, 3);
+                }
 
             } else if (facing === 'RIGHT') {
                 // Boots side step
@@ -1025,27 +1440,29 @@ class RetroRenderer {
 
                 // Robe Side
                 ctx.fillStyle = robeColor;
-                ctx.fillRect(sx - 3, sy - 7 + bob, 7, 11);
+                ctx.fillRect(sx - 3, sy - 7 + effBob, 7, 11);
 
                 // Hood Profile
                 ctx.fillStyle = hoodColor;
-                ctx.fillRect(sx - 3, sy - 13 + bob, 7, 7);
+                ctx.fillRect(sx - 3, sy - 13 + effBob, 7, 7);
                 ctx.fillStyle = skinColor;
-                ctx.fillRect(sx + 2, sy - 11 + bob, 2, 3);
+                ctx.fillRect(sx + 2, sy - 11 + effBob, 2, 3);
                 ctx.fillStyle = cyanAccent;
-                ctx.fillRect(sx + 3, sy - 10 + bob, 1, 1);
+                ctx.fillRect(sx + 3, sy - 10 + effBob, 1, 1);
 
-                // Floating Orb Forward
-                ctx.fillStyle = cyanAccent;
-                ctx.beginPath();
-                ctx.arc(sx + 8, sy - 4 + bob, 2.5, 0, Math.PI * 2);
-                ctx.fill();
+                if (!equippedWep) {
+                    // Floating Orb Forward
+                    ctx.fillStyle = cyanAccent;
+                    ctx.beginPath();
+                    ctx.arc(sx + 8, sy - 4 + effBob, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
 
-                // Staff
-                ctx.fillStyle = '#ffb300';
-                ctx.fillRect(sx - 4, sy - 12 + bob, 2, 16);
-                ctx.fillStyle = '#ea80fc';
-                ctx.fillRect(sx - 5, sy - 15 + bob, 4, 3);
+                    // Staff
+                    ctx.fillStyle = '#ffb300';
+                    ctx.fillRect(sx - 4, sy - 12 + effBob, 2, 16);
+                    ctx.fillStyle = '#ea80fc';
+                    ctx.fillRect(sx - 5, sy - 15 + effBob, 4, 3);
+                }
             }
 
         // 2. SUPER-SOLDIER (Heavy Armor Warrior with Broadsword)
@@ -1064,22 +1481,24 @@ class RetroRenderer {
 
                 // Cuirass & Pauldrons
                 ctx.fillStyle = steelArmor;
-                ctx.fillRect(sx - 5, sy - 7 + bob, 10, 11);
+                ctx.fillRect(sx - 5, sy - 7 + effBob, 10, 11);
                 ctx.fillStyle = pauldronOrange;
-                ctx.fillRect(sx - 7, sy - 7 + bob, 2, 5);
-                ctx.fillRect(sx + 5, sy - 7 + bob, 2, 5);
+                ctx.fillRect(sx - 7, sy - 7 + effBob, 2, 5);
+                ctx.fillRect(sx + 5, sy - 7 + effBob, 2, 5);
 
                 // Helmet with horizontal slit visor
                 ctx.fillStyle = '#263238';
-                ctx.fillRect(sx - 4, sy - 13 + bob, 8, 6);
+                ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 6);
                 ctx.fillStyle = visorCyan;
-                ctx.fillRect(sx - 3, sy - 10 + bob, 6, 2);
+                ctx.fillRect(sx - 3, sy - 10 + effBob, 6, 2);
 
-                // Broadsword at side
-                ctx.fillStyle = swordSteel;
-                ctx.fillRect(sx + 6, sy - 12 + bob, 2, 14);
-                ctx.fillStyle = '#ffd54f';
-                ctx.fillRect(sx + 5, sy - 7 + bob, 4, 2);
+                if (!equippedWep) {
+                    // Broadsword at side
+                    ctx.fillStyle = swordSteel;
+                    ctx.fillRect(sx + 6, sy - 12 + effBob, 2, 14);
+                    ctx.fillStyle = '#ffd54f';
+                    ctx.fillRect(sx + 5, sy - 7 + effBob, 4, 2);
+                }
 
             } else if (facing === 'UP') {
                 // Greaves
@@ -1089,21 +1508,23 @@ class RetroRenderer {
 
                 // Backplate
                 ctx.fillStyle = steelArmor;
-                ctx.fillRect(sx - 5, sy - 7 + bob, 10, 11);
+                ctx.fillRect(sx - 5, sy - 7 + effBob, 10, 11);
                 ctx.fillStyle = steelHighlight;
-                ctx.fillRect(sx - 2, sy - 5 + bob, 4, 6);
+                ctx.fillRect(sx - 2, sy - 5 + effBob, 4, 6);
                 ctx.fillStyle = pauldronOrange;
-                ctx.fillRect(sx - 7, sy - 7 + bob, 2, 5);
-                ctx.fillRect(sx + 5, sy - 7 + bob, 2, 5);
+                ctx.fillRect(sx - 7, sy - 7 + effBob, 2, 5);
+                ctx.fillRect(sx + 5, sy - 7 + effBob, 2, 5);
 
                 // Helmet Back
                 ctx.fillStyle = '#263238';
-                ctx.fillRect(sx - 4, sy - 13 + bob, 8, 6);
+                ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 6);
 
-                // Diagonal Broadsword across back
-                ctx.fillStyle = swordSteel;
-                ctx.fillRect(sx - 4, sy - 14 + bob, 8, 2);
-                ctx.fillRect(sx - 1, sy - 10 + bob, 2, 10);
+                if (!equippedWep) {
+                    // Diagonal Broadsword across back
+                    ctx.fillStyle = swordSteel;
+                    ctx.fillRect(sx - 4, sy - 14 + effBob, 8, 2);
+                    ctx.fillRect(sx - 1, sy - 10 + effBob, 2, 10);
+                }
 
             } else if (facing === 'LEFT') {
                 // Greaves
@@ -1113,19 +1534,21 @@ class RetroRenderer {
 
                 // Side Armor
                 ctx.fillStyle = steelArmor;
-                ctx.fillRect(sx - 4, sy - 7 + bob, 8, 11);
+                ctx.fillRect(sx - 4, sy - 7 + effBob, 8, 11);
                 ctx.fillStyle = pauldronOrange;
-                ctx.fillRect(sx - 5, sy - 7 + bob, 3, 5);
+                ctx.fillRect(sx - 5, sy - 7 + effBob, 3, 5);
 
                 // Helmet Profile
                 ctx.fillStyle = '#263238';
-                ctx.fillRect(sx - 4, sy - 13 + bob, 7, 6);
+                ctx.fillRect(sx - 4, sy - 13 + effBob, 7, 6);
                 ctx.fillStyle = visorCyan;
-                ctx.fillRect(sx - 4, sy - 10 + bob, 3, 2);
+                ctx.fillRect(sx - 4, sy - 10 + effBob, 3, 2);
 
-                // Sword Forward
-                ctx.fillStyle = swordSteel;
-                ctx.fillRect(sx - 7, sy - 8 + bob, 3, 11);
+                if (!equippedWep) {
+                    // Sword Forward
+                    ctx.fillStyle = swordSteel;
+                    ctx.fillRect(sx - 7, sy - 8 + effBob, 3, 11);
+                }
 
             } else if (facing === 'RIGHT') {
                 // Greaves
@@ -1135,19 +1558,21 @@ class RetroRenderer {
 
                 // Side Armor
                 ctx.fillStyle = steelArmor;
-                ctx.fillRect(sx - 4, sy - 7 + bob, 8, 11);
+                ctx.fillRect(sx - 4, sy - 7 + effBob, 8, 11);
                 ctx.fillStyle = pauldronOrange;
-                ctx.fillRect(sx + 2, sy - 7 + bob, 3, 5);
+                ctx.fillRect(sx + 2, sy - 7 + effBob, 3, 5);
 
                 // Helmet Profile
                 ctx.fillStyle = '#263238';
-                ctx.fillRect(sx - 3, sy - 13 + bob, 7, 6);
+                ctx.fillRect(sx - 3, sy - 13 + effBob, 7, 6);
                 ctx.fillStyle = visorCyan;
-                ctx.fillRect(sx + 1, sy - 10 + bob, 3, 2);
+                ctx.fillRect(sx + 1, sy - 10 + effBob, 3, 2);
 
-                // Sword Forward
-                ctx.fillStyle = swordSteel;
-                ctx.fillRect(sx + 4, sy - 8 + bob, 3, 11);
+                if (!equippedWep) {
+                    // Sword Forward
+                    ctx.fillStyle = swordSteel;
+                    ctx.fillRect(sx + 4, sy - 8 + effBob, 3, 11);
+                }
             }
 
         // 3. THE FARMER (Deific Harvester with Straw Hat & Cosmic Hoe - Matching Image 3)
@@ -1167,27 +1592,29 @@ class RetroRenderer {
 
                 // Denim Overalls & Plaid Shirt
                 ctx.fillStyle = overalls;
-                ctx.fillRect(sx - 4, sy - 6 + bob, 8, 10);
+                ctx.fillRect(sx - 4, sy - 6 + effBob, 8, 10);
                 ctx.fillStyle = plaidRed;
-                ctx.fillRect(sx - 6, sy - 6 + bob, 2, 6);
-                ctx.fillRect(sx + 4, sy - 6 + bob, 2, 6);
+                ctx.fillRect(sx - 6, sy - 6 + effBob, 2, 6);
+                ctx.fillRect(sx + 4, sy - 6 + effBob, 2, 6);
 
                 // Straw Hat & Face
                 ctx.fillStyle = strawHat;
-                ctx.fillRect(sx - 7, sy - 13 + bob, 14, 3);
+                ctx.fillRect(sx - 7, sy - 13 + effBob, 14, 3);
                 ctx.fillStyle = strawDark;
-                ctx.fillRect(sx - 4, sy - 16 + bob, 8, 4);
+                ctx.fillRect(sx - 4, sy - 16 + effBob, 8, 4);
                 ctx.fillStyle = skinColor;
-                ctx.fillRect(sx - 3, sy - 10 + bob, 6, 4);
+                ctx.fillRect(sx - 3, sy - 10 + effBob, 6, 4);
                 ctx.fillStyle = '#eeeeee'; // Beard
-                ctx.fillRect(sx - 3, sy - 7 + bob, 6, 2);
+                ctx.fillRect(sx - 3, sy - 7 + effBob, 6, 2);
 
-                // Cosmic Golden Hoe
-                ctx.fillStyle = cosmicHoe;
-                ctx.fillRect(sx + 5, sy - 10 + bob, 2, 14);
-                ctx.fillRect(sx + 5, sy - 12 + bob, 5, 2);
-                ctx.fillStyle = '#76ff03'; // Reality sprout
-                ctx.fillRect(sx + 8, sy - 14 + bob, 2, 2);
+                if (!equippedWep) {
+                    // Cosmic Golden Hoe
+                    ctx.fillStyle = cosmicHoe;
+                    ctx.fillRect(sx + 5, sy - 10 + effBob, 2, 14);
+                    ctx.fillRect(sx + 5, sy - 12 + effBob, 5, 2);
+                    ctx.fillStyle = '#76ff03'; // Reality sprout
+                    ctx.fillRect(sx + 8, sy - 14 + effBob, 2, 2);
+                }
 
             } else if (facing === 'UP') { // Back view matching Image 3!
                 // Boots
@@ -1197,23 +1624,25 @@ class RetroRenderer {
 
                 // Overalls Back
                 ctx.fillStyle = overalls;
-                ctx.fillRect(sx - 4, sy - 6 + bob, 8, 10);
+                ctx.fillRect(sx - 4, sy - 6 + effBob, 8, 10);
                 ctx.fillStyle = plaidRed;
-                ctx.fillRect(sx - 6, sy - 6 + bob, 2, 6);
-                ctx.fillRect(sx + 4, sy - 6 + bob, 2, 6);
+                ctx.fillRect(sx - 6, sy - 6 + effBob, 2, 6);
+                ctx.fillRect(sx + 4, sy - 6 + effBob, 2, 6);
                 ctx.fillStyle = strawDark;
-                ctx.fillRect(sx - 2, sy - 5 + bob, 4, 2); // Suspenders cross
+                ctx.fillRect(sx - 2, sy - 5 + effBob, 4, 2); // Suspenders cross
 
                 // Straw Hat seen from behind/above
                 ctx.fillStyle = strawHat;
-                ctx.fillRect(sx - 6, sy - 16 + bob, 12, 7);
+                ctx.fillRect(sx - 6, sy - 16 + effBob, 12, 7);
                 ctx.fillStyle = strawDark;
-                ctx.fillRect(sx - 4, sy - 14 + bob, 8, 2);
+                ctx.fillRect(sx - 4, sy - 14 + effBob, 8, 2);
 
-                // Hoe carried over shoulder
-                ctx.fillStyle = cosmicHoe;
-                ctx.fillRect(sx + 4, sy - 14 + bob, 2, 16);
-                ctx.fillRect(sx + 4, sy - 16 + bob, 4, 2);
+                if (!equippedWep) {
+                    // Hoe carried over shoulder
+                    ctx.fillStyle = cosmicHoe;
+                    ctx.fillRect(sx + 4, sy - 14 + effBob, 2, 16);
+                    ctx.fillRect(sx + 4, sy - 16 + effBob, 4, 2);
+                }
 
             } else if (facing === 'LEFT') {
                 // Boots
@@ -1223,24 +1652,26 @@ class RetroRenderer {
 
                 // Overalls Side
                 ctx.fillStyle = overalls;
-                ctx.fillRect(sx - 4, sy - 6 + bob, 7, 10);
+                ctx.fillRect(sx - 4, sy - 6 + effBob, 7, 10);
                 ctx.fillStyle = plaidRed;
-                ctx.fillRect(sx - 4, sy - 6 + bob, 2, 5);
+                ctx.fillRect(sx - 4, sy - 6 + effBob, 2, 5);
 
                 // Straw Hat Profile
                 ctx.fillStyle = strawHat;
-                ctx.fillRect(sx - 6, sy - 14 + bob, 11, 4);
+                ctx.fillRect(sx - 6, sy - 14 + effBob, 11, 4);
                 ctx.fillStyle = strawDark;
-                ctx.fillRect(sx - 4, sy - 16 + bob, 6, 3);
+                ctx.fillRect(sx - 4, sy - 16 + effBob, 6, 3);
                 ctx.fillStyle = skinColor;
-                ctx.fillRect(sx - 4, sy - 10 + bob, 4, 4);
+                ctx.fillRect(sx - 4, sy - 10 + effBob, 4, 4);
                 ctx.fillStyle = '#eeeeee';
-                ctx.fillRect(sx - 4, sy - 7 + bob, 3, 2);
+                ctx.fillRect(sx - 4, sy - 7 + effBob, 3, 2);
 
-                // Hoe Forward
-                ctx.fillStyle = cosmicHoe;
-                ctx.fillRect(sx - 7, sy - 10 + bob, 2, 13);
-                ctx.fillRect(sx - 9, sy - 12 + bob, 4, 2);
+                if (!equippedWep) {
+                    // Hoe Forward
+                    ctx.fillStyle = cosmicHoe;
+                    ctx.fillRect(sx - 7, sy - 10 + effBob, 2, 13);
+                    ctx.fillRect(sx - 9, sy - 12 + effBob, 4, 2);
+                }
 
             } else if (facing === 'RIGHT') {
                 // Boots
@@ -1250,24 +1681,26 @@ class RetroRenderer {
 
                 // Overalls Side
                 ctx.fillStyle = overalls;
-                ctx.fillRect(sx - 3, sy - 6 + bob, 7, 10);
+                ctx.fillRect(sx - 3, sy - 6 + effBob, 7, 10);
                 ctx.fillStyle = plaidRed;
-                ctx.fillRect(sx + 2, sy - 6 + bob, 2, 5);
+                ctx.fillRect(sx + 2, sy - 6 + effBob, 2, 5);
 
                 // Straw Hat Profile
                 ctx.fillStyle = strawHat;
-                ctx.fillRect(sx - 5, sy - 14 + bob, 11, 4);
+                ctx.fillRect(sx - 5, sy - 14 + effBob, 11, 4);
                 ctx.fillStyle = strawDark;
-                ctx.fillRect(sx - 2, sy - 16 + bob, 6, 3);
+                ctx.fillRect(sx - 2, sy - 16 + effBob, 6, 3);
                 ctx.fillStyle = skinColor;
-                ctx.fillRect(sx, sy - 10 + bob, 4, 4);
+                ctx.fillRect(sx, sy - 10 + effBob, 4, 4);
                 ctx.fillStyle = '#eeeeee';
-                ctx.fillRect(sx + 1, sy - 7 + bob, 3, 2);
+                ctx.fillRect(sx + 1, sy - 7 + effBob, 3, 2);
 
-                // Hoe Forward
-                ctx.fillStyle = cosmicHoe;
-                ctx.fillRect(sx + 5, sy - 10 + bob, 2, 13);
-                ctx.fillRect(sx + 5, sy - 12 + bob, 4, 2);
+                if (!equippedWep) {
+                    // Hoe Forward
+                    ctx.fillStyle = cosmicHoe;
+                    ctx.fillRect(sx + 5, sy - 10 + effBob, 2, 13);
+                    ctx.fillRect(sx + 5, sy - 12 + effBob, 4, 2);
+                }
             }
 
         // 4. CHRONO-GLITCHER (Reality/Time Anomaly with Temporal Tuning Blade)
@@ -1292,26 +1725,28 @@ class RetroRenderer {
 
                 // Cyber-Trench Coat
                 ctx.fillStyle = coatLight;
-                ctx.fillRect(csx - 4, sy - 7 + bob, 8, 11);
+                ctx.fillRect(csx - 4, sy - 7 + effBob, 8, 11);
                 ctx.fillStyle = glitchMagenta;
-                ctx.fillRect(csx - 1, sy - 6 + bob, 2, 9); // Central glitch seam
+                ctx.fillRect(csx - 1, sy - 6 + effBob, 2, 9); // Central glitch seam
                 ctx.fillStyle = cyanAccent;
-                ctx.fillRect(csx - 3, sy - 5 + bob, 1, 3); // Reality static
+                ctx.fillRect(csx - 3, sy - 5 + effBob, 1, 3); // Reality static
 
                 // Temporal Hood & Face
                 ctx.fillStyle = coatDark;
-                ctx.fillRect(csx - 4, sy - 13 + bob, 8, 7);
+                ctx.fillRect(csx - 4, sy - 13 + effBob, 8, 7);
                 ctx.fillStyle = skinColor;
-                ctx.fillRect(csx - 2, sy - 11 + bob, 4, 3);
+                ctx.fillRect(csx - 2, sy - 11 + effBob, 4, 3);
                 // Glowing cyan chrono-visor
                 ctx.fillStyle = cyanAccent;
-                ctx.fillRect(csx - 2, sy - 10 + bob, 4, 1);
+                ctx.fillRect(csx - 2, sy - 10 + effBob, 4, 1);
 
-                // Tuning Blade (Right Hand)
-                ctx.fillStyle = cyanAccent;
-                ctx.fillRect(csx + 5, sy - 12 + bob, 2, 16);
-                ctx.fillStyle = bladeColor;
-                ctx.fillRect(csx + 4, sy - 15 + bob, 4, 4);
+                if (!equippedWep) {
+                    // Tuning Blade (Right Hand)
+                    ctx.fillStyle = cyanAccent;
+                    ctx.fillRect(csx + 5, sy - 12 + effBob, 2, 16);
+                    ctx.fillStyle = bladeColor;
+                    ctx.fillRect(csx + 4, sy - 15 + effBob, 4, 4);
+                }
 
             } else if (facing === 'UP') {
                 // Boots
@@ -1321,22 +1756,24 @@ class RetroRenderer {
 
                 // Coat Back with Tachyon Spine line
                 ctx.fillStyle = coatLight;
-                ctx.fillRect(csx - 4, sy - 7 + bob, 8, 11);
+                ctx.fillRect(csx - 4, sy - 7 + effBob, 8, 11);
                 ctx.fillStyle = cyanAccent;
-                ctx.fillRect(csx - 1, sy - 6 + bob, 2, 8);
+                ctx.fillRect(csx - 1, sy - 6 + effBob, 2, 8);
                 ctx.fillStyle = glitchMagenta;
-                ctx.fillRect(csx - 3, sy - 3 + bob, 1, 2);
+                ctx.fillRect(csx - 3, sy - 3 + effBob, 1, 2);
 
                 // Hood back
                 ctx.fillStyle = coatDark;
-                ctx.fillRect(csx - 4, sy - 13 + bob, 8, 7);
-                ctx.fillRect(csx - 1, sy - 14 + bob, 2, 2);
+                ctx.fillRect(csx - 4, sy - 13 + effBob, 8, 7);
+                ctx.fillRect(csx - 1, sy - 14 + effBob, 2, 2);
 
-                // Tuning blade raised
-                ctx.fillStyle = cyanAccent;
-                ctx.fillRect(csx + 5, sy - 14 + bob, 2, 17);
-                ctx.fillStyle = bladeColor;
-                ctx.fillRect(csx + 4, sy - 16 + bob, 4, 3);
+                if (!equippedWep) {
+                    // Tuning blade raised
+                    ctx.fillStyle = cyanAccent;
+                    ctx.fillRect(csx + 5, sy - 14 + effBob, 2, 17);
+                    ctx.fillStyle = bladeColor;
+                    ctx.fillRect(csx + 4, sy - 16 + effBob, 4, 3);
+                }
 
             } else if (facing === 'LEFT') {
                 ctx.fillStyle = '#10002b';
@@ -1344,22 +1781,24 @@ class RetroRenderer {
                 ctx.fillRect(csx + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
 
                 ctx.fillStyle = coatLight;
-                ctx.fillRect(csx - 4, sy - 7 + bob, 7, 11);
+                ctx.fillRect(csx - 4, sy - 7 + effBob, 7, 11);
                 ctx.fillStyle = glitchMagenta;
-                ctx.fillRect(csx - 2, sy - 4 + bob, 1, 5);
+                ctx.fillRect(csx - 2, sy - 4 + effBob, 1, 5);
 
                 ctx.fillStyle = coatDark;
-                ctx.fillRect(csx - 4, sy - 13 + bob, 7, 7);
+                ctx.fillRect(csx - 4, sy - 13 + effBob, 7, 7);
                 ctx.fillStyle = skinColor;
-                ctx.fillRect(csx - 4, sy - 11 + bob, 2, 3);
+                ctx.fillRect(csx - 4, sy - 11 + effBob, 2, 3);
                 ctx.fillStyle = cyanAccent;
-                ctx.fillRect(csx - 4, sy - 10 + bob, 2, 1);
+                ctx.fillRect(csx - 4, sy - 10 + effBob, 2, 1);
 
-                // Blade pointed left
-                ctx.fillStyle = cyanAccent;
-                ctx.fillRect(csx - 7, sy - 10 + bob, 2, 14);
-                ctx.fillStyle = bladeColor;
-                ctx.fillRect(csx - 9, sy - 13 + bob, 4, 3);
+                if (!equippedWep) {
+                    // Blade pointed left
+                    ctx.fillStyle = cyanAccent;
+                    ctx.fillRect(csx - 7, sy - 10 + effBob, 2, 14);
+                    ctx.fillStyle = bladeColor;
+                    ctx.fillRect(csx - 9, sy - 13 + effBob, 4, 3);
+                }
 
             } else if (facing === 'RIGHT') {
                 ctx.fillStyle = '#10002b';
@@ -1367,22 +1806,24 @@ class RetroRenderer {
                 ctx.fillRect(csx + 2 + (walkCycle === 1 ? 1 : 0), sy + 4, 3, 2);
 
                 ctx.fillStyle = coatLight;
-                ctx.fillRect(csx - 3, sy - 7 + bob, 7, 11);
+                ctx.fillRect(csx - 3, sy - 7 + effBob, 7, 11);
                 ctx.fillStyle = glitchMagenta;
-                ctx.fillRect(csx + 1, sy - 4 + bob, 1, 5);
+                ctx.fillRect(csx + 1, sy - 4 + effBob, 1, 5);
 
                 ctx.fillStyle = coatDark;
-                ctx.fillRect(csx - 3, sy - 13 + bob, 7, 7);
+                ctx.fillRect(csx - 3, sy - 13 + effBob, 7, 7);
                 ctx.fillStyle = skinColor;
-                ctx.fillRect(csx + 2, sy - 11 + bob, 2, 3);
+                ctx.fillRect(csx + 2, sy - 11 + effBob, 2, 3);
                 ctx.fillStyle = cyanAccent;
-                ctx.fillRect(csx + 2, sy - 10 + bob, 2, 1);
+                ctx.fillRect(csx + 2, sy - 10 + effBob, 2, 1);
 
-                // Blade pointed right
-                ctx.fillStyle = cyanAccent;
-                ctx.fillRect(csx + 5, sy - 10 + bob, 2, 14);
-                ctx.fillStyle = bladeColor;
-                ctx.fillRect(csx + 5, sy - 13 + bob, 4, 3);
+                if (!equippedWep) {
+                    // Blade pointed right
+                    ctx.fillStyle = cyanAccent;
+                    ctx.fillRect(csx + 5, sy - 10 + effBob, 2, 14);
+                    ctx.fillStyle = bladeColor;
+                    ctx.fillRect(csx + 5, sy - 13 + effBob, 4, 3);
+                }
             }
 
         // 5. SOLARION-ARCHITECT (Hard-Light Photon Engineer)
@@ -1401,27 +1842,29 @@ class RetroRenderer {
 
                 // Solar Armor Cuirass
                 ctx.fillStyle = goldBronze;
-                ctx.fillRect(sx - 4, sy - 7 + bob, 8, 11);
+                ctx.fillRect(sx - 4, sy - 7 + effBob, 8, 11);
                 // Hard-Light Photon Core in center
                 ctx.fillStyle = photonCyan;
-                ctx.fillRect(sx - 1, sy - 5 + bob, 2, 3);
+                ctx.fillRect(sx - 1, sy - 5 + effBob, 2, 3);
                 ctx.fillStyle = solarOrange;
-                ctx.fillRect(sx - 5, sy - 6 + bob, 2, 5); // Pauldron L
-                ctx.fillRect(sx + 3, sy - 6 + bob, 2, 5); // Pauldron R
+                ctx.fillRect(sx - 5, sy - 6 + effBob, 2, 5); // Pauldron L
+                ctx.fillRect(sx + 3, sy - 6 + effBob, 2, 5); // Pauldron R
 
                 // Solar Helm & Optics
                 ctx.fillStyle = solarAmber;
-                ctx.fillRect(sx - 4, sy - 13 + bob, 8, 7);
+                ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 7);
                 ctx.fillStyle = chassisWhite;
-                ctx.fillRect(sx - 2, sy - 10 + bob, 4, 2); // Visor
+                ctx.fillRect(sx - 2, sy - 10 + effBob, 4, 2); // Visor
                 ctx.fillStyle = solarOrange;
-                ctx.fillRect(sx - 1, sy - 15 + bob, 2, 3); // Solar Crest
+                ctx.fillRect(sx - 1, sy - 15 + effBob, 2, 3); // Solar Crest
 
-                // Hard-light wand / prism emitter
-                ctx.fillStyle = '#fbbf24';
-                ctx.fillRect(sx + 5, sy - 12 + bob, 2, 16);
-                ctx.fillStyle = photonCyan;
-                ctx.fillRect(sx + 4, sy - 15 + bob, 4, 4);
+                if (!equippedWep) {
+                    // Hard-light wand / prism emitter
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.fillRect(sx + 5, sy - 12 + effBob, 2, 16);
+                    ctx.fillStyle = photonCyan;
+                    ctx.fillRect(sx + 4, sy - 15 + effBob, 4, 4);
+                }
 
             } else if (facing === 'UP') {
                 ctx.fillStyle = '#78350f';
@@ -1430,22 +1873,24 @@ class RetroRenderer {
 
                 // Cuirass back with solar radiators
                 ctx.fillStyle = goldBronze;
-                ctx.fillRect(sx - 4, sy - 7 + bob, 8, 11);
+                ctx.fillRect(sx - 4, sy - 7 + effBob, 8, 11);
                 ctx.fillStyle = solarOrange;
-                ctx.fillRect(sx - 2, sy - 6 + bob, 4, 8); // Radiator vent
+                ctx.fillRect(sx - 2, sy - 6 + effBob, 4, 8); // Radiator vent
                 ctx.fillStyle = '#ffd54f';
-                ctx.fillRect(sx - 1, sy - 4 + bob, 2, 4);
+                ctx.fillRect(sx - 1, sy - 4 + effBob, 2, 4);
 
                 // Helm back
                 ctx.fillStyle = solarAmber;
-                ctx.fillRect(sx - 4, sy - 13 + bob, 8, 7);
+                ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 7);
                 ctx.fillStyle = solarOrange;
-                ctx.fillRect(sx - 1, sy - 15 + bob, 2, 3);
+                ctx.fillRect(sx - 1, sy - 15 + effBob, 2, 3);
 
-                ctx.fillStyle = '#fbbf24';
-                ctx.fillRect(sx + 5, sy - 13 + bob, 2, 16);
-                ctx.fillStyle = photonCyan;
-                ctx.fillRect(sx + 4, sy - 15 + bob, 4, 3);
+                if (!equippedWep) {
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.fillRect(sx + 5, sy - 13 + effBob, 2, 16);
+                    ctx.fillStyle = photonCyan;
+                    ctx.fillRect(sx + 4, sy - 15 + effBob, 4, 3);
+                }
 
             } else if (facing === 'LEFT') {
                 ctx.fillStyle = '#78350f';
@@ -1453,19 +1898,21 @@ class RetroRenderer {
                 ctx.fillRect(sx + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
 
                 ctx.fillStyle = goldBronze;
-                ctx.fillRect(sx - 4, sy - 7 + bob, 7, 11);
+                ctx.fillRect(sx - 4, sy - 7 + effBob, 7, 11);
                 ctx.fillStyle = solarOrange;
-                ctx.fillRect(sx - 3, sy - 6 + bob, 3, 5);
+                ctx.fillRect(sx - 3, sy - 6 + effBob, 3, 5);
 
                 ctx.fillStyle = solarAmber;
-                ctx.fillRect(sx - 4, sy - 13 + bob, 7, 7);
+                ctx.fillRect(sx - 4, sy - 13 + effBob, 7, 7);
                 ctx.fillStyle = chassisWhite;
-                ctx.fillRect(sx - 4, sy - 10 + bob, 3, 2);
+                ctx.fillRect(sx - 4, sy - 10 + effBob, 3, 2);
 
-                ctx.fillStyle = '#fbbf24';
-                ctx.fillRect(sx - 7, sy - 10 + bob, 2, 14);
-                ctx.fillStyle = photonCyan;
-                ctx.fillRect(sx - 8, sy - 13 + bob, 4, 4);
+                if (!equippedWep) {
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.fillRect(sx - 7, sy - 10 + effBob, 2, 14);
+                    ctx.fillStyle = photonCyan;
+                    ctx.fillRect(sx - 8, sy - 13 + effBob, 4, 4);
+                }
 
             } else if (facing === 'RIGHT') {
                 ctx.fillStyle = '#78350f';
@@ -1473,21 +1920,29 @@ class RetroRenderer {
                 ctx.fillRect(sx + 2 + (walkCycle === 1 ? 1 : 0), sy + 4, 3, 2);
 
                 ctx.fillStyle = goldBronze;
-                ctx.fillRect(sx - 3, sy - 7 + bob, 7, 11);
+                ctx.fillRect(sx - 3, sy - 7 + effBob, 7, 11);
                 ctx.fillStyle = solarOrange;
-                ctx.fillRect(sx, sy - 6 + bob, 3, 5);
+                ctx.fillRect(sx, sy - 6 + effBob, 3, 5);
 
                 ctx.fillStyle = solarAmber;
-                ctx.fillRect(sx - 3, sy - 13 + bob, 7, 7);
+                ctx.fillRect(sx - 3, sy - 13 + effBob, 7, 7);
                 ctx.fillStyle = chassisWhite;
-                ctx.fillRect(sx + 1, sy - 10 + bob, 3, 2);
+                ctx.fillRect(sx + 1, sy - 10 + effBob, 3, 2);
 
-                ctx.fillStyle = '#fbbf24';
-                ctx.fillRect(sx + 5, sy - 10 + bob, 2, 14);
-                ctx.fillStyle = photonCyan;
-                ctx.fillRect(sx + 4, sy - 13 + bob, 4, 4);
+                if (!equippedWep) {
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.fillRect(sx + 5, sy - 10 + effBob, 2, 14);
+                    ctx.fillStyle = photonCyan;
+                    ctx.fillRect(sx + 4, sy - 13 + effBob, 4, 4);
+                }
             }
         }
+
+        // Draw equipped front armor (Vanguard Chestplate, Iron Aegis, Shield, Flux Band)
+        this.drawEquippedArmorFront(ctx, char, equippedArm, sx, sy, effBob, facing, walkCycle);
+
+        // Draw equipped weapon (Cudgel, Flint Dagger, Ultrasonic Sword, Warhammer, Solarion Broadsword, Scythe)
+        this.drawEquippedWeapon(ctx, char, equippedWep, sx, sy, effBob, facing, walkCycle);
 
         // Draw Dash Afterimages (Ghost trail)
         if (char.dashTrail && char.dashTrail.length > 0) {
@@ -2715,23 +3170,7 @@ class RetroRenderer {
 
         this.saveStarPositions = [];
 
-        // If at least 2 active saves, draw connecting constellation starlight threads
-        if (activeSaves.length > 1) {
-            ctx.save();
-            ctx.strokeStyle = 'rgba(0, 229, 255, 0.25)';
-            ctx.lineWidth = 1;
-            ctx.setLineDash([2, 4]);
-            ctx.beginPath();
-            for (let a = 0; a < activeSaves.length; a++) {
-                const pt = CONSTELLATION_POINTS[activeSaves[a].index % CONSTELLATION_POINTS.length];
-                const px = Math.round(w * pt.rx);
-                const py = Math.round(h * pt.ry);
-                if (a === 0) ctx.moveTo(px, py);
-                else ctx.lineTo(px, py);
-            }
-            ctx.stroke();
-            ctx.restore();
-        }
+        // Save stars float independently in the upper sky (disconnected for pristine look)
 
         // Draw each persistent bright save star
         for (let a = 0; a < activeSaves.length; a++) {
@@ -3128,105 +3567,6 @@ class RetroRenderer {
         const dailyState = (this.game && this.game.getDailyHoldingState) ? this.game.getDailyHoldingState() : { currentDay: 1, claimedDays: [] };
         this.holdingPointPositions = [];
 
-        // Helper: Draw Glowing Detailed Celestial Orb (No Text, Pure Atmosphere)
-        const drawCelestialOrb = (ox, oy, orbType, dayNum) => {
-            ctx.save();
-            const hoverY = oy - 20 + Math.sin(t * 2.8 + dayNum) * 4;
-            const rot = t * 1.2 + dayNum * 0.8;
-            const pulse = 1.0 + 0.18 * Math.sin(t * 3.5 + dayNum);
-
-            // 1. Ambient lighting cast onto the pedestal below
-            const baseGlow = ctx.createRadialGradient(ox, oy + 4, 2, ox, oy + 4, 30);
-            baseGlow.addColorStop(0, 'rgba(0, 229, 255, 0.45)');
-            baseGlow.addColorStop(0.7, 'rgba(0, 229, 255, 0.12)');
-            baseGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            ctx.fillStyle = baseGlow;
-            ctx.beginPath();
-            ctx.ellipse(ox, oy + 4, 28, 12, 0, 0, Math.PI * 2);
-            ctx.fill();
-
-            // 2. Swirling Celestial Clouds & Wisps
-            const smokeColors = {
-                wisp: ['rgba(224, 247, 250, 0.65)', 'rgba(0, 229, 255, 0.45)', 'rgba(0, 145, 234, 0.25)'],
-                sol: ['rgba(255, 249, 196, 0.70)', 'rgba(255, 213, 79, 0.50)', 'rgba(255, 152, 0, 0.25)'],
-                nebula: ['rgba(243, 229, 245, 0.70)', 'rgba(224, 64, 251, 0.50)', 'rgba(123, 31, 162, 0.25)'],
-                chronos: ['rgba(232, 245, 233, 0.70)', 'rgba(105, 240, 174, 0.50)', 'rgba(0, 200, 83, 0.25)'],
-                eclipse: ['rgba(238, 238, 238, 0.65)', 'rgba(176, 190, 197, 0.50)', 'rgba(55, 71, 79, 0.3)'],
-                singularity: ['rgba(255, 255, 255, 0.85)', 'rgba(255, 213, 79, 0.65)', 'rgba(0, 229, 255, 0.45)']
-            };
-            const pal = smokeColors[orbType] || smokeColors.wisp;
-
-            // Outer rotating ethereal celestial plumes
-            for (let w = 0; w < 6; w++) {
-                const angle = rot + (w * Math.PI * 2) / 6;
-                const dist = (12 + 4 * Math.sin(t * 3.0 + w * 2)) * pulse;
-                const wx = ox + Math.cos(angle) * dist;
-                const wy = hoverY + Math.sin(angle) * (dist * 0.75);
-                const wRadius = (6 + 3 * Math.cos(t * 2.5 + w)) * pulse;
-
-                const smokeGrad = ctx.createRadialGradient(wx, wy, 1, wx, wy, wRadius);
-                smokeGrad.addColorStop(0, pal[0]);
-                smokeGrad.addColorStop(0.5, pal[1]);
-                smokeGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-                ctx.fillStyle = smokeGrad;
-                ctx.beginPath();
-                ctx.arc(wx, wy, wRadius, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // Inner dense swirling nebula core
-            for (let s = 0; s < 4; s++) {
-                const sAngle = -rot * 1.5 + (s * Math.PI) / 2;
-                const sDist = (6 + 2 * Math.sin(t * 4.0 + s)) * pulse;
-                const sx = ox + Math.cos(sAngle) * sDist;
-                const sy = hoverY + Math.sin(sAngle) * (sDist * 0.7);
-                const sRad = 8 * pulse;
-
-                const inGrad = ctx.createRadialGradient(sx, sy, 1, sx, sy, sRad);
-                inGrad.addColorStop(0, pal[0]);
-                inGrad.addColorStop(0.6, pal[2]);
-                inGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-                ctx.fillStyle = inGrad;
-                ctx.beginPath();
-                ctx.arc(sx, sy, sRad, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            // Orbiting Stardust Gyroscope Rings (Singularity & Nebula)
-            if (orbType === 'singularity' || orbType === 'nebula') {
-                ctx.strokeStyle = pal[1];
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.ellipse(ox, hoverY, 16 * pulse, 6 * pulse, rot * 0.8, 0, Math.PI * 2);
-                ctx.stroke();
-            }
-
-            // Core Incandescent Luminous Plasma Sphere
-            const coreRad = 7 * pulse;
-            const coreGrad = ctx.createRadialGradient(ox, hoverY - 1, 1, ox, hoverY, coreRad);
-            coreGrad.addColorStop(0, '#ffffff');
-            coreGrad.addColorStop(0.4, pal[0]);
-            coreGrad.addColorStop(0.85, pal[1]);
-            coreGrad.addColorStop(1, pal[2]);
-            ctx.fillStyle = coreGrad;
-            ctx.beginPath();
-            ctx.arc(ox, hoverY, coreRad, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Ascending Sparks & Embers
-            for (let sp = 0; sp < 4; sp++) {
-                const sparkProg = (t * 20 + sp * 25 + dayNum * 17) % 36;
-                const spX = ox + Math.sin(t * 3.5 + sp * 2) * (6 + sparkProg * 0.2);
-                const spY = hoverY - 6 - sparkProg;
-                const spAlpha = Math.max(0, 1.0 - (sparkProg / 36));
-                ctx.fillStyle = (sp % 2 === 0) ? `rgba(255, 255, 255, ${spAlpha})` : `rgba(0, 229, 255, ${spAlpha})`;
-                ctx.fillRect(spX, spY, 1.5, 1.5);
-            }
-
-            // User Requirement: No writing / no text rendered on holding points
-            ctx.restore();
-        };
-
         // Render each of the 6 holding points
         for (const cl of holdingPoints) {
             // Draw Carved Stone Runic Pedestal Stand
@@ -3272,7 +3612,7 @@ class RetroRenderer {
 
             if (isUnlocked && !isClaimed) {
                 // Active Glowing Celestial Orb ready to collect!
-                drawCelestialOrb(cl.x, cl.y, cl.type, cl.day);
+                this.drawCelestialOrb(ctx, cl.x, cl.y, cl.type, t, 1.0, cl.day, true);
             } else if (isClaimed) {
                 // Claimed serene starlight font in basin (pure starlight pool, no text)
                 ctx.save();
@@ -3737,6 +4077,123 @@ class RetroRenderer {
             }
         }
         ctx.fillText(line, x, y);
+    }
+
+    drawCelestialOrb(ctx, ox, oy, orbType, t, scale = 1.0, dayNum = 1, isPedestalOffset = true) {
+        ctx.save();
+        const hoverY = isPedestalOffset
+            ? (oy - 20 * scale + Math.sin(t * 2.8 + dayNum) * 4 * scale)
+            : (oy + Math.sin(t * 2.8 + dayNum) * 3 * scale);
+        const rot = t * 1.2 + dayNum * 0.8;
+        const pulse = (1.0 + 0.18 * Math.sin(t * 3.5 + dayNum)) * scale;
+
+        if (isPedestalOffset) {
+            // Ambient lighting cast onto the pedestal below
+            const baseGlow = ctx.createRadialGradient(ox, oy + 4 * scale, 2 * scale, ox, oy + 4 * scale, 30 * scale);
+            baseGlow.addColorStop(0, 'rgba(0, 229, 255, 0.45)');
+            baseGlow.addColorStop(0.7, 'rgba(0, 229, 255, 0.12)');
+            baseGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = baseGlow;
+            ctx.beginPath();
+            ctx.ellipse(ox, oy + 4 * scale, 28 * scale, 12 * scale, 0, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // General ambient backlight glow for standalone UI cards / remains
+            const baseGlow = ctx.createRadialGradient(ox, hoverY, 4 * scale, ox, hoverY, 36 * scale);
+            baseGlow.addColorStop(0, 'rgba(0, 229, 255, 0.35)');
+            baseGlow.addColorStop(0.6, 'rgba(0, 229, 255, 0.10)');
+            baseGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = baseGlow;
+            ctx.beginPath();
+            ctx.arc(ox, hoverY, 36 * scale, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Swirling Celestial Clouds & Wisps
+        const smokeColors = {
+            wisp: ['rgba(224, 247, 250, 0.65)', 'rgba(0, 229, 255, 0.45)', 'rgba(0, 145, 234, 0.25)'],
+            sol: ['rgba(255, 249, 196, 0.70)', 'rgba(255, 213, 79, 0.50)', 'rgba(255, 152, 0, 0.25)'],
+            nebula: ['rgba(243, 229, 245, 0.70)', 'rgba(224, 64, 251, 0.50)', 'rgba(123, 31, 162, 0.25)'],
+            chronos: ['rgba(232, 245, 233, 0.70)', 'rgba(105, 240, 174, 0.50)', 'rgba(0, 200, 83, 0.25)'],
+            eclipse: ['rgba(238, 238, 238, 0.65)', 'rgba(176, 190, 197, 0.50)', 'rgba(55, 71, 79, 0.3)'],
+            singularity: ['rgba(255, 255, 255, 0.85)', 'rgba(255, 213, 79, 0.65)', 'rgba(0, 229, 255, 0.45)']
+        };
+        const pal = smokeColors[orbType] || smokeColors.wisp;
+
+        // Outer rotating ethereal celestial plumes
+        for (let w = 0; w < 6; w++) {
+            const angle = rot + (w * Math.PI * 2) / 6;
+            const dist = (12 + 4 * Math.sin(t * 3.0 + w * 2)) * pulse;
+            const wx = ox + Math.cos(angle) * dist;
+            const wy = hoverY + Math.sin(angle) * (dist * 0.75);
+            const wRadius = (6 + 3 * Math.cos(t * 2.5 + w)) * pulse;
+
+            const smokeGrad = ctx.createRadialGradient(wx, wy, 1, wx, wy, wRadius);
+            smokeGrad.addColorStop(0, pal[0]);
+            smokeGrad.addColorStop(0.5, pal[1]);
+            smokeGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = smokeGrad;
+            ctx.beginPath();
+            ctx.arc(wx, wy, wRadius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Inner dense swirling nebula core
+        for (let s = 0; s < 4; s++) {
+            const sAngle = -rot * 1.5 + (s * Math.PI) / 2;
+            const sDist = (6 + 2 * Math.sin(t * 4.0 + s)) * pulse;
+            const sx = ox + Math.cos(sAngle) * sDist;
+            const sy = hoverY + Math.sin(sAngle) * (sDist * 0.7);
+            const sRad = 8 * pulse;
+
+            const inGrad = ctx.createRadialGradient(sx, sy, 1, sx, sy, sRad);
+            inGrad.addColorStop(0, pal[0]);
+            inGrad.addColorStop(0.6, pal[2]);
+            inGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = inGrad;
+            ctx.beginPath();
+            ctx.arc(sx, sy, sRad, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Orbiting Stardust Gyroscope Rings (Singularity & Nebula)
+        if (orbType === 'singularity' || orbType === 'nebula') {
+            ctx.strokeStyle = pal[1];
+            ctx.lineWidth = Math.max(1, 1.2 * scale);
+            ctx.beginPath();
+            ctx.ellipse(ox, hoverY, 16 * pulse, 6 * pulse, rot * 0.8, 0, Math.PI * 2);
+            ctx.stroke();
+            if (orbType === 'singularity') {
+                ctx.strokeStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.ellipse(ox, hoverY, 18 * pulse, 5 * pulse, -rot * 0.6, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
+
+        // Core Incandescent Luminous Plasma Sphere
+        const coreRad = 7 * pulse;
+        const coreGrad = ctx.createRadialGradient(ox, hoverY - 1, 1, ox, hoverY, coreRad);
+        coreGrad.addColorStop(0, '#ffffff');
+        coreGrad.addColorStop(0.4, pal[0]);
+        coreGrad.addColorStop(0.85, pal[1]);
+        coreGrad.addColorStop(1, pal[2]);
+        ctx.fillStyle = coreGrad;
+        ctx.beginPath();
+        ctx.arc(ox, hoverY, coreRad, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ascending Sparks & Embers
+        for (let sp = 0; sp < 4; sp++) {
+            const sparkProg = (t * 20 + sp * 25 + dayNum * 17) % 36;
+            const spX = ox + Math.sin(t * 3.5 + sp * 2) * (6 + sparkProg * 0.2) * scale;
+            const spY = hoverY - (6 + sparkProg) * scale;
+            const spAlpha = Math.max(0, 1.0 - (sparkProg / 36));
+            ctx.fillStyle = (sp % 2 === 0) ? `rgba(255, 255, 255, ${spAlpha})` : `rgba(0, 229, 255, ${spAlpha})`;
+            ctx.fillRect(spX, spY, 1.5 * scale, 1.5 * scale);
+        }
+
+        ctx.restore();
     }
 }
 

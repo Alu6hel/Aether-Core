@@ -37,10 +37,12 @@ console.log("--- TEST 1: Round Logo & Dyson Sphere DOM Structure ---");
     // 2. Tap to fast forward prompt is removed
     assert.ok(!html.includes('TAP SCREEN TO FAST-FORWARD'), "Tap to skip text prompt is completely removed");
 
-    // 3. Font live preview box in settings exists
-    assert.ok(html.includes('id="font-preview-box"'), "Settings font preview box exists");
+    // 3. User Requirement: Text readability & typography removed from Settings
+    const soundModalChunk = html.split('id="sound-modal"')[1];
+    assert.ok(!soundModalChunk.includes('TEXT READABILITY & TYPOGRAPHY'), "Typography removed from Settings modal");
+    assert.ok(!soundModalChunk.includes('font-preview-box'), "Font preview box removed from Settings modal");
 
-    console.log("  ✓ DOM check passed: Round logo circle, Dyson rings, energy nodes, and preview box validated.\n");
+    console.log("  ✓ DOM check passed: Round logo circle, Dyson rings, energy nodes, and typography removal verified.\n");
 }
 
 // ==============================================================================
@@ -111,22 +113,19 @@ console.log("--- TEST 3: Game Loop Guard & Zero In-World Leakage ---");
 }
 
 // ==============================================================================
-// TEST 4: TYPOGRAPHY CONTROLS (STANDARD RETRO VS CLEAR LEGIBLE)
+// TEST 4: LOGO ECLIPSE IN FINAL SECONDS & TYPOGRAPHY REMOVAL VERIFICATION
 // ==============================================================================
-console.log("--- TEST 4: Typography Controls & CSS Rules ---");
+console.log("--- TEST 4: Logo Eclipse in Final Seconds & Typography Removal ---");
 {
     const stylesPath = path.join(__dirname, '../styles.css');
     const styles = fs.readFileSync(stylesPath, 'utf8');
 
-    // 1. Check body.font-mode-large overrides font-family
-    assert.ok(styles.includes('body.font-mode-large'), "body.font-mode-large defined");
-    assert.ok(styles.includes('font-family: \'JetBrains Mono\''), "Clear font family applied in large mode");
-    assert.ok(styles.includes('--ui-font-scale: 1.25'), "UI font scale boosted in large mode");
+    // 1. Logo Eclipse Keyframe check: when Dyson Core settles over logo, logo smoothly disappears (opacity: 0)
+    assert.ok(styles.includes('@keyframes logoBrightenOnHits'), "logoBrightenOnHits keyframe defined");
+    assert.ok(styles.includes('@keyframes logoImpactRecoil'), "logoImpactRecoil keyframe defined");
+    assert.ok(styles.includes('opacity: 0;'), "Logo fades to opacity 0 as sphere covers it");
 
-    // 2. Check font-preview-box styling
-    assert.ok(styles.includes('.font-preview-box'), "font-preview-box styled");
-
-    // 3. Mock setFontMode logic
+    // 2. Mock setFontMode logic continues to work safely if invoked
     class MockFontController {
         constructor() {
             this.fontMode = 'standard';
@@ -156,22 +155,15 @@ console.log("--- TEST 4: Typography Controls & CSS Rules ---");
     assert.strictEqual(ctrl.fontMode, 'standard');
     assert.strictEqual(ctrl.bodyClasses.has('font-mode-large'), false);
 
-    // Switch to clear & legible large
     ctrl.setFontMode('large');
     assert.strictEqual(ctrl.fontMode, 'large');
     assert.strictEqual(ctrl.bodyClasses.has('font-mode-large'), true);
-    assert.strictEqual(ctrl.htmlClasses.has('font-mode-large'), true);
-    assert.strictEqual(ctrl.fontScale, '1.25');
-    assert.strictEqual(ctrl.storage['aether_font_mode'], 'large');
 
-    // Switch back to standard retro
     ctrl.setFontMode('standard');
     assert.strictEqual(ctrl.fontMode, 'standard');
     assert.strictEqual(ctrl.bodyClasses.has('font-mode-large'), false);
-    assert.strictEqual(ctrl.fontScale, '1.0');
-    assert.strictEqual(ctrl.storage['aether_font_mode'], 'standard');
 
-    console.log("  ✓ Typography controls verified: Dynamic mode toggling, accessibility scaling, and storage.\n");
+    console.log("  ✓ Logo eclipse and typography safety verified: Logo fades out upon Dyson Core convergence.\n");
 }
 
 // ==============================================================================

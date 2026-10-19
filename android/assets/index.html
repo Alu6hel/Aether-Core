@@ -196,7 +196,7 @@
                     </div>
                     <div class="start-header-right">
                         <div class="start-stat-chip clickable-chip" id="start-cores-chip" title="Tap to inspect Ancient Dyson Cores">
-                            <span class="stat-icon">☥</span>
+                            <span class="stat-icon">💦</span>
                             <span class="stat-val" id="start-cores-val">0</span>
                         </div>
                         <div class="start-stat-chip clickable-chip" id="start-tokens-chip" title="Tap to inspect Blood Currency">
@@ -547,36 +547,25 @@
                         <div class="remains-status-tip">Keys unbox ancient celestial relics containing rare spoils, Dyson cores, blueprints, and weapons.</div>
                     </div>
 
-                    <!-- 3 Creative Non-Copyright Celestial Orb Relics -->
+                    <!-- 3 Creative Non-Copyright Celestial Core Relics (Title Screen Matching Live Canvas) -->
                     <div class="relic-chests-grid">
-                        <!-- Tier 1: Astral Vapor Sphere -->
+                        <!-- Tier 1: Astral Vapor Core -->
                         <div class="relic-chest-card" data-tier="common">
                             <div class="chest-art-frame">
-                                <div class="celestial-orb-widget orb-wisp">
-                                    <div class="orb-aura aura-cyan"></div>
-                                    <div class="orb-smoke-layer smoke-1 smoke-cyan"></div>
-                                    <div class="orb-smoke-layer smoke-2 smoke-silver"></div>
-                                    <div class="orb-plasma-core core-cyan"></div>
-                                </div>
+                                <canvas class="remains-core-canvas" id="remains-core-common" width="100" height="100"></canvas>
                             </div>
-                            <div class="chest-title">ASTRAL VAPOR SPHERE</div>
+                            <div class="chest-title">ASTRAL VAPOR CORE</div>
                             <div class="chest-cost">🗝️ 1 KEY</div>
                             <div class="chest-desc">Swirling celestial mist holding survival rations, copper shards, and craft blueprints. (+10 PT)</div>
                             <button class="relic-open-btn" data-chest="common">OPEN (1 KEY)</button>
                         </div>
 
-                        <!-- Tier 2: Resonant Nebula Orb -->
+                        <!-- Tier 2: Resonant Nebula Core -->
                         <div class="relic-chest-card featured" data-tier="runic">
                             <div class="chest-art-frame">
-                                <div class="celestial-orb-widget orb-nebula">
-                                    <div class="orb-aura aura-violet"></div>
-                                    <div class="orb-gyro-ring ring-violet"></div>
-                                    <div class="orb-smoke-layer smoke-1 smoke-violet"></div>
-                                    <div class="orb-smoke-layer smoke-2 smoke-gold"></div>
-                                    <div class="orb-plasma-core core-violet"></div>
-                                </div>
+                                <canvas class="remains-core-canvas" id="remains-core-runic" width="100" height="100"></canvas>
                             </div>
-                            <div class="chest-title">RESONANT NEBULA ORB</div>
+                            <div class="chest-title">RESONANT NEBULA CORE</div>
                             <div class="chest-cost">🗝️ 2 KEYS / 30 BLOOD ESSENCE</div>
                             <div class="chest-desc">Dense cosmic vapor charged with Dyson cores, ultrasonic weapons, and armor. (+25 PT)</div>
                             <div class="relic-btn-group">
@@ -585,19 +574,12 @@
                             </div>
                         </div>
 
-                        <!-- Tier 3: Primordial Singularity Orb -->
+                        <!-- Tier 3: Primordial Singularity Core -->
                         <div class="relic-chest-card legendary" data-tier="celestial">
                             <div class="chest-art-frame">
-                                <div class="celestial-orb-widget orb-singularity">
-                                    <div class="orb-aura aura-gold"></div>
-                                    <div class="orb-gyro-ring ring-gold"></div>
-                                    <div class="orb-gyro-ring ring-inner-cyan"></div>
-                                    <div class="orb-smoke-layer smoke-1 smoke-singularity"></div>
-                                    <div class="orb-smoke-layer smoke-2 smoke-gold"></div>
-                                    <div class="orb-plasma-core core-singularity"></div>
-                                </div>
+                                <canvas class="remains-core-canvas" id="remains-core-celestial" width="100" height="100"></canvas>
                             </div>
-                            <div class="chest-title">PRIMORDIAL SINGULARITY</div>
+                            <div class="chest-title">PRIMORDIAL SINGULARITY CORE</div>
                             <div class="chest-cost">🗝️ 3 KEYS / 300 BLOOD ESSENCE</div>
                             <div class="chest-desc">Hyper-dense vortex granting guaranteed Dyson Cores, Void Scythes, and Mythics. (+50 PT)</div>
                             <div class="relic-btn-group">
@@ -659,7 +641,7 @@
                             <span><strong id="shop-coins-val">0</strong></span>
                         </div>
                         <div class="shop-cur-chip">
-                            <span class="cur-icon">☥</span>
+                            <span class="cur-icon">💦</span>
                             <span>CORES: <strong id="shop-cores-val">0</strong></span>
                         </div>
                         <div class="shop-cur-chip">
@@ -850,11 +832,14 @@
                     </div>
                     <div class="yggdrasil-scroll-wrap">
                         <div id="skill-tree-container" class="yggdrasil-tree-container">
-                            <!-- Populated dynamically: Roots, World Trunk & Cross-Skills, Boughs, Canopy, Crown Lv. 100 -->
+                            <!-- Populated dynamically: Organic Yggdrasil World Tree of Life -->
                         </div>
                     </div>
+                    <div id="ygg-inspection-plaque" class="ygg-inspection-plaque">
+                        <!-- Interactive Branch Altar: Full skill details, level requirement, SP cost & upgrade action -->
+                    </div>
                     <div class="skill-footer-tip ygg-footer-tip">
-                        <span>🌳 Yggdrasil spans Level 1–100: Roots to Apex Crown. Trunk Cross-Skills can be augmented to Rank 5!</span>
+                        <span>🌳 Yggdrasil spans Level 1–100: Roots to Apex Crown. Tap any Rune to inspect & augment!</span>
                     </div>
                 </div>
             </div>
@@ -878,18 +863,7 @@
                             </div>
                         </div>
 
-                        <!-- 2. Typography & Readability -->
-                        <div class="settings-section">
-                            <div class="settings-section-title">📖 TEXT READABILITY & TYPOGRAPHY</div>
-                            <div class="settings-btn-group" id="font-scale-options">
-                                <button class="font-choice-btn active" data-font="large" style="width: 100%; pointer-events: none;">CLEAR & LEGIBLE (LARGE - ACTIVE)</button>
-                            </div>
-                            <div class="font-preview-box" id="font-preview-box">
-                                <span class="preview-tag">[CLEAR & LEGIBLE ACTIVE]:</span> The Living Runic Matrix is synchronized. [HP 140 / 140]
-                            </div>
-                        </div>
-
-                        <!-- 3. Audio & Chiptune Synth -->
+                        <!-- 2. Audio & Chiptune Synth -->
                         <div class="settings-section">
                             <div class="settings-section-title">🔊 AUDIO & CHIPTUNE SYNTHESIZER</div>
                             <div class="sound-toggle-row">
