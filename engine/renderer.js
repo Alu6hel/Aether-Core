@@ -2600,15 +2600,18 @@ class RetroRenderer {
     }
 
     renderTitleBackdrop(dt) {
-        this.titleAnimTimer = (this.titleAnimTimer || 0) + (dt || 0.016);
+        this.titleAnimTimer = Math.max(0, (this.titleAnimTimer || 0) + Math.max(0, (dt || 0.016)));
         const ctx = this.ctx;
-        const w = this.width;
-        const h = this.height;
+        if (!ctx) return;
+        const w = this.width || (this.canvas ? this.canvas.width : 480);
+        const h = this.height || (this.canvas ? this.canvas.height : 320);
         const t = this.titleAnimTimer;
 
         // 1. Dynamic Celestial Sky & Horizon (Dyson Luminary & Mountain Backdrop)
         const cycleDuration = 32.0; // 32 seconds full celestial cycle
-        const cycle = ((t * 0.1) % cycleDuration) / cycleDuration;
+        let cycle = ((t * 0.1) % cycleDuration) / cycleDuration;
+        if (isNaN(cycle) || cycle < 0) cycle = 0;
+        if (cycle >= 1.0) cycle = cycle % 1.0;
 
         const KEYFRAMES = [
             // 0: Eclipse / Waxing Crescent (Lunar Mode)
@@ -2621,25 +2624,39 @@ class RetroRenderer {
             { top: [34, 11, 24], mid: [28, 10, 34], bot: [14, 11, 28], mtn: [23, 15, 26], star: 0.45, rim: [255, 82, 82, 0.50], ring: [255, 82, 82, 0.35] }
         ];
 
-        const phaseProgress = cycle * 4;
-        const currentPhase = Math.floor(phaseProgress);
+        const phaseProgress = Math.abs(cycle * 4);
+        const currentPhase = (Math.floor(phaseProgress) % 4 + 4) % 4;
         const nextPhase = (currentPhase + 1) % 4;
-        const localT = phaseProgress - currentPhase;
+        const localT = Math.max(0, Math.min(1, phaseProgress - Math.floor(phaseProgress)));
         const smoothT = 0.5 - 0.5 * Math.cos(localT * Math.PI);
 
-        const kfA = KEYFRAMES[currentPhase];
-        const kfB = KEYFRAMES[nextPhase];
+        const kfA = KEYFRAMES[currentPhase] || KEYFRAMES[0];
+        const kfB = KEYFRAMES[nextPhase] || KEYFRAMES[1];
         const lerp = (a, b, factor) => a + (b - a) * factor;
+        const safeColor = (c, def) => (Array.isArray(c) && c.length >= 3 ? c : def);
+        const colorA_top = safeColor(kfA.top, [2, 5, 14]);
+        const colorB_top = safeColor(kfB.top, [18, 13, 32]);
+        const colorA_mid = safeColor(kfA.mid, [9, 17, 34]);
+        const colorB_mid = safeColor(kfB.mid, [38, 22, 42]);
+        const colorA_bot = safeColor(kfA.bot, [20, 32, 54]);
+        const colorB_bot = safeColor(kfB.bot, [60, 32, 42]);
+        const colorA_mtn = safeColor(kfA.mtn, [10, 16, 29]);
+        const colorB_mtn = safeColor(kfB.mtn, [20, 20, 36]);
+        const colorA_rim = (Array.isArray(kfA.rim) && kfA.rim.length >= 4) ? kfA.rim : [0, 229, 255, 0.35];
+        const colorB_rim = (Array.isArray(kfB.rim) && kfB.rim.length >= 4) ? kfB.rim : [255, 170, 0, 0.45];
+        const colorA_ring = (Array.isArray(kfA.ring) && kfA.ring.length >= 4) ? kfA.ring : [0, 229, 255, 0.25];
+        const colorB_ring = (Array.isArray(kfB.ring) && kfB.ring.length >= 4) ? kfB.ring : [255, 183, 77, 0.30];
+
         const lerpColor = (cA, cB, factor) => `rgb(${Math.round(lerp(cA[0], cB[0], factor))}, ${Math.round(lerp(cA[1], cB[1], factor))}, ${Math.round(lerp(cA[2], cB[2], factor))})`;
         const lerpRgba = (cA, cB, factor) => `rgba(${Math.round(lerp(cA[0], cB[0], factor))}, ${Math.round(lerp(cA[1], cB[1], factor))}, ${Math.round(lerp(cA[2], cB[2], factor))}, ${lerp(cA[3], cB[3], factor).toFixed(3)})`;
 
-        const skyTop = lerpColor(kfA.top, kfB.top, smoothT);
-        const skyMid = lerpColor(kfA.mid, kfB.mid, smoothT);
-        const skyBottom = lerpColor(kfA.bot, kfB.bot, smoothT);
-        const mountainTint = lerpColor(kfA.mtn, kfB.mtn, smoothT);
-        const starAlpha = lerp(kfA.star, kfB.star, smoothT);
-        const rimColor = lerpRgba(kfA.rim, kfB.rim, smoothT);
-        const ringColor = lerpRgba(kfA.ring, kfB.ring, smoothT);
+        const skyTop = lerpColor(colorA_top, colorB_top, smoothT);
+        const skyMid = lerpColor(colorA_mid, colorB_mid, smoothT);
+        const skyBottom = lerpColor(colorA_bot, colorB_bot, smoothT);
+        const mountainTint = lerpColor(colorA_mtn, colorB_mtn, smoothT);
+        const starAlpha = lerp(typeof kfA.star === 'number' ? kfA.star : 0.5, typeof kfB.star === 'number' ? kfB.star : 0.5, smoothT);
+        const rimColor = lerpRgba(colorA_rim, colorB_rim, smoothT);
+        const ringColor = lerpRgba(colorA_ring, colorB_ring, smoothT);
 
         // Render dynamic celestial sky gradient
         const skyGrad = ctx.createLinearGradient(0, 0, 0, h * 0.55);
