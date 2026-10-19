@@ -24,6 +24,8 @@ class RetroRenderer {
         this.floatingTexts = [];
         this.audio = new ChiptuneSynth();
         this.sprites = new SpriteSheet();
+        this.ambientParticles = [];
+        this.ambientParticleArea = null;
     }
 
     clear(bgColor = '#0a0a0f') {
@@ -1468,610 +1470,8 @@ class RetroRenderer {
         // Draw back armor layer (Genesis Starmantle flowing cape behind body)
         this.drawEquippedArmorBack(ctx, char, equippedArm, sx, sy, effBob, facing, walkCycle);
 
-        // 1. TECHNO-MAGE (Arcane Arcanist with Nanite Orb & Staff)
-        if (char.charClass === 'TECHNO_MAGE') {
-            const robeColor = '#311b92';
-            const hoodColor = '#4a148c';
-            const cyanAccent = '#00e5ff';
-            const skinColor = '#ffcc80';
-
-            if (facing === 'DOWN') {
-                // Boots
-                ctx.fillStyle = '#212121';
-                ctx.fillRect(sx - 3 + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(sx + 1 + (walkCycle === 1 ? -1 : 0), sy + 4, 3, 2);
-
-                // Robe
-                ctx.fillStyle = robeColor;
-                ctx.fillRect(sx - 4, sy - 7 + effBob, 8, 11);
-                ctx.fillStyle = cyanAccent;
-                ctx.fillRect(sx - 1, sy - 6 + effBob, 2, 9); // Central cyan circuit trim
-
-                // Hood & Face
-                ctx.fillStyle = hoodColor;
-                ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 7);
-                ctx.fillStyle = skinColor;
-                ctx.fillRect(sx - 2, sy - 11 + effBob, 4, 3);
-                ctx.fillStyle = cyanAccent;
-                ctx.fillRect(sx - 2, sy - 10 + effBob, 1, 1);
-                ctx.fillRect(sx + 1, sy - 10 + effBob, 1, 1);
-
-                if (!equippedWep) {
-                    // Floating Nanite Orb (Left Hand)
-                    ctx.fillStyle = cyanAccent;
-                    ctx.beginPath();
-                    ctx.arc(sx - 7, sy - 4 + effBob, 2.5, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    // Gold Staff (Right Hand)
-                    ctx.fillStyle = '#ffb300';
-                    ctx.fillRect(sx + 5, sy - 13 + effBob, 2, 17);
-                    ctx.fillStyle = '#ea80fc';
-                    ctx.fillRect(sx + 4, sy - 16 + effBob, 4, 3);
-                }
-
-            } else if (facing === 'UP') {
-                // Boots
-                ctx.fillStyle = '#212121';
-                ctx.fillRect(sx - 3 + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(sx + 1 + (walkCycle === 1 ? -1 : 0), sy + 4, 3, 2);
-
-                // Robe Back
-                ctx.fillStyle = robeColor;
-                ctx.fillRect(sx - 4, sy - 7 + effBob, 8, 11);
-                ctx.fillStyle = cyanAccent;
-                ctx.fillRect(sx - 1, sy - 6 + effBob, 2, 7); // Spine line
-
-                // Back of Hood
-                ctx.fillStyle = hoodColor;
-                ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 7);
-                ctx.fillRect(sx - 1, sy - 14 + effBob, 2, 2); // Hood peak
-
-                if (!equippedWep) {
-                    // Staff over shoulder
-                    ctx.fillStyle = '#ffb300';
-                    ctx.fillRect(sx + 5, sy - 14 + effBob, 2, 17);
-                    ctx.fillStyle = '#ea80fc';
-                    ctx.fillRect(sx + 4, sy - 16 + effBob, 4, 3);
-                }
-
-            } else if (facing === 'LEFT') {
-                // Boots side step
-                ctx.fillStyle = '#212121';
-                ctx.fillRect(sx - 3 - (walkCycle === 1 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(sx + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-
-                // Robe Side
-                ctx.fillStyle = robeColor;
-                ctx.fillRect(sx - 4, sy - 7 + effBob, 7, 11);
-
-                // Hood Profile
-                ctx.fillStyle = hoodColor;
-                ctx.fillRect(sx - 4, sy - 13 + effBob, 7, 7);
-                ctx.fillStyle = skinColor;
-                ctx.fillRect(sx - 4, sy - 11 + effBob, 2, 3);
-                ctx.fillStyle = cyanAccent;
-                ctx.fillRect(sx - 4, sy - 10 + effBob, 1, 1);
-
-                if (!equippedWep) {
-                    // Floating Orb Forward
-                    ctx.fillStyle = cyanAccent;
-                    ctx.beginPath();
-                    ctx.arc(sx - 8, sy - 4 + effBob, 2.5, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    // Staff Trailing
-                    ctx.fillStyle = '#ffb300';
-                    ctx.fillRect(sx + 2, sy - 12 + effBob, 2, 16);
-                    ctx.fillStyle = '#ea80fc';
-                    ctx.fillRect(sx + 1, sy - 15 + effBob, 4, 3);
-                }
-
-            } else if (facing === 'RIGHT') {
-                // Boots side step
-                ctx.fillStyle = '#212121';
-                ctx.fillRect(sx - (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(sx + 2 + (walkCycle === 1 ? 1 : 0), sy + 4, 3, 2);
-
-                // Robe Side
-                ctx.fillStyle = robeColor;
-                ctx.fillRect(sx - 3, sy - 7 + effBob, 7, 11);
-
-                // Hood Profile
-                ctx.fillStyle = hoodColor;
-                ctx.fillRect(sx - 3, sy - 13 + effBob, 7, 7);
-                ctx.fillStyle = skinColor;
-                ctx.fillRect(sx + 2, sy - 11 + effBob, 2, 3);
-                ctx.fillStyle = cyanAccent;
-                ctx.fillRect(sx + 3, sy - 10 + effBob, 1, 1);
-
-                if (!equippedWep) {
-                    // Floating Orb Forward
-                    ctx.fillStyle = cyanAccent;
-                    ctx.beginPath();
-                    ctx.arc(sx + 8, sy - 4 + effBob, 2.5, 0, Math.PI * 2);
-                    ctx.fill();
-
-                    // Staff
-                    ctx.fillStyle = '#ffb300';
-                    ctx.fillRect(sx - 4, sy - 12 + effBob, 2, 16);
-                    ctx.fillStyle = '#ea80fc';
-                    ctx.fillRect(sx - 5, sy - 15 + effBob, 4, 3);
-                }
-            }
-
-        // 2. SUPER-SOLDIER (Heavy Armor Warrior with Broadsword)
-        } else if (char.charClass === 'SUPER_SOLDIER') {
-            const steelArmor = '#37474f';
-            const steelHighlight = '#607d8b';
-            const visorCyan = '#00e5ff';
-            const pauldronOrange = '#ff5722';
-            const swordSteel = '#cfd8dc';
-
-            if (facing === 'DOWN') {
-                // Greaves
-                ctx.fillStyle = '#212121';
-                ctx.fillRect(sx - 4 + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(sx + 1 + (walkCycle === 1 ? -1 : 0), sy + 4, 3, 2);
-
-                // Cuirass & Pauldrons
-                ctx.fillStyle = steelArmor;
-                ctx.fillRect(sx - 5, sy - 7 + effBob, 10, 11);
-                ctx.fillStyle = pauldronOrange;
-                ctx.fillRect(sx - 7, sy - 7 + effBob, 2, 5);
-                ctx.fillRect(sx + 5, sy - 7 + effBob, 2, 5);
-
-                // Helmet with horizontal slit visor
-                ctx.fillStyle = '#263238';
-                ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 6);
-                ctx.fillStyle = visorCyan;
-                ctx.fillRect(sx - 3, sy - 10 + effBob, 6, 2);
-
-                if (!equippedWep) {
-                    // Broadsword at side
-                    ctx.fillStyle = swordSteel;
-                    ctx.fillRect(sx + 6, sy - 12 + effBob, 2, 14);
-                    ctx.fillStyle = '#ffd54f';
-                    ctx.fillRect(sx + 5, sy - 7 + effBob, 4, 2);
-                }
-
-            } else if (facing === 'UP') {
-                // Greaves
-                ctx.fillStyle = '#212121';
-                ctx.fillRect(sx - 4 + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(sx + 1 + (walkCycle === 1 ? -1 : 0), sy + 4, 3, 2);
-
-                // Backplate
-                ctx.fillStyle = steelArmor;
-                ctx.fillRect(sx - 5, sy - 7 + effBob, 10, 11);
-                ctx.fillStyle = steelHighlight;
-                ctx.fillRect(sx - 2, sy - 5 + effBob, 4, 6);
-                ctx.fillStyle = pauldronOrange;
-                ctx.fillRect(sx - 7, sy - 7 + effBob, 2, 5);
-                ctx.fillRect(sx + 5, sy - 7 + effBob, 2, 5);
-
-                // Helmet Back
-                ctx.fillStyle = '#263238';
-                ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 6);
-
-                if (!equippedWep) {
-                    // Diagonal Broadsword across back
-                    ctx.fillStyle = swordSteel;
-                    ctx.fillRect(sx - 4, sy - 14 + effBob, 8, 2);
-                    ctx.fillRect(sx - 1, sy - 10 + effBob, 2, 10);
-                }
-
-            } else if (facing === 'LEFT') {
-                // Greaves
-                ctx.fillStyle = '#212121';
-                ctx.fillRect(sx - 3 - (walkCycle === 1 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(sx + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-
-                // Side Armor
-                ctx.fillStyle = steelArmor;
-                ctx.fillRect(sx - 4, sy - 7 + effBob, 8, 11);
-                ctx.fillStyle = pauldronOrange;
-                ctx.fillRect(sx - 5, sy - 7 + effBob, 3, 5);
-
-                // Helmet Profile
-                ctx.fillStyle = '#263238';
-                ctx.fillRect(sx - 4, sy - 13 + effBob, 7, 6);
-                ctx.fillStyle = visorCyan;
-                ctx.fillRect(sx - 4, sy - 10 + effBob, 3, 2);
-
-                if (!equippedWep) {
-                    // Sword Forward
-                    ctx.fillStyle = swordSteel;
-                    ctx.fillRect(sx - 7, sy - 8 + effBob, 3, 11);
-                }
-
-            } else if (facing === 'RIGHT') {
-                // Greaves
-                ctx.fillStyle = '#212121';
-                ctx.fillRect(sx - (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(sx + 2 + (walkCycle === 1 ? 1 : 0), sy + 4, 3, 2);
-
-                // Side Armor
-                ctx.fillStyle = steelArmor;
-                ctx.fillRect(sx - 4, sy - 7 + effBob, 8, 11);
-                ctx.fillStyle = pauldronOrange;
-                ctx.fillRect(sx + 2, sy - 7 + effBob, 3, 5);
-
-                // Helmet Profile
-                ctx.fillStyle = '#263238';
-                ctx.fillRect(sx - 3, sy - 13 + effBob, 7, 6);
-                ctx.fillStyle = visorCyan;
-                ctx.fillRect(sx + 1, sy - 10 + effBob, 3, 2);
-
-                if (!equippedWep) {
-                    // Sword Forward
-                    ctx.fillStyle = swordSteel;
-                    ctx.fillRect(sx + 4, sy - 8 + effBob, 3, 11);
-                }
-            }
-
-        // 3. THE FARMER (Deific Harvester with Straw Hat & Cosmic Hoe - Matching Image 3)
-        } else if (char.charClass === 'FARMER_GOD') {
-            const strawHat = '#ffd54f';
-            const strawDark = '#ffb300';
-            const overalls = '#1565c0';
-            const plaidRed = '#d32f2f';
-            const skinColor = '#ffcc80';
-            const cosmicHoe = '#ffd700';
-
-            if (facing === 'DOWN') {
-                // Boots
-                ctx.fillStyle = '#5d4037';
-                ctx.fillRect(sx - 3 + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(sx + 1 + (walkCycle === 1 ? -1 : 0), sy + 4, 3, 2);
-
-                // Denim Overalls & Plaid Shirt
-                ctx.fillStyle = overalls;
-                ctx.fillRect(sx - 4, sy - 6 + effBob, 8, 10);
-                ctx.fillStyle = plaidRed;
-                ctx.fillRect(sx - 6, sy - 6 + effBob, 2, 6);
-                ctx.fillRect(sx + 4, sy - 6 + effBob, 2, 6);
-
-                // Straw Hat & Face
-                ctx.fillStyle = strawHat;
-                ctx.fillRect(sx - 7, sy - 13 + effBob, 14, 3);
-                ctx.fillStyle = strawDark;
-                ctx.fillRect(sx - 4, sy - 16 + effBob, 8, 4);
-                ctx.fillStyle = skinColor;
-                ctx.fillRect(sx - 3, sy - 10 + effBob, 6, 4);
-                ctx.fillStyle = '#eeeeee'; // Beard
-                ctx.fillRect(sx - 3, sy - 7 + effBob, 6, 2);
-
-                if (!equippedWep) {
-                    // Cosmic Golden Hoe
-                    ctx.fillStyle = cosmicHoe;
-                    ctx.fillRect(sx + 5, sy - 10 + effBob, 2, 14);
-                    ctx.fillRect(sx + 5, sy - 12 + effBob, 5, 2);
-                    ctx.fillStyle = '#76ff03'; // Reality sprout
-                    ctx.fillRect(sx + 8, sy - 14 + effBob, 2, 2);
-                }
-
-            } else if (facing === 'UP') { // Back view matching Image 3!
-                // Boots
-                ctx.fillStyle = '#5d4037';
-                ctx.fillRect(sx - 3 + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(sx + 1 + (walkCycle === 1 ? -1 : 0), sy + 4, 3, 2);
-
-                // Overalls Back
-                ctx.fillStyle = overalls;
-                ctx.fillRect(sx - 4, sy - 6 + effBob, 8, 10);
-                ctx.fillStyle = plaidRed;
-                ctx.fillRect(sx - 6, sy - 6 + effBob, 2, 6);
-                ctx.fillRect(sx + 4, sy - 6 + effBob, 2, 6);
-                ctx.fillStyle = strawDark;
-                ctx.fillRect(sx - 2, sy - 5 + effBob, 4, 2); // Suspenders cross
-
-                // Straw Hat seen from behind/above
-                ctx.fillStyle = strawHat;
-                ctx.fillRect(sx - 6, sy - 16 + effBob, 12, 7);
-                ctx.fillStyle = strawDark;
-                ctx.fillRect(sx - 4, sy - 14 + effBob, 8, 2);
-
-                if (!equippedWep) {
-                    // Hoe carried over shoulder
-                    ctx.fillStyle = cosmicHoe;
-                    ctx.fillRect(sx + 4, sy - 14 + effBob, 2, 16);
-                    ctx.fillRect(sx + 4, sy - 16 + effBob, 4, 2);
-                }
-
-            } else if (facing === 'LEFT') {
-                // Boots
-                ctx.fillStyle = '#5d4037';
-                ctx.fillRect(sx - 3 - (walkCycle === 1 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(sx + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-
-                // Overalls Side
-                ctx.fillStyle = overalls;
-                ctx.fillRect(sx - 4, sy - 6 + effBob, 7, 10);
-                ctx.fillStyle = plaidRed;
-                ctx.fillRect(sx - 4, sy - 6 + effBob, 2, 5);
-
-                // Straw Hat Profile
-                ctx.fillStyle = strawHat;
-                ctx.fillRect(sx - 6, sy - 14 + effBob, 11, 4);
-                ctx.fillStyle = strawDark;
-                ctx.fillRect(sx - 4, sy - 16 + effBob, 6, 3);
-                ctx.fillStyle = skinColor;
-                ctx.fillRect(sx - 4, sy - 10 + effBob, 4, 4);
-                ctx.fillStyle = '#eeeeee';
-                ctx.fillRect(sx - 4, sy - 7 + effBob, 3, 2);
-
-                if (!equippedWep) {
-                    // Hoe Forward
-                    ctx.fillStyle = cosmicHoe;
-                    ctx.fillRect(sx - 7, sy - 10 + effBob, 2, 13);
-                    ctx.fillRect(sx - 9, sy - 12 + effBob, 4, 2);
-                }
-
-            } else if (facing === 'RIGHT') {
-                // Boots
-                ctx.fillStyle = '#5d4037';
-                ctx.fillRect(sx - (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(sx + 2 + (walkCycle === 1 ? 1 : 0), sy + 4, 3, 2);
-
-                // Overalls Side
-                ctx.fillStyle = overalls;
-                ctx.fillRect(sx - 3, sy - 6 + effBob, 7, 10);
-                ctx.fillStyle = plaidRed;
-                ctx.fillRect(sx + 2, sy - 6 + effBob, 2, 5);
-
-                // Straw Hat Profile
-                ctx.fillStyle = strawHat;
-                ctx.fillRect(sx - 5, sy - 14 + effBob, 11, 4);
-                ctx.fillStyle = strawDark;
-                ctx.fillRect(sx - 2, sy - 16 + effBob, 6, 3);
-                ctx.fillStyle = skinColor;
-                ctx.fillRect(sx, sy - 10 + effBob, 4, 4);
-                ctx.fillStyle = '#eeeeee';
-                ctx.fillRect(sx + 1, sy - 7 + effBob, 3, 2);
-
-                if (!equippedWep) {
-                    // Hoe Forward
-                    ctx.fillStyle = cosmicHoe;
-                    ctx.fillRect(sx + 5, sy - 10 + effBob, 2, 13);
-                    ctx.fillRect(sx + 5, sy - 12 + effBob, 4, 2);
-                }
-            }
-
-        // 4. CHRONO-GLITCHER (Reality/Time Anomaly with Temporal Tuning Blade)
-        } else if (char.charClass === 'CHRONO_GLITCHER') {
-            const coatDark = '#240046';
-            const coatLight = '#3c096c';
-            const glitchMagenta = '#ff007f';
-            const cyanAccent = '#00f0ff';
-            const bladeColor = '#e0aaff';
-            const skinColor = '#ffcc80';
-
-            // Micro-jitter glitch displacement when moving or phasing
-            const jitter = (char.phasingTimer > 0 || (char.vel && char.vel.length() > 5 && Math.random() < 0.2)) 
-                ? (Math.random() > 0.5 ? 1 : -1) : 0;
-            const csx = sx + jitter;
-
-            if (facing === 'DOWN') {
-                // Boots
-                ctx.fillStyle = '#10002b';
-                ctx.fillRect(csx - 3 + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(csx + 1 + (walkCycle === 1 ? -1 : 0), sy + 4, 3, 2);
-
-                // Cyber-Trench Coat
-                ctx.fillStyle = coatLight;
-                ctx.fillRect(csx - 4, sy - 7 + effBob, 8, 11);
-                ctx.fillStyle = glitchMagenta;
-                ctx.fillRect(csx - 1, sy - 6 + effBob, 2, 9); // Central glitch seam
-                ctx.fillStyle = cyanAccent;
-                ctx.fillRect(csx - 3, sy - 5 + effBob, 1, 3); // Reality static
-
-                // Temporal Hood & Face
-                ctx.fillStyle = coatDark;
-                ctx.fillRect(csx - 4, sy - 13 + effBob, 8, 7);
-                ctx.fillStyle = skinColor;
-                ctx.fillRect(csx - 2, sy - 11 + effBob, 4, 3);
-                // Glowing cyan chrono-visor
-                ctx.fillStyle = cyanAccent;
-                ctx.fillRect(csx - 2, sy - 10 + effBob, 4, 1);
-
-                if (!equippedWep) {
-                    // Tuning Blade (Right Hand)
-                    ctx.fillStyle = cyanAccent;
-                    ctx.fillRect(csx + 5, sy - 12 + effBob, 2, 16);
-                    ctx.fillStyle = bladeColor;
-                    ctx.fillRect(csx + 4, sy - 15 + effBob, 4, 4);
-                }
-
-            } else if (facing === 'UP') {
-                // Boots
-                ctx.fillStyle = '#10002b';
-                ctx.fillRect(csx - 3 + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(csx + 1 + (walkCycle === 1 ? -1 : 0), sy + 4, 3, 2);
-
-                // Coat Back with Tachyon Spine line
-                ctx.fillStyle = coatLight;
-                ctx.fillRect(csx - 4, sy - 7 + effBob, 8, 11);
-                ctx.fillStyle = cyanAccent;
-                ctx.fillRect(csx - 1, sy - 6 + effBob, 2, 8);
-                ctx.fillStyle = glitchMagenta;
-                ctx.fillRect(csx - 3, sy - 3 + effBob, 1, 2);
-
-                // Hood back
-                ctx.fillStyle = coatDark;
-                ctx.fillRect(csx - 4, sy - 13 + effBob, 8, 7);
-                ctx.fillRect(csx - 1, sy - 14 + effBob, 2, 2);
-
-                if (!equippedWep) {
-                    // Tuning blade raised
-                    ctx.fillStyle = cyanAccent;
-                    ctx.fillRect(csx + 5, sy - 14 + effBob, 2, 17);
-                    ctx.fillStyle = bladeColor;
-                    ctx.fillRect(csx + 4, sy - 16 + effBob, 4, 3);
-                }
-
-            } else if (facing === 'LEFT') {
-                ctx.fillStyle = '#10002b';
-                ctx.fillRect(csx - 3 - (walkCycle === 1 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(csx + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-
-                ctx.fillStyle = coatLight;
-                ctx.fillRect(csx - 4, sy - 7 + effBob, 7, 11);
-                ctx.fillStyle = glitchMagenta;
-                ctx.fillRect(csx - 2, sy - 4 + effBob, 1, 5);
-
-                ctx.fillStyle = coatDark;
-                ctx.fillRect(csx - 4, sy - 13 + effBob, 7, 7);
-                ctx.fillStyle = skinColor;
-                ctx.fillRect(csx - 4, sy - 11 + effBob, 2, 3);
-                ctx.fillStyle = cyanAccent;
-                ctx.fillRect(csx - 4, sy - 10 + effBob, 2, 1);
-
-                if (!equippedWep) {
-                    // Blade pointed left
-                    ctx.fillStyle = cyanAccent;
-                    ctx.fillRect(csx - 7, sy - 10 + effBob, 2, 14);
-                    ctx.fillStyle = bladeColor;
-                    ctx.fillRect(csx - 9, sy - 13 + effBob, 4, 3);
-                }
-
-            } else if (facing === 'RIGHT') {
-                ctx.fillStyle = '#10002b';
-                ctx.fillRect(csx - (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(csx + 2 + (walkCycle === 1 ? 1 : 0), sy + 4, 3, 2);
-
-                ctx.fillStyle = coatLight;
-                ctx.fillRect(csx - 3, sy - 7 + effBob, 7, 11);
-                ctx.fillStyle = glitchMagenta;
-                ctx.fillRect(csx + 1, sy - 4 + effBob, 1, 5);
-
-                ctx.fillStyle = coatDark;
-                ctx.fillRect(csx - 3, sy - 13 + effBob, 7, 7);
-                ctx.fillStyle = skinColor;
-                ctx.fillRect(csx + 2, sy - 11 + effBob, 2, 3);
-                ctx.fillStyle = cyanAccent;
-                ctx.fillRect(csx + 2, sy - 10 + effBob, 2, 1);
-
-                if (!equippedWep) {
-                    // Blade pointed right
-                    ctx.fillStyle = cyanAccent;
-                    ctx.fillRect(csx + 5, sy - 10 + effBob, 2, 14);
-                    ctx.fillStyle = bladeColor;
-                    ctx.fillRect(csx + 5, sy - 13 + effBob, 4, 3);
-                }
-            }
-
-        // 5. SOLARION-ARCHITECT (Hard-Light Photon Engineer)
-        } else if (char.charClass === 'SOLARION_ARCHITECT') {
-            const goldBronze = '#d97706';
-            const solarAmber = '#f59e0b';
-            const solarOrange = '#ff6f00';
-            const photonCyan = '#38bdf8';
-            const chassisWhite = '#ffffff';
-
-            if (facing === 'DOWN') {
-                // Boots
-                ctx.fillStyle = '#78350f';
-                ctx.fillRect(sx - 3 + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(sx + 1 + (walkCycle === 1 ? -1 : 0), sy + 4, 3, 2);
-
-                // Solar Armor Cuirass
-                ctx.fillStyle = goldBronze;
-                ctx.fillRect(sx - 4, sy - 7 + effBob, 8, 11);
-                // Hard-Light Photon Core in center
-                ctx.fillStyle = photonCyan;
-                ctx.fillRect(sx - 1, sy - 5 + effBob, 2, 3);
-                ctx.fillStyle = solarOrange;
-                ctx.fillRect(sx - 5, sy - 6 + effBob, 2, 5); // Pauldron L
-                ctx.fillRect(sx + 3, sy - 6 + effBob, 2, 5); // Pauldron R
-
-                // Solar Helm & Optics
-                ctx.fillStyle = solarAmber;
-                ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 7);
-                ctx.fillStyle = chassisWhite;
-                ctx.fillRect(sx - 2, sy - 10 + effBob, 4, 2); // Visor
-                ctx.fillStyle = solarOrange;
-                ctx.fillRect(sx - 1, sy - 15 + effBob, 2, 3); // Solar Crest
-
-                if (!equippedWep) {
-                    // Hard-light wand / prism emitter
-                    ctx.fillStyle = '#fbbf24';
-                    ctx.fillRect(sx + 5, sy - 12 + effBob, 2, 16);
-                    ctx.fillStyle = photonCyan;
-                    ctx.fillRect(sx + 4, sy - 15 + effBob, 4, 4);
-                }
-
-            } else if (facing === 'UP') {
-                ctx.fillStyle = '#78350f';
-                ctx.fillRect(sx - 3 + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(sx + 1 + (walkCycle === 1 ? -1 : 0), sy + 4, 3, 2);
-
-                // Cuirass back with solar radiators
-                ctx.fillStyle = goldBronze;
-                ctx.fillRect(sx - 4, sy - 7 + effBob, 8, 11);
-                ctx.fillStyle = solarOrange;
-                ctx.fillRect(sx - 2, sy - 6 + effBob, 4, 8); // Radiator vent
-                ctx.fillStyle = '#ffd54f';
-                ctx.fillRect(sx - 1, sy - 4 + effBob, 2, 4);
-
-                // Helm back
-                ctx.fillStyle = solarAmber;
-                ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 7);
-                ctx.fillStyle = solarOrange;
-                ctx.fillRect(sx - 1, sy - 15 + effBob, 2, 3);
-
-                if (!equippedWep) {
-                    ctx.fillStyle = '#fbbf24';
-                    ctx.fillRect(sx + 5, sy - 13 + effBob, 2, 16);
-                    ctx.fillStyle = photonCyan;
-                    ctx.fillRect(sx + 4, sy - 15 + effBob, 4, 3);
-                }
-
-            } else if (facing === 'LEFT') {
-                ctx.fillStyle = '#78350f';
-                ctx.fillRect(sx - 3 - (walkCycle === 1 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(sx + (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-
-                ctx.fillStyle = goldBronze;
-                ctx.fillRect(sx - 4, sy - 7 + effBob, 7, 11);
-                ctx.fillStyle = solarOrange;
-                ctx.fillRect(sx - 3, sy - 6 + effBob, 3, 5);
-
-                ctx.fillStyle = solarAmber;
-                ctx.fillRect(sx - 4, sy - 13 + effBob, 7, 7);
-                ctx.fillStyle = chassisWhite;
-                ctx.fillRect(sx - 4, sy - 10 + effBob, 3, 2);
-
-                if (!equippedWep) {
-                    ctx.fillStyle = '#fbbf24';
-                    ctx.fillRect(sx - 7, sy - 10 + effBob, 2, 14);
-                    ctx.fillStyle = photonCyan;
-                    ctx.fillRect(sx - 8, sy - 13 + effBob, 4, 4);
-                }
-
-            } else if (facing === 'RIGHT') {
-                ctx.fillStyle = '#78350f';
-                ctx.fillRect(sx - (walkCycle === 0 ? 1 : 0), sy + 4, 3, 2);
-                ctx.fillRect(sx + 2 + (walkCycle === 1 ? 1 : 0), sy + 4, 3, 2);
-
-                ctx.fillStyle = goldBronze;
-                ctx.fillRect(sx - 3, sy - 7 + effBob, 7, 11);
-                ctx.fillStyle = solarOrange;
-                ctx.fillRect(sx, sy - 6 + effBob, 3, 5);
-
-                ctx.fillStyle = solarAmber;
-                ctx.fillRect(sx - 3, sy - 13 + effBob, 7, 7);
-                ctx.fillStyle = chassisWhite;
-                ctx.fillRect(sx + 1, sy - 10 + effBob, 3, 2);
-
-                if (!equippedWep) {
-                    ctx.fillStyle = '#fbbf24';
-                    ctx.fillRect(sx + 5, sy - 10 + effBob, 2, 14);
-                    ctx.fillStyle = photonCyan;
-                    ctx.fillRect(sx + 4, sy - 13 + effBob, 4, 4);
-                }
-            }
-        }
+        // Draw High-Fidelity GBA / Terraria Detailed Character Body
+        this.drawDetailedCharacterBody(ctx, char, sx, sy, effBob, facing, walkCycle, equippedWep);
 
         // Draw equipped front armor (Vanguard Chestplate, Iron Aegis, Shield, Flux Band)
         this.drawEquippedArmorFront(ctx, char, equippedArm, sx, sy, effBob, facing, walkCycle);
@@ -2242,6 +1642,972 @@ class RetroRenderer {
         }
     }
 
+
+    // =========================================================================
+    // HIGH-FIDELITY GBA / TERRARIA DETAILED CHARACTER SPRITE RENDERERS
+    // =========================================================================
+
+    drawPixelEyes(ctx, x, y, facing, irisColor = '#00e5ff', isBlinking = false) {
+        if (facing === 'UP') return;
+
+        if (isBlinking) {
+            ctx.fillStyle = '#1e293b';
+            if (facing === 'DOWN') {
+                ctx.fillRect(x - 3, y + 1, 3, 1);
+                ctx.fillRect(x + 1, y + 1, 3, 1);
+            } else if (facing === 'LEFT') {
+                ctx.fillRect(x - 3, y + 1, 3, 1);
+            } else if (facing === 'RIGHT') {
+                ctx.fillRect(x + 1, y + 1, 3, 1);
+            }
+            return;
+        }
+
+        if (facing === 'DOWN') {
+            // Left Eye: Sclera, Iris, Pupil, Catchlight, Brow
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x - 3, y, 3, 2);
+            ctx.fillStyle = irisColor;
+            ctx.fillRect(x - 2, y, 1, 2);
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(x - 2, y + 1, 1, 1);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x - 3, y, 1, 1);
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(x - 3, y - 1, 3, 1);
+
+            // Right Eye: Sclera, Iris, Pupil, Catchlight, Brow
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x + 1, y, 3, 2);
+            ctx.fillStyle = irisColor;
+            ctx.fillRect(x + 1, y, 1, 2);
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(x + 1, y + 1, 1, 1);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x + 2, y, 1, 1);
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(x + 1, y - 1, 3, 1);
+
+        } else if (facing === 'LEFT') {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x - 3, y, 3, 2);
+            ctx.fillStyle = irisColor;
+            ctx.fillRect(x - 3, y, 1, 2);
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(x - 3, y + 1, 1, 1);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x - 2, y, 1, 1);
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(x - 3, y - 1, 3, 1);
+
+        } else if (facing === 'RIGHT') {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x + 1, y, 3, 2);
+            ctx.fillStyle = irisColor;
+            ctx.fillRect(x + 2, y, 1, 2);
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(x + 2, y + 1, 1, 1);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x + 1, y, 1, 1);
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(x + 1, y - 1, 3, 1);
+        }
+    }
+
+    drawDetailedCharacterBody(ctx, char, sx, sy, effBob, facing, walkCycle, equippedWep) {
+        const cls = char.charClass || 'TECHNO_MAGE';
+        if (cls === 'TECHNO_MAGE') {
+            this.drawDetailedTechnoMage(ctx, char, sx, sy, effBob, facing, walkCycle, equippedWep);
+        } else if (cls === 'SUPER_SOLDIER') {
+            this.drawDetailedSuperSoldier(ctx, char, sx, sy, effBob, facing, walkCycle, equippedWep);
+        } else if (cls === 'FARMER_GOD') {
+            this.drawDetailedFarmerGod(ctx, char, sx, sy, effBob, facing, walkCycle, equippedWep);
+        } else if (cls === 'CHRONO_GLITCHER') {
+            this.drawDetailedChronoGlitcher(ctx, char, sx, sy, effBob, facing, walkCycle, equippedWep);
+        } else if (cls === 'SOLARION_ARCHITECT') {
+            this.drawDetailedSolarionArchitect(ctx, char, sx, sy, effBob, facing, walkCycle, equippedWep);
+        } else {
+            this.drawDetailedTechnoMage(ctx, char, sx, sy, effBob, facing, walkCycle, equippedWep);
+        }
+    }
+
+    drawDetailedTechnoMage(ctx, char, sx, sy, effBob, facing, walkCycle, equippedWep) {
+        const isBlinking = (Math.floor(Date.now() / 150) % 24 === 0);
+        const robeBase = '#311b92';
+        const robeDark = '#1f104d';
+        const robeLight = '#4a148c';
+        const cyan = '#00e5ff';
+        const cyanGlow = '#84ffff';
+        const skin = '#ffe0bd';
+        const skinShadow = '#f5cba7';
+
+        if (facing === 'DOWN') {
+            // 1. Shaded Boots with soles
+            const bOffL = (walkCycle === 0 ? 1 : 0);
+            const bOffR = (walkCycle === 1 ? -1 : 0);
+            ctx.fillStyle = '#212121';
+            ctx.fillRect(sx - 4 + bOffL, sy + 4, 3, 2);
+            ctx.fillRect(sx + 1 + bOffR, sy + 4, 3, 2);
+            ctx.fillStyle = '#0a0a0f'; // Soles
+            ctx.fillRect(sx - 4 + bOffL, sy + 6, 3, 1);
+            ctx.fillRect(sx + 1 + bOffR, sy + 6, 3, 1);
+
+            // 2. Layered Arcane Robe (Folds & Shading)
+            ctx.fillStyle = robeDark;
+            ctx.fillRect(sx - 5, sy - 6 + effBob, 10, 10);
+            ctx.fillStyle = robeBase;
+            ctx.fillRect(sx - 4, sy - 6 + effBob, 8, 9);
+            ctx.fillStyle = robeLight;
+            ctx.fillRect(sx - 4, sy - 6 + effBob, 2, 9);
+            ctx.fillRect(sx + 2, sy - 6 + effBob, 2, 9);
+
+            // 3. Central Nanite Circuit Trim
+            ctx.fillStyle = cyan;
+            ctx.fillRect(sx - 1, sy - 5 + effBob, 2, 8);
+            ctx.fillStyle = cyanGlow;
+            ctx.fillRect(sx - 2, sy + 1 + effBob, 1, 2);
+            ctx.fillRect(sx + 1, sy + 1 + effBob, 1, 2);
+
+            // 4. Belt & Mana Battery Phial
+            ctx.fillStyle = '#3e2723';
+            ctx.fillRect(sx - 4, sy - 1 + effBob, 8, 2);
+            ctx.fillStyle = '#ffd700'; // Gold buckle
+            ctx.fillRect(sx - 1, sy - 1 + effBob, 2, 2);
+            ctx.fillStyle = cyan; // Cyan phial on hip
+            ctx.fillRect(sx - 5, sy - 1 + effBob, 1, 2);
+
+            // 5. Hood & Head & Shaded Face
+            ctx.fillStyle = robeDark; // Outer cowl shadow
+            ctx.fillRect(sx - 5, sy - 14 + effBob, 10, 8);
+            ctx.fillStyle = robeLight; // Cowl hood
+            ctx.fillRect(sx - 4, sy - 14 + effBob, 8, 7);
+            ctx.fillStyle = skinShadow; // Chin shadow
+            ctx.fillRect(sx - 3, sy - 11 + effBob, 6, 4);
+            ctx.fillStyle = skin; // Face
+            ctx.fillRect(sx - 3, sy - 11 + effBob, 6, 3);
+
+            // 6. Bangs beneath hood
+            ctx.fillStyle = '#1a237e';
+            ctx.fillRect(sx - 3, sy - 12 + effBob, 6, 2);
+            ctx.fillRect(sx - 1, sy - 11 + effBob, 2, 1);
+
+            // 7. Expressive Multi-tone Eyes
+            this.drawPixelEyes(ctx, sx, sy - 10 + effBob, facing, cyan, isBlinking);
+
+            // 8. Class Weapons (if unarmed)
+            if (!equippedWep) {
+                // Floating Nanite Orb (Left Hand)
+                const orbBob = Math.sin(Date.now() / 200) * 2;
+                ctx.fillStyle = cyan;
+                ctx.beginPath();
+                ctx.arc(sx - 8, sy - 4 + effBob + orbBob, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx - 9, sy - 5 + effBob + orbBob, 2, 2);
+                // Nanite orbit ring
+                ctx.strokeStyle = 'rgba(0, 229, 255, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.ellipse(sx - 8, sy - 4 + effBob + orbBob, 5, 2, 0.4, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Golden Arcanist Staff (Right Hand)
+                ctx.fillStyle = '#ffb300';
+                ctx.fillRect(sx + 5, sy - 14 + effBob, 2, 18);
+                ctx.fillStyle = '#ffa000';
+                ctx.fillRect(sx + 4, sy - 17 + effBob, 4, 3);
+                // Glowing Amethyst focus gem
+                ctx.fillStyle = '#ea80fc';
+                ctx.fillRect(sx + 5, sy - 16 + effBob, 2, 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx + 5, sy - 16 + effBob, 1, 1);
+            }
+
+        } else if (facing === 'UP') {
+            const bOffL = (walkCycle === 0 ? 1 : 0);
+            const bOffR = (walkCycle === 1 ? -1 : 0);
+            ctx.fillStyle = '#212121';
+            ctx.fillRect(sx - 4 + bOffL, sy + 4, 3, 2);
+            ctx.fillRect(sx + 1 + bOffR, sy + 4, 3, 2);
+            ctx.fillStyle = '#0a0a0f';
+            ctx.fillRect(sx - 4 + bOffL, sy + 6, 3, 1);
+            ctx.fillRect(sx + 1 + bOffR, sy + 6, 3, 1);
+
+            // Robe Back with sacred geometry circuit
+            ctx.fillStyle = robeDark;
+            ctx.fillRect(sx - 5, sy - 6 + effBob, 10, 10);
+            ctx.fillStyle = robeBase;
+            ctx.fillRect(sx - 4, sy - 6 + effBob, 8, 9);
+            ctx.fillStyle = cyan;
+            ctx.fillRect(sx - 1, sy - 5 + effBob, 2, 4);
+            ctx.fillRect(sx - 3, sy - 2 + effBob, 6, 1);
+            ctx.fillRect(sx - 2, sy + 1 + effBob, 4, 1);
+
+            // Back of Cowl Hood with fold
+            ctx.fillStyle = robeDark;
+            ctx.fillRect(sx - 5, sy - 14 + effBob, 10, 8);
+            ctx.fillStyle = robeLight;
+            ctx.fillRect(sx - 4, sy - 14 + effBob, 8, 7);
+            ctx.fillStyle = '#120024'; // Fold shadow tip
+            ctx.fillRect(sx - 1, sy - 9 + effBob, 2, 3);
+
+            if (!equippedWep) {
+                // Staff on right
+                ctx.fillStyle = '#ffb300';
+                ctx.fillRect(sx + 5, sy - 15 + effBob, 2, 19);
+                ctx.fillStyle = '#ea80fc';
+                ctx.fillRect(sx + 5, sy - 17 + effBob, 2, 2);
+            }
+
+        } else if (facing === 'LEFT') {
+            // Profile Boots
+            ctx.fillStyle = '#212121';
+            ctx.fillRect(sx - 3 + (walkCycle === 0 ? 2 : -1), sy + 4, 3, 2);
+            ctx.fillRect(sx + (walkCycle === 1 ? -2 : 1), sy + 4, 3, 2);
+            ctx.fillStyle = '#0a0a0f';
+            ctx.fillRect(sx - 3 + (walkCycle === 0 ? 2 : -1), sy + 6, 3, 1);
+            ctx.fillRect(sx + (walkCycle === 1 ? -2 : 1), sy + 6, 3, 1);
+
+            // Profile Robe
+            ctx.fillStyle = robeDark;
+            ctx.fillRect(sx - 3, sy - 6 + effBob, 7, 10);
+            ctx.fillStyle = robeBase;
+            ctx.fillRect(sx - 2, sy - 6 + effBob, 5, 9);
+            ctx.fillStyle = cyan;
+            ctx.fillRect(sx - 2, sy - 4 + effBob, 1, 6);
+
+            // Profile Hood & Face
+            ctx.fillStyle = robeLight;
+            ctx.fillRect(sx - 4, sy - 14 + effBob, 7, 7);
+            ctx.fillStyle = skin;
+            ctx.fillRect(sx - 3, sy - 11 + effBob, 4, 3);
+            ctx.fillStyle = '#1a237e'; // Bangs
+            ctx.fillRect(sx - 3, sy - 12 + effBob, 4, 1);
+
+            this.drawPixelEyes(ctx, sx, sy - 10 + effBob, facing, cyan, isBlinking);
+
+            if (!equippedWep) {
+                // Staff held in front
+                ctx.fillStyle = '#ffb300';
+                ctx.fillRect(sx - 6, sy - 14 + effBob, 2, 18);
+                ctx.fillStyle = '#ea80fc';
+                ctx.fillRect(sx - 7, sy - 17 + effBob, 3, 3);
+            }
+
+        } else if (facing === 'RIGHT') {
+            // Profile Boots
+            ctx.fillStyle = '#212121';
+            ctx.fillRect(sx - 1 + (walkCycle === 0 ? -2 : 1), sy + 4, 3, 2);
+            ctx.fillRect(sx + 2 + (walkCycle === 1 ? 2 : -1), sy + 4, 3, 2);
+            ctx.fillStyle = '#0a0a0f';
+            ctx.fillRect(sx - 1 + (walkCycle === 0 ? -2 : 1), sy + 6, 3, 1);
+            ctx.fillRect(sx + 2 + (walkCycle === 1 ? 2 : -1), sy + 6, 3, 1);
+
+            // Profile Robe
+            ctx.fillStyle = robeDark;
+            ctx.fillRect(sx - 4, sy - 6 + effBob, 7, 10);
+            ctx.fillStyle = robeBase;
+            ctx.fillRect(sx - 3, sy - 6 + effBob, 5, 9);
+            ctx.fillStyle = cyan;
+            ctx.fillRect(sx + 1, sy - 4 + effBob, 1, 6);
+
+            // Profile Hood & Face
+            ctx.fillStyle = robeLight;
+            ctx.fillRect(sx - 3, sy - 14 + effBob, 7, 7);
+            ctx.fillStyle = skin;
+            ctx.fillRect(sx - 1, sy - 11 + effBob, 4, 3);
+            ctx.fillStyle = '#1a237e'; // Bangs
+            ctx.fillRect(sx - 1, sy - 12 + effBob, 4, 1);
+
+            this.drawPixelEyes(ctx, sx, sy - 10 + effBob, facing, cyan, isBlinking);
+
+            if (!equippedWep) {
+                // Staff held in front
+                ctx.fillStyle = '#ffb300';
+                ctx.fillRect(sx + 5, sy - 14 + effBob, 2, 18);
+                ctx.fillStyle = '#ea80fc';
+                ctx.fillRect(sx + 4, sy - 17 + effBob, 3, 3);
+            }
+        }
+    }
+
+    drawDetailedSuperSoldier(ctx, char, sx, sy, effBob, facing, walkCycle, equippedWep) {
+        const isBlinking = (Math.floor(Date.now() / 150) % 24 === 0);
+        const armorBase = '#263238';
+        const armorLight = '#455a64';
+        const armorDark = '#102027';
+        const orange = '#ff6d00';
+        const orangeGlow = '#ffa000';
+        const skin = '#ffcc80';
+        const skinShadow = '#e0a96d';
+        const hair = '#3e2723';
+        const headband = '#d50000';
+
+        if (facing === 'DOWN') {
+            // Combat Sabatons
+            const bOffL = (walkCycle === 0 ? 1 : 0);
+            const bOffR = (walkCycle === 1 ? -1 : 0);
+            ctx.fillStyle = armorDark;
+            ctx.fillRect(sx - 4 + bOffL, sy + 4, 3, 2);
+            ctx.fillRect(sx + 1 + bOffR, sy + 4, 3, 2);
+            ctx.fillStyle = '#0a0a0f'; // Soles
+            ctx.fillRect(sx - 4 + bOffL, sy + 6, 3, 1);
+            ctx.fillRect(sx + 1 + bOffR, sy + 6, 3, 1);
+
+            // Ballistic Trousers & Kneepads
+            ctx.fillStyle = armorBase;
+            ctx.fillRect(sx - 4, sy - 1 + effBob, 8, 5);
+            ctx.fillStyle = armorLight;
+            ctx.fillRect(sx - 3 + bOffL, sy + 1 + effBob, 2, 2);
+            ctx.fillRect(sx + 1 + bOffR, sy + 1 + effBob, 2, 2);
+
+            // Heavy Ballistic Cuirass (Chestplate & Pauldrons)
+            ctx.fillStyle = armorDark;
+            ctx.fillRect(sx - 5, sy - 7 + effBob, 10, 6);
+            ctx.fillStyle = armorBase;
+            ctx.fillRect(sx - 4, sy - 7 + effBob, 8, 5);
+            ctx.fillStyle = armorLight;
+            ctx.fillRect(sx - 5, sy - 7 + effBob, 2, 3); // Left pauldron
+            ctx.fillRect(sx + 3, sy - 7 + effBob, 2, 3); // Right pauldron
+
+            // Hazard Orange Power Core & Warning Trim
+            ctx.fillStyle = orange;
+            ctx.fillRect(sx - 1, sy - 6 + effBob, 2, 3);
+            ctx.fillStyle = orangeGlow;
+            ctx.fillRect(sx - 1, sy - 5 + effBob, 2, 1);
+
+            // Tactical Harness Belt
+            ctx.fillStyle = '#212121';
+            ctx.fillRect(sx - 4, sy - 2 + effBob, 8, 1);
+            ctx.fillStyle = '#b0bec5'; // Titanium buckle
+            ctx.fillRect(sx - 1, sy - 2 + effBob, 2, 1);
+
+            // Rugged Jaw & Head
+            ctx.fillStyle = skinShadow;
+            ctx.fillRect(sx - 3, sy - 12 + effBob, 6, 5);
+            ctx.fillStyle = skin;
+            ctx.fillRect(sx - 3, sy - 12 + effBob, 6, 4);
+
+            // Crimson Headband
+            ctx.fillStyle = headband;
+            ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 2);
+            ctx.fillStyle = '#ff1744';
+            ctx.fillRect(sx - 3, sy - 13 + effBob, 6, 1);
+
+            // Spiky Dark Chestnut Hair
+            ctx.fillStyle = hair;
+            ctx.fillRect(sx - 4, sy - 15 + effBob, 8, 2);
+            ctx.fillRect(sx - 3, sy - 16 + effBob, 2, 1); // Spikes
+            ctx.fillRect(sx + 1, sy - 16 + effBob, 2, 1);
+
+            // Expressive Tactical Amber Eyes
+            this.drawPixelEyes(ctx, sx, sy - 10 + effBob, facing, orange, isBlinking);
+
+            // Assault Carbine (if unarmed)
+            if (!equippedWep) {
+                ctx.fillStyle = '#37474f';
+                ctx.fillRect(sx + 4, sy - 8 + effBob, 3, 10);
+                ctx.fillStyle = orange;
+                ctx.fillRect(sx + 5, sy - 9 + effBob, 1, 2);
+            }
+
+        } else if (facing === 'UP') {
+            const bOffL = (walkCycle === 0 ? 1 : 0);
+            const bOffR = (walkCycle === 1 ? -1 : 0);
+            ctx.fillStyle = armorDark;
+            ctx.fillRect(sx - 4 + bOffL, sy + 4, 3, 2);
+            ctx.fillRect(sx + 1 + bOffR, sy + 4, 3, 2);
+            ctx.fillStyle = '#0a0a0f';
+            ctx.fillRect(sx - 4 + bOffL, sy + 6, 3, 1);
+            ctx.fillRect(sx + 1 + bOffR, sy + 6, 3, 1);
+
+            // Heavy Exo Backplate with Heat Exhaust Vents
+            ctx.fillStyle = armorDark;
+            ctx.fillRect(sx - 5, sy - 7 + effBob, 10, 11);
+            ctx.fillStyle = armorBase;
+            ctx.fillRect(sx - 4, sy - 6 + effBob, 8, 8);
+            ctx.fillStyle = orange;
+            ctx.fillRect(sx - 3, sy - 4 + effBob, 2, 3); // Vent Left
+            ctx.fillRect(sx + 1, sy - 4 + effBob, 2, 3); // Vent Right
+
+            // Back of Spiky Hair & Fluttering Headband knot
+            ctx.fillStyle = hair;
+            ctx.fillRect(sx - 4, sy - 15 + effBob, 8, 6);
+            ctx.fillStyle = headband;
+            ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 2);
+            ctx.fillRect(sx + 4, sy - 12 + effBob, 2, 4);
+
+        } else if (facing === 'LEFT') {
+            ctx.fillStyle = armorDark;
+            ctx.fillRect(sx - 3 + (walkCycle === 0 ? 2 : -1), sy + 4, 3, 2);
+            ctx.fillRect(sx + (walkCycle === 1 ? -2 : 1), sy + 4, 3, 2);
+            ctx.fillStyle = '#0a0a0f';
+            ctx.fillRect(sx - 3 + (walkCycle === 0 ? 2 : -1), sy + 6, 3, 1);
+            ctx.fillRect(sx + (walkCycle === 1 ? -2 : 1), sy + 6, 3, 1);
+
+            // Profile Torso
+            ctx.fillStyle = armorDark;
+            ctx.fillRect(sx - 3, sy - 7 + effBob, 7, 11);
+            ctx.fillStyle = armorBase;
+            ctx.fillRect(sx - 2, sy - 6 + effBob, 5, 9);
+            ctx.fillStyle = orange;
+            ctx.fillRect(sx - 2, sy - 4 + effBob, 1, 3);
+
+            // Profile Head & Visor
+            ctx.fillStyle = skin;
+            ctx.fillRect(sx - 3, sy - 12 + effBob, 5, 4);
+            ctx.fillStyle = headband;
+            ctx.fillRect(sx - 4, sy - 13 + effBob, 6, 2);
+            ctx.fillStyle = hair;
+            ctx.fillRect(sx - 3, sy - 15 + effBob, 6, 3);
+
+            this.drawPixelEyes(ctx, sx, sy - 10 + effBob, facing, orange, isBlinking);
+
+            if (!equippedWep) {
+                ctx.fillStyle = '#37474f';
+                ctx.fillRect(sx - 6, sy - 6 + effBob, 6, 3);
+                ctx.fillStyle = orange;
+                ctx.fillRect(sx - 8, sy - 5 + effBob, 2, 1);
+            }
+
+        } else if (facing === 'RIGHT') {
+            ctx.fillStyle = armorDark;
+            ctx.fillRect(sx - 1 + (walkCycle === 0 ? -2 : 1), sy + 4, 3, 2);
+            ctx.fillRect(sx + 2 + (walkCycle === 1 ? 2 : -1), sy + 4, 3, 2);
+            ctx.fillStyle = '#0a0a0f';
+            ctx.fillRect(sx - 1 + (walkCycle === 0 ? -2 : 1), sy + 6, 3, 1);
+            ctx.fillRect(sx + 2 + (walkCycle === 1 ? 2 : -1), sy + 6, 3, 1);
+
+            // Profile Torso
+            ctx.fillStyle = armorDark;
+            ctx.fillRect(sx - 4, sy - 7 + effBob, 7, 11);
+            ctx.fillStyle = armorBase;
+            ctx.fillRect(sx - 3, sy - 6 + effBob, 5, 9);
+            ctx.fillStyle = orange;
+            ctx.fillRect(sx + 1, sy - 4 + effBob, 1, 3);
+
+            // Profile Head & Visor
+            ctx.fillStyle = skin;
+            ctx.fillRect(sx - 2, sy - 12 + effBob, 5, 4);
+            ctx.fillStyle = headband;
+            ctx.fillRect(sx - 2, sy - 13 + effBob, 6, 2);
+            ctx.fillStyle = hair;
+            ctx.fillRect(sx - 3, sy - 15 + effBob, 6, 3);
+
+            this.drawPixelEyes(ctx, sx, sy - 10 + effBob, facing, orange, isBlinking);
+
+            if (!equippedWep) {
+                ctx.fillStyle = '#37474f';
+                ctx.fillRect(sx, sy - 6 + effBob, 6, 3);
+                ctx.fillStyle = orange;
+                ctx.fillRect(sx + 6, sy - 5 + effBob, 2, 1);
+            }
+        }
+    }
+
+    drawDetailedFarmerGod(ctx, char, sx, sy, effBob, facing, walkCycle, equippedWep) {
+        const isBlinking = (Math.floor(Date.now() / 150) % 24 === 0);
+        const strawHat = '#fbc02d';
+        const strawShadow = '#f57f17';
+        const ribbon = '#2e7d32';
+        const hair = '#795548';
+        const tunic = '#558b2f';
+        const overalls = '#4e342e';
+        const boots = '#3e2723';
+        const skin = '#ffe082';
+        const emeraldIris = '#00e676';
+
+        if (facing === 'DOWN') {
+            // Sturdy Mud-Tread Boots
+            const bOffL = (walkCycle === 0 ? 1 : 0);
+            const bOffR = (walkCycle === 1 ? -1 : 0);
+            ctx.fillStyle = boots;
+            ctx.fillRect(sx - 4 + bOffL, sy + 4, 3, 2);
+            ctx.fillRect(sx + 1 + bOffR, sy + 4, 3, 2);
+            ctx.fillStyle = '#21120b';
+            ctx.fillRect(sx - 4 + bOffL, sy + 6, 3, 1);
+            ctx.fillRect(sx + 1 + bOffR, sy + 6, 3, 1);
+
+            // Verdant Tunic & Overalls
+            ctx.fillStyle = tunic;
+            ctx.fillRect(sx - 4, sy - 6 + effBob, 8, 10);
+            ctx.fillStyle = overalls;
+            ctx.fillRect(sx - 3, sy - 2 + effBob, 6, 6); // Overalls bib
+            ctx.fillStyle = '#ffd54f'; // Brass buttons
+            ctx.fillRect(sx - 3, sy - 1 + effBob, 1, 1);
+            ctx.fillRect(sx + 2, sy - 1 + effBob, 1, 1);
+
+            // Living Vine Mantle on Shoulders
+            ctx.fillStyle = '#76ff03';
+            ctx.fillRect(sx - 5, sy - 5 + effBob, 2, 2);
+            ctx.fillRect(sx + 3, sy - 5 + effBob, 2, 2);
+
+            // Sun-kissed Face & Cheerful Cheeks
+            ctx.fillStyle = skin;
+            ctx.fillRect(sx - 3, sy - 11 + effBob, 6, 4);
+            ctx.fillStyle = '#ffab91'; // Rosy cheeks
+            ctx.fillRect(sx - 3, sy - 9 + effBob, 1, 1);
+            ctx.fillRect(sx + 2, sy - 9 + effBob, 1, 1);
+
+            // Tousled Chestnut Curls
+            ctx.fillStyle = hair;
+            ctx.fillRect(sx - 4, sy - 12 + effBob, 8, 2);
+            ctx.fillRect(sx - 4, sy - 10 + effBob, 1, 2);
+            ctx.fillRect(sx + 3, sy - 10 + effBob, 1, 2);
+
+            // Wide Woven Straw Hat
+            ctx.fillStyle = strawShadow;
+            ctx.fillRect(sx - 7, sy - 13 + effBob, 14, 2);
+            ctx.fillStyle = strawHat;
+            ctx.fillRect(sx - 7, sy - 14 + effBob, 14, 1);
+            ctx.fillRect(sx - 4, sy - 17 + effBob, 8, 3);
+            ctx.fillStyle = ribbon;
+            ctx.fillRect(sx - 4, sy - 14 + effBob, 8, 1);
+
+            // Vibrant Emerald Eyes
+            this.drawPixelEyes(ctx, sx, sy - 10 + effBob, facing, emeraldIris, isBlinking);
+
+            // Celestial Harvesting Sickle (if unarmed)
+            if (!equippedWep) {
+                ctx.fillStyle = '#5d4037';
+                ctx.fillRect(sx + 5, sy - 8 + effBob, 2, 12);
+                ctx.fillStyle = '#ffd54f';
+                ctx.fillRect(sx + 4, sy - 12 + effBob, 5, 2);
+                ctx.fillRect(sx + 7, sy - 10 + effBob, 2, 4);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx + 6, sy - 6 + effBob, 2, 2);
+                ctx.fillStyle = '#ffeb3b';
+                ctx.fillRect(sx + 6, sy - 6 + effBob, 1, 1);
+            }
+
+        } else if (facing === 'UP') {
+            const bOffL = (walkCycle === 0 ? 1 : 0);
+            const bOffR = (walkCycle === 1 ? -1 : 0);
+            ctx.fillStyle = boots;
+            ctx.fillRect(sx - 4 + bOffL, sy + 4, 3, 2);
+            ctx.fillRect(sx + 1 + bOffR, sy + 4, 3, 2);
+            ctx.fillStyle = '#21120b';
+            ctx.fillRect(sx - 4 + bOffL, sy + 6, 3, 1);
+            ctx.fillRect(sx + 1 + bOffR, sy + 6, 3, 1);
+
+            ctx.fillStyle = tunic;
+            ctx.fillRect(sx - 4, sy - 6 + effBob, 8, 10);
+            ctx.fillStyle = overalls;
+            ctx.fillRect(sx - 3, sy - 4 + effBob, 2, 7);
+            ctx.fillRect(sx + 1, sy - 4 + effBob, 2, 7);
+            ctx.fillStyle = '#ffd54f';
+            ctx.fillRect(sx - 1, sy - 2 + effBob, 2, 2);
+
+            ctx.fillStyle = '#fbc02d';
+            ctx.fillRect(sx - 1, sy + 1 + effBob, 2, 2);
+
+            // Straw Hat Back
+            ctx.fillStyle = strawShadow;
+            ctx.fillRect(sx - 7, sy - 13 + effBob, 14, 2);
+            ctx.fillStyle = strawHat;
+            ctx.fillRect(sx - 4, sy - 17 + effBob, 8, 4);
+            ctx.fillStyle = ribbon;
+            ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 1);
+            ctx.fillRect(sx + 2, sy - 12 + effBob, 2, 3);
+
+        } else if (facing === 'LEFT') {
+            ctx.fillStyle = boots;
+            ctx.fillRect(sx - 3 + (walkCycle === 0 ? 2 : -1), sy + 4, 3, 2);
+            ctx.fillRect(sx + (walkCycle === 1 ? -2 : 1), sy + 4, 3, 2);
+            ctx.fillStyle = '#21120b';
+            ctx.fillRect(sx - 3 + (walkCycle === 0 ? 2 : -1), sy + 6, 3, 1);
+            ctx.fillRect(sx + (walkCycle === 1 ? -2 : 1), sy + 6, 3, 1);
+
+            ctx.fillStyle = tunic;
+            ctx.fillRect(sx - 3, sy - 6 + effBob, 6, 10);
+            ctx.fillStyle = overalls;
+            ctx.fillRect(sx - 2, sy - 1 + effBob, 4, 5);
+            ctx.fillStyle = '#8d6e63';
+            ctx.fillRect(sx + 1, sy + effBob, 2, 3);
+
+            ctx.fillStyle = hair;
+            ctx.fillRect(sx - 2, sy - 12 + effBob, 3, 2);
+            ctx.fillStyle = skin;
+            ctx.fillRect(sx - 3, sy - 11 + effBob, 4, 3);
+            ctx.fillStyle = strawShadow;
+            ctx.fillRect(sx - 6, sy - 14 + effBob, 11, 2);
+            ctx.fillStyle = strawHat;
+            ctx.fillRect(sx - 3, sy - 17 + effBob, 6, 3);
+            ctx.fillStyle = ribbon;
+            ctx.fillRect(sx - 3, sy - 14 + effBob, 6, 1);
+
+            this.drawPixelEyes(ctx, sx, sy - 10 + effBob, facing, emeraldIris, isBlinking);
+
+            if (!equippedWep) {
+                ctx.fillStyle = '#ffd54f';
+                ctx.fillRect(sx - 6, sy - 10 + effBob, 4, 2);
+                ctx.fillStyle = '#5d4037';
+                ctx.fillRect(sx - 5, sy - 8 + effBob, 2, 8);
+            }
+
+        } else if (facing === 'RIGHT') {
+            ctx.fillStyle = boots;
+            ctx.fillRect(sx - 1 + (walkCycle === 0 ? -2 : 1), sy + 4, 3, 2);
+            ctx.fillRect(sx + 2 + (walkCycle === 1 ? 2 : -1), sy + 4, 3, 2);
+            ctx.fillStyle = '#21120b';
+            ctx.fillRect(sx - 1 + (walkCycle === 0 ? -2 : 1), sy + 6, 3, 1);
+            ctx.fillRect(sx + 2 + (walkCycle === 1 ? 2 : -1), sy + 6, 3, 1);
+
+            ctx.fillStyle = tunic;
+            ctx.fillRect(sx - 3, sy - 6 + effBob, 6, 10);
+            ctx.fillStyle = overalls;
+            ctx.fillRect(sx - 2, sy - 1 + effBob, 4, 5);
+            ctx.fillStyle = '#8d6e63';
+            ctx.fillRect(sx - 3, sy + effBob, 2, 3);
+
+            ctx.fillStyle = hair;
+            ctx.fillRect(sx - 1, sy - 12 + effBob, 3, 2);
+            ctx.fillStyle = skin;
+            ctx.fillRect(sx - 1, sy - 11 + effBob, 4, 3);
+            ctx.fillStyle = strawShadow;
+            ctx.fillRect(sx - 5, sy - 14 + effBob, 11, 2);
+            ctx.fillStyle = strawHat;
+            ctx.fillRect(sx - 3, sy - 17 + effBob, 6, 3);
+            ctx.fillStyle = ribbon;
+            ctx.fillRect(sx - 3, sy - 14 + effBob, 6, 1);
+
+            this.drawPixelEyes(ctx, sx, sy - 10 + effBob, facing, emeraldIris, isBlinking);
+
+            if (!equippedWep) {
+                ctx.fillStyle = '#ffd54f';
+                ctx.fillRect(sx + 2, sy - 10 + effBob, 4, 2);
+                ctx.fillStyle = '#5d4037';
+                ctx.fillRect(sx + 3, sy - 8 + effBob, 2, 8);
+            }
+        }
+    }
+
+    drawDetailedChronoGlitcher(ctx, char, sx, sy, effBob, facing, walkCycle, equippedWep) {
+        const isBlinking = (Math.floor(Date.now() / 150) % 24 === 0);
+        const coatDark = '#12121e';
+        const coatMid = '#1e1e2f';
+        const violet = '#d500f9';
+        const violetGlow = '#e040fb';
+        const cyanMonocle = '#00e5ff';
+        const silverHair = '#ede7f6';
+        const skin = '#fff9c4';
+
+        const isGlitching = (Math.random() < 0.15);
+        const gx = isGlitching ? (Math.random() > 0.5 ? 1 : -1) : 0;
+
+        if (facing === 'DOWN') {
+            const bOffL = (walkCycle === 0 ? 1 : 0);
+            const bOffR = (walkCycle === 1 ? -1 : 0);
+            ctx.fillStyle = coatDark;
+            ctx.fillRect(sx - 4 + bOffL, sy + 4, 3, 2);
+            ctx.fillRect(sx + 1 + bOffR, sy + 4, 3, 2);
+            ctx.fillStyle = violet;
+            ctx.fillRect(sx - 4 + bOffL, sy + 6, 3, 1);
+            ctx.fillRect(sx + 1 + bOffR, sy + 6, 3, 1);
+
+            ctx.fillStyle = coatDark;
+            ctx.fillRect(sx - 5 + gx, sy - 6 + effBob, 10, 10);
+            ctx.fillStyle = coatMid;
+            ctx.fillRect(sx - 4, sy - 6 + effBob, 8, 9);
+            ctx.fillStyle = violetGlow;
+            ctx.fillRect(sx - 2, sy - 5 + effBob, 1, 8);
+            ctx.fillRect(sx + 1, sy - 5 + effBob, 1, 8);
+
+            ctx.fillStyle = '#ffd54f';
+            ctx.fillRect(sx - 4, sy - 1 + effBob, 8, 2);
+            ctx.fillStyle = cyanMonocle;
+            ctx.fillRect(sx - 1, sy - 1 + effBob, 2, 2);
+
+            ctx.fillStyle = skin;
+            ctx.fillRect(sx - 3, sy - 11 + effBob, 6, 4);
+
+            ctx.fillStyle = silverHair;
+            ctx.fillRect(sx - 4, sy - 14 + effBob, 8, 4);
+            ctx.fillStyle = '#b39ddb';
+            ctx.fillRect(sx + 1, sy - 11 + effBob, 2, 2);
+
+            if (isBlinking) {
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(sx - 3, sy - 9 + effBob, 3, 1);
+                ctx.fillRect(sx + 1, sy - 9 + effBob, 3, 1);
+            } else {
+                ctx.fillStyle = cyanMonocle;
+                ctx.fillRect(sx - 3, sy - 10 + effBob, 3, 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx - 2, sy - 10 + effBob, 1, 1);
+                ctx.strokeStyle = 'rgba(0, 229, 255, 0.7)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(sx - 4, sy - 11 + effBob, 4, 4);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx + 1, sy - 10 + effBob, 3, 2);
+                ctx.fillStyle = violet;
+                ctx.fillRect(sx + 1, sy - 10 + effBob, 1, 2);
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(sx + 1, sy - 9 + effBob, 1, 1);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx + 2, sy - 10 + effBob, 1, 1);
+            }
+
+            if (!equippedWep) {
+                ctx.fillStyle = '#1e1e2f';
+                ctx.fillRect(sx - 7, sy - 5 + effBob, 2, 8);
+                ctx.fillRect(sx + 5, sy - 5 + effBob, 2, 8);
+                ctx.fillStyle = violetGlow;
+                ctx.fillRect(sx - 7, sy - 7 + effBob, 2, 3);
+                ctx.fillRect(sx + 5, sy - 7 + effBob, 2, 3);
+            }
+
+        } else if (facing === 'UP') {
+            const bOffL = (walkCycle === 0 ? 1 : 0);
+            const bOffR = (walkCycle === 1 ? -1 : 0);
+            ctx.fillStyle = coatDark;
+            ctx.fillRect(sx - 4 + bOffL, sy + 4, 3, 2);
+            ctx.fillRect(sx + 1 + bOffR, sy + 4, 3, 2);
+            ctx.fillStyle = violet;
+            ctx.fillRect(sx - 4 + bOffL, sy + 6, 3, 1);
+            ctx.fillRect(sx + 1 + bOffR, sy + 6, 3, 1);
+
+            ctx.fillStyle = coatDark;
+            ctx.fillRect(sx - 5, sy - 6 + effBob, 10, 11);
+            ctx.fillStyle = violet;
+            ctx.fillRect(sx - 4, sy + 4 + effBob, 8, 1);
+            ctx.fillStyle = '#0a0a14';
+            ctx.fillRect(sx, sy + 1 + effBob, 1, 4);
+
+            // Temporal Reactor Core on Spine
+            ctx.fillStyle = '#ffd54f';
+            ctx.fillRect(sx - 2, sy - 3 + effBob, 4, 4);
+            ctx.fillStyle = cyanMonocle;
+            ctx.fillRect(sx - 1, sy - 2 + effBob, 2, 2);
+            ctx.fillStyle = violetGlow;
+            ctx.fillRect(sx - 4, sy - 2 + effBob, 1, 3);
+            ctx.fillRect(sx + 3, sy - 2 + effBob, 1, 3);
+
+            ctx.fillStyle = silverHair;
+            ctx.fillRect(sx - 4, sy - 14 + effBob, 8, 6);
+            ctx.fillStyle = '#b39ddb';
+            ctx.fillRect(sx - 3, sy - 10 + effBob, 6, 2);
+
+        } else if (facing === 'LEFT') {
+            ctx.fillStyle = coatDark;
+            ctx.fillRect(sx - 3 + (walkCycle === 0 ? 2 : -1), sy + 4, 3, 2);
+            ctx.fillRect(sx + (walkCycle === 1 ? -2 : 1), sy + 4, 3, 2);
+            ctx.fillStyle = violet;
+            ctx.fillRect(sx - 3 + (walkCycle === 0 ? 2 : -1), sy + 6, 3, 1);
+            ctx.fillRect(sx + (walkCycle === 1 ? -2 : 1), sy + 6, 3, 1);
+
+            ctx.fillStyle = coatDark;
+            ctx.fillRect(sx - 3, sy - 6 + effBob, 6, 10);
+            ctx.fillStyle = violetGlow;
+            ctx.fillRect(sx - 2, sy - 4 + effBob, 1, 6);
+            ctx.fillStyle = '#ffd54f';
+            ctx.fillRect(sx - 2, sy - 1 + effBob, 2, 2);
+
+            ctx.fillStyle = silverHair;
+            ctx.fillRect(sx - 3, sy - 14 + effBob, 6, 5);
+            ctx.fillStyle = '#b39ddb';
+            ctx.fillRect(sx - 2, sy - 11 + effBob, 4, 2);
+            ctx.fillStyle = skin;
+            ctx.fillRect(sx - 3, sy - 11 + effBob, 3, 3);
+
+            ctx.fillStyle = cyanMonocle;
+            ctx.fillRect(sx - 4, sy - 10 + effBob, 3, 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(sx - 3, sy - 10 + effBob, 1, 1);
+
+            if (!equippedWep) {
+                ctx.fillStyle = violetGlow;
+                ctx.fillRect(sx - 7, sy - 5 + effBob, 4, 2);
+            }
+
+        } else if (facing === 'RIGHT') {
+            ctx.fillStyle = coatDark;
+            ctx.fillRect(sx - 1 + (walkCycle === 0 ? -2 : 1), sy + 4, 3, 2);
+            ctx.fillRect(sx + 2 + (walkCycle === 1 ? 2 : -1), sy + 4, 3, 2);
+            ctx.fillStyle = violet;
+            ctx.fillRect(sx - 1 + (walkCycle === 0 ? -2 : 1), sy + 6, 3, 1);
+            ctx.fillRect(sx + 2 + (walkCycle === 1 ? 2 : -1), sy + 6, 3, 1);
+
+            ctx.fillStyle = coatDark;
+            ctx.fillRect(sx - 3, sy - 6 + effBob, 6, 10);
+            ctx.fillStyle = violetGlow;
+            ctx.fillRect(sx + 1, sy - 4 + effBob, 1, 6);
+            ctx.fillStyle = '#ffd54f';
+            ctx.fillRect(sx, sy - 1 + effBob, 2, 2);
+
+            ctx.fillStyle = silverHair;
+            ctx.fillRect(sx - 3, sy - 14 + effBob, 6, 5);
+            ctx.fillStyle = '#b39ddb';
+            ctx.fillRect(sx - 2, sy - 11 + effBob, 4, 2);
+            ctx.fillStyle = skin;
+            ctx.fillRect(sx, sy - 11 + effBob, 3, 3);
+
+            this.drawPixelEyes(ctx, sx, sy - 10 + effBob, facing, violet, isBlinking);
+
+            if (!equippedWep) {
+                ctx.fillStyle = violetGlow;
+                ctx.fillRect(sx + 3, sy - 5 + effBob, 4, 2);
+            }
+        }
+    }
+
+    drawDetailedSolarionArchitect(ctx, char, sx, sy, effBob, facing, walkCycle, equippedWep) {
+        const isBlinking = (Math.floor(Date.now() / 150) % 24 === 0);
+        const ceramic = '#f8fafc';
+        const ceramicShadow = '#cbd5e1';
+        const gold = '#f59e0b';
+        const cyanCore = '#00e5ff';
+        const solarAmber = '#fbbf24';
+
+        if (facing === 'DOWN') {
+            const bOffL = (walkCycle === 0 ? 1 : 0);
+            const bOffR = (walkCycle === 1 ? -1 : 0);
+            ctx.fillStyle = ceramic;
+            ctx.fillRect(sx - 4 + bOffL, sy + 4, 3, 2);
+            ctx.fillRect(sx + 1 + bOffR, sy + 4, 3, 2);
+            ctx.fillStyle = gold;
+            ctx.fillRect(sx - 4 + bOffL, sy + 6, 3, 1);
+            ctx.fillRect(sx + 1 + bOffR, sy + 6, 3, 1);
+
+            ctx.fillStyle = ceramicShadow;
+            ctx.fillRect(sx - 5, sy - 7 + effBob, 10, 11);
+            ctx.fillStyle = ceramic;
+            ctx.fillRect(sx - 4, sy - 7 + effBob, 8, 10);
+            ctx.fillStyle = gold;
+            ctx.fillRect(sx - 5, sy - 7 + effBob, 2, 4);
+            ctx.fillRect(sx + 3, sy - 7 + effBob, 2, 4);
+
+            const corePulse = Math.sin(Date.now() / 180) > 0 ? '#ffea00' : '#ff9100';
+            ctx.fillStyle = corePulse;
+            ctx.fillRect(sx - 2, sy - 5 + effBob, 4, 4);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(sx - 1, sy - 4 + effBob, 2, 2);
+
+            const haloSpin = (Date.now() / 600) % (Math.PI * 2);
+            ctx.fillStyle = solarAmber;
+            ctx.fillRect(sx - 6, sy - 18 + effBob, 12, 1);
+            ctx.fillRect(sx - 7, sy - 16 + effBob, 1, 5);
+            ctx.fillRect(sx + 6, sy - 16 + effBob, 1, 5);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(sx - 5 + Math.cos(haloSpin) * 4, sy - 18 + effBob, 2, 2);
+            ctx.fillRect(sx + 3 - Math.cos(haloSpin) * 4, sy - 18 + effBob, 2, 2);
+
+            ctx.fillStyle = ceramic;
+            ctx.fillRect(sx - 3, sy - 13 + effBob, 6, 6);
+            ctx.fillStyle = gold;
+            ctx.fillRect(sx - 2, sy - 8 + effBob, 1, 2);
+            ctx.fillRect(sx + 1, sy - 8 + effBob, 1, 2);
+
+            this.drawPixelEyes(ctx, sx, sy - 10 + effBob, facing, '#ffd700', isBlinking);
+
+            if (!equippedWep) {
+                ctx.fillStyle = gold;
+                ctx.fillRect(sx + 5, sy - 12 + effBob, 2, 16);
+                ctx.fillStyle = cyanCore;
+                ctx.fillRect(sx + 4, sy - 15 + effBob, 4, 4);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx + 5, sy - 14 + effBob, 2, 2);
+            }
+
+        } else if (facing === 'UP') {
+            const bOffL = (walkCycle === 0 ? 1 : 0);
+            const bOffR = (walkCycle === 1 ? -1 : 0);
+            ctx.fillStyle = ceramic;
+            ctx.fillRect(sx - 4 + bOffL, sy + 4, 3, 2);
+            ctx.fillRect(sx + 1 + bOffR, sy + 4, 3, 2);
+            ctx.fillStyle = gold;
+            ctx.fillRect(sx - 4 + bOffL, sy + 6, 3, 1);
+            ctx.fillRect(sx + 1 + bOffR, sy + 6, 3, 1);
+
+            ctx.fillStyle = ceramicShadow;
+            ctx.fillRect(sx - 5, sy - 7 + effBob, 10, 11);
+            ctx.fillStyle = ceramic;
+            ctx.fillRect(sx - 4, sy - 7 + effBob, 8, 10);
+            ctx.fillStyle = gold;
+            ctx.fillRect(sx - 3, sy - 5 + effBob, 2, 6);
+            ctx.fillRect(sx + 1, sy - 5 + effBob, 2, 6);
+            ctx.fillStyle = cyanCore;
+            ctx.fillRect(sx - 1, sy - 6 + effBob, 2, 7);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(sx - 1, sy - 3 + effBob, 2, 2);
+
+            // Halo seen from behind
+            ctx.fillStyle = solarAmber;
+            ctx.fillRect(sx - 6, sy - 18 + effBob, 12, 1);
+            ctx.fillRect(sx - 7, sy - 16 + effBob, 1, 5);
+            ctx.fillRect(sx + 6, sy - 16 + effBob, 1, 5);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(sx - 4, sy - 19 + effBob, 2, 2);
+            ctx.fillRect(sx + 2, sy - 19 + effBob, 2, 2);
+
+        } else if (facing === 'LEFT') {
+            ctx.fillStyle = ceramic;
+            ctx.fillRect(sx - 3 + (walkCycle === 0 ? 2 : -1), sy + 4, 3, 2);
+            ctx.fillRect(sx + (walkCycle === 1 ? -2 : 1), sy + 4, 3, 2);
+            ctx.fillStyle = gold;
+            ctx.fillRect(sx - 3 + (walkCycle === 0 ? 2 : -1), sy + 6, 3, 1);
+            ctx.fillRect(sx + (walkCycle === 1 ? -2 : 1), sy + 6, 3, 1);
+
+            ctx.fillStyle = ceramicShadow;
+            ctx.fillRect(sx - 3, sy - 7 + effBob, 6, 11);
+            ctx.fillStyle = gold;
+            ctx.fillRect(sx - 2, sy - 5 + effBob, 2, 4);
+            ctx.fillStyle = cyanCore;
+            ctx.fillRect(sx - 1, sy - 3 + effBob, 1, 3);
+
+            ctx.fillStyle = ceramic;
+            ctx.fillRect(sx - 3, sy - 13 + effBob, 5, 5);
+            ctx.fillStyle = gold;
+            ctx.fillRect(sx - 2, sy - 8 + effBob, 1, 2);
+
+            ctx.fillStyle = solarAmber;
+            ctx.fillRect(sx - 1, sy - 17 + effBob, 2, 4);
+
+            this.drawPixelEyes(ctx, sx, sy - 10 + effBob, facing, '#ffd700', isBlinking);
+
+            if (!equippedWep) {
+                ctx.fillStyle = gold;
+                ctx.fillRect(sx - 6, sy - 12 + effBob, 2, 14);
+                ctx.fillStyle = cyanCore;
+                ctx.fillRect(sx - 7, sy - 14 + effBob, 4, 3);
+            }
+
+        } else if (facing === 'RIGHT') {
+            ctx.fillStyle = ceramic;
+            ctx.fillRect(sx - 1 + (walkCycle === 0 ? -2 : 1), sy + 4, 3, 2);
+            ctx.fillRect(sx + 2 + (walkCycle === 1 ? 2 : -1), sy + 4, 3, 2);
+            ctx.fillStyle = gold;
+            ctx.fillRect(sx - 1 + (walkCycle === 0 ? -2 : 1), sy + 6, 3, 1);
+            ctx.fillRect(sx + 2 + (walkCycle === 1 ? 2 : -1), sy + 6, 3, 1);
+
+            ctx.fillStyle = ceramicShadow;
+            ctx.fillRect(sx - 3, sy - 7 + effBob, 6, 11);
+            ctx.fillStyle = gold;
+            ctx.fillRect(sx, sy - 5 + effBob, 2, 4);
+            ctx.fillStyle = cyanCore;
+            ctx.fillRect(sx, sy - 3 + effBob, 1, 3);
+
+            ctx.fillStyle = ceramic;
+            ctx.fillRect(sx - 2, sy - 13 + effBob, 5, 5);
+            ctx.fillStyle = gold;
+            ctx.fillRect(sx + 1, sy - 8 + effBob, 1, 2);
+
+            ctx.fillStyle = solarAmber;
+            ctx.fillRect(sx - 1, sy - 17 + effBob, 2, 4);
+
+            this.drawPixelEyes(ctx, sx, sy - 10 + effBob, facing, '#ffd700', isBlinking);
+
+            if (!equippedWep) {
+                ctx.fillStyle = gold;
+                ctx.fillRect(sx + 4, sy - 12 + effBob, 2, 14);
+                ctx.fillStyle = cyanCore;
+                ctx.fillRect(sx + 3, sy - 14 + effBob, 4, 3);
+            }
+        }
+    }
+
+
     renderChests(chests, camX, camY, map = null) {
         const ctx = this.ctx;
         const heightStep = map ? (map.heightStep || 10) : 10;
@@ -2340,6 +2706,9 @@ class RetroRenderer {
         if (!npcs) return;
         const ctx = this.ctx;
         const heightStep = map ? (map.heightStep || 10) : 10;
+        const isBlinking = (Math.floor(Date.now() / 150) % 24 === 0);
+        const effBob = (Math.sin(Date.now() / 240) > 0.4 ? -1 : 0);
+
         for (const npc of npcs) {
             const elev = (map && map.getElevationAt) ? map.getElevationAt(npc.x, npc.y) : 1;
             const sx = Math.round(npc.x) - camX;
@@ -2347,102 +2716,152 @@ class RetroRenderer {
             if (sx < -30 || sx > this.width + 30 || sy < -30 || sy > this.height + 30) continue;
 
             // Shadow
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.38)';
             ctx.beginPath();
-            ctx.ellipse(sx, sy + 6, 6, 3, 0, 0, Math.PI * 2);
+            ctx.ellipse(sx, sy + 6, 7, 3, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            const facing = npc.facing || 'down';
+            const facing = (npc.facing || 'down').toUpperCase();
 
-            // Distinct GBA Pixel Art Sprites for each NPC
+            // 1. ARCHIVIST_UNIT_7 (High-Tech Gyro Automaton)
             if (npc.id === 'ARCHIVIST_UNIT_7') {
-                // Floating Automaton Drone Cube with glowing eye
                 const floatBob = Math.sin(this.waterAnimTimer * 3.5) * 2;
-                ctx.fillStyle = '#1e272e';
-                ctx.fillRect(sx - 6, sy - 10 + floatBob, 12, 12);
-                ctx.fillStyle = '#00cec9';
-                ctx.fillRect(sx - 5, sy - 9 + floatBob, 10, 10);
-                // Glowing cyan eye
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(sx - 2, sy - 6 + floatBob, 4, 4);
-                ctx.fillStyle = '#0984e3';
-                ctx.fillRect(sx - 1, sy - 5 + floatBob, 2, 2);
-                // Orbiting nanite ring
-                ctx.strokeStyle = 'rgba(0, 206, 201, 0.6)';
-                ctx.lineWidth = 1;
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 1.5;
                 ctx.beginPath();
-                ctx.ellipse(sx, sy - 4 + floatBob, 9, 3, 0, 0, Math.PI * 2);
+                ctx.ellipse(sx, sy - 5 + floatBob, 10, 4, Date.now() / 400, 0, Math.PI * 2);
                 ctx.stroke();
+
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(sx - 6, sy - 11 + floatBob, 12, 12);
+                ctx.fillStyle = '#00cec9';
+                ctx.fillRect(sx - 5, sy - 10 + floatBob, 10, 10);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(sx - 2, sy - 7 + floatBob, 4, 4);
+                ctx.fillStyle = '#0984e3';
+                ctx.fillRect(sx - 1, sy - 6 + floatBob, 2, 2);
+
+                ctx.fillStyle = 'rgba(0, 229, 255, 0.6)';
+                ctx.fillRect(sx - 4 + Math.sin(Date.now() / 150) * 3, sy - 14 + floatBob, 2, 2);
+
             } else {
-                // Humanoid NPC (Elder, Smith, Herbalist, Scavenger, Ranger, Hermit)
-                // Boots
-                ctx.fillStyle = '#2d3436';
-                ctx.fillRect(sx - 3, sy + 3, 3, 3);
+                // High-Fidelity Humanoid NPC
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(sx - 4, sy + 3, 3, 3);
                 ctx.fillRect(sx + 1, sy + 3, 3, 3);
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(sx - 4, sy + 5, 3, 1);
+                ctx.fillRect(sx + 1, sy + 5, 3, 1);
 
-                // Torso / Robe / Clothing
                 ctx.fillStyle = npc.spriteColor || '#6c5ce7';
-                ctx.fillRect(sx - 4, sy - 4, 9, 8);
+                ctx.fillRect(sx - 5, sy - 5 + effBob, 10, 9);
+                ctx.fillStyle = 'rgba(0,0,0,0.15)';
+                ctx.fillRect(sx - 5, sy - 1 + effBob, 10, 5);
 
-                // Accessories
+                ctx.fillStyle = '#f5cba7';
+                ctx.fillRect(sx - 3, sy - 11 + effBob, 6, 6);
+                ctx.fillStyle = '#ffeaa7';
+                ctx.fillRect(sx - 3, sy - 11 + effBob, 6, 5);
+
                 if (npc.id === 'BLACKSMITH_THORNE') {
-                    // Leather Apron
-                    ctx.fillStyle = '#636e72';
-                    ctx.fillRect(sx - 3, sy - 2, 7, 6);
-                    // Hammer in hand
-                    ctx.fillStyle = '#b2bec3';
-                    ctx.fillRect(sx + 5, sy - 4, 3, 3);
-                    ctx.fillStyle = '#6d4c41';
-                    ctx.fillRect(sx + 6, sy - 1, 1, 6);
-                } else if (npc.id === 'ELDER_OAKHAVEN') {
-                    // Robe Trim
-                    ctx.fillStyle = '#ffd700';
-                    ctx.fillRect(sx - 1, sy - 4, 3, 8);
-                    // Staff
                     ctx.fillStyle = '#795548';
-                    ctx.fillRect(sx + 5, sy - 10, 2, 16);
+                    ctx.fillRect(sx - 4, sy - 3 + effBob, 8, 7);
+                    ctx.fillStyle = '#bcaaa4';
+                    ctx.fillRect(sx - 3, sy - 2 + effBob, 1, 1);
+                    ctx.fillRect(sx + 2, sy - 2 + effBob, 1, 1);
+                    ctx.fillStyle = '#b0bec5';
+                    ctx.fillRect(sx + 5, sy - 7 + effBob, 4, 3);
+                    ctx.fillStyle = '#4e342e';
+                    ctx.fillRect(sx + 6, sy - 4 + effBob, 2, 9);
+                    ctx.fillStyle = '#212121';
+                    ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 3);
+                    ctx.fillRect(sx - 3, sy - 7 + effBob, 6, 5);
+
+                } else if (npc.id === 'ELDER_OAKHAVEN') {
+                    ctx.fillStyle = '#ffd700';
+                    ctx.fillRect(sx - 1, sy - 5 + effBob, 2, 9);
+                    ctx.fillStyle = '#6d4c41';
+                    ctx.fillRect(sx + 5, sy - 15 + effBob, 2, 20);
                     ctx.fillStyle = '#00e5ff';
-                    ctx.fillRect(sx + 4, sy - 12, 4, 3);
+                    ctx.fillRect(sx + 4, sy - 18 + effBob, 4, 4);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(sx + 5, sy - 17 + effBob, 2, 2);
+                    ctx.fillStyle = '#eceff1';
+                    ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 3);
+                    ctx.fillRect(sx - 3, sy - 7 + effBob, 6, 6);
+                    ctx.fillStyle = '#b0bec5';
+                    ctx.fillRect(sx - 1, sy - 4 + effBob, 2, 4);
+
                 } else if (npc.id === 'HERBALIST_MAEVE') {
-                    // Flower basket
-                    ctx.fillStyle = '#e17055';
-                    ctx.fillRect(sx + 5, sy, 4, 4);
-                    ctx.fillStyle = '#55efc4';
-                    ctx.fillRect(sx + 5, sy - 1, 4, 2);
-                }
+                    ctx.fillStyle = '#81c784';
+                    ctx.fillRect(sx - 4, sy - 3 + effBob, 8, 7);
+                    ctx.fillStyle = '#a1887f';
+                    ctx.fillRect(sx + 5, sy - 2 + effBob, 5, 5);
+                    ctx.fillStyle = '#e91e63';
+                    ctx.fillRect(sx + 6, sy - 4 + effBob, 3, 3);
+                    ctx.fillStyle = '#76ff03';
+                    ctx.fillRect(sx + 5, sy - 3 + effBob, 2, 2);
+                    ctx.fillStyle = '#a04000';
+                    ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 4);
+                    ctx.fillRect(sx + 3, sy - 10 + effBob, 2, 5);
 
-                // Head
-                ctx.fillStyle = '#ffeaa7'; // Skin tone
-                ctx.fillRect(sx - 3, sy - 9, 7, 6);
+                } else if (npc.id === 'INVENTOR_ZARA') {
+                    ctx.fillStyle = '#d97706';
+                    ctx.fillRect(sx - 4, sy - 12 + effBob, 8, 3);
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.fillRect(sx - 3, sy - 11 + effBob, 2, 2);
+                    ctx.fillRect(sx + 1, sy - 11 + effBob, 2, 2);
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.fillRect(sx + 5, sy - 7 + effBob, 2, 9);
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.fillRect(sx + 5 + (Math.random() > 0.5 ? 1 : -1), sy - 8 + effBob, 2, 2);
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillRect(sx - 4, sy - 14 + effBob, 8, 3);
 
-                // Hair / Beard / Hat
-                ctx.fillStyle = npc.hairColor || '#dfe6e9';
-                if (npc.id === 'ELDER_OAKHAVEN') {
-                    ctx.fillRect(sx - 4, sy - 11, 9, 3);
-                    ctx.fillRect(sx - 4, sy - 9, 2, 8);
-                    ctx.fillRect(sx + 3, sy - 9, 2, 8);
-                    ctx.fillRect(sx - 2, sy - 4, 5, 5); // Beard
-                } else if (npc.id === 'WANDERER_LYRA') {
-                    ctx.fillRect(sx - 4, sy - 11, 9, 4);
-                    ctx.fillStyle = '#e74c3c';
-                    ctx.fillRect(sx - 3, sy - 13, 2, 3);
+                } else if (npc.id === 'COMMANDER_KRELL') {
+                    ctx.fillStyle = '#334155';
+                    ctx.fillRect(sx - 4, sy - 5 + effBob, 8, 7);
+                    ctx.fillStyle = '#dc2626';
+                    ctx.fillRect(sx - 6, sy - 4 + effBob, 2, 8);
+                    ctx.fillStyle = '#475569';
+                    ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 3);
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.fillRect(sx - 6, sy - 2 + effBob, 2, 2);
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillRect(sx - 6, sy + effBob, 2, 7);
+
+                } else if (npc.id === 'ASTRONOMER_NABILAH') {
+                    ctx.fillStyle = '#1e1b4b';
+                    ctx.fillRect(sx - 5, sy - 5 + effBob, 10, 9);
+                    ctx.fillStyle = '#fde047';
+                    ctx.fillRect(sx - 3, sy - 2 + effBob, 1, 1);
+                    ctx.fillRect(sx + 2, sy + 1 + effBob, 1, 1);
+                    ctx.fillStyle = '#e2e8f0';
+                    ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 2);
+                    ctx.fillRect(sx - 1, sy - 15 + effBob, 2, 2);
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.fillRect(sx + 5, sy - 4 + effBob, 4, 4);
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.fillRect(sx + 6, sy - 3 + effBob, 2, 2);
+
+                } else if (npc.id === 'MYSTIC_ROWAN') {
+                    ctx.fillStyle = '#581c87';
+                    ctx.fillRect(sx - 5, sy - 5 + effBob, 10, 9);
+                    const scrollBob = Math.sin(Date.now() / 220) * 3;
+                    ctx.fillStyle = '#fef08a';
+                    ctx.fillRect(sx - 8, sy - 6 + effBob + scrollBob, 3, 4);
+                    ctx.fillStyle = '#a855f7';
+                    ctx.fillRect(sx - 7, sy - 5 + effBob + scrollBob, 1, 2);
+
                 } else {
-                    ctx.fillRect(sx - 4, sy - 11, 9, 3);
+                    ctx.fillStyle = npc.hairColor || '#475569';
+                    ctx.fillRect(sx - 4, sy - 13 + effBob, 8, 3);
                 }
 
-                // Eyes based on facing
-                ctx.fillStyle = '#2d3436';
-                if (facing === 'down') {
-                    ctx.fillRect(sx - 2, sy - 7, 2, 2);
-                    ctx.fillRect(sx + 1, sy - 7, 2, 2);
-                } else if (facing === 'left') {
-                    ctx.fillRect(sx - 3, sy - 7, 2, 2);
-                } else if (facing === 'right') {
-                    ctx.fillRect(sx + 2, sy - 7, 2, 2);
-                }
+                this.drawPixelEyes(ctx, sx, sy - 9 + effBob, facing, '#0284c7', isBlinking);
             }
 
-            // Proximity Talk Prompt & Nameplate
             if (playerPos) {
                 const dist = Math.hypot(playerPos.x - npc.x, playerPos.y - npc.y);
                 if (dist <= 38) {
@@ -2454,9 +2873,8 @@ class RetroRenderer {
                     ctx.textAlign = 'center';
                     ctx.fillText('💬 TALK', sx, sy - 17 + bob);
 
-                    // Nameplate banner
                     ctx.fillStyle = 'rgba(8, 12, 18, 0.88)';
-                    ctx.fillRect(sx - 30, sy - 35 + bob, 60, 10);
+                    ctx.fillRect(sx - 32, sy - 35 + bob, 64, 10);
                     ctx.fillStyle = '#00e5ff';
                     ctx.font = 'bold 6px monospace';
                     ctx.fillText(npc.name, sx, sy - 27 + bob);
@@ -2464,6 +2882,7 @@ class RetroRenderer {
             }
         }
     }
+
 
     addFloatingText(text, x, y, color = '#ffd54f') {
         this.floatingTexts.push({
@@ -2834,49 +3253,329 @@ class RetroRenderer {
 
         if (sx < -40 || sx > this.width + 40 || sy < -40 || sy > this.height + 40) return;
 
-        // Shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+        const isBoss = Boolean(enemy.isBoss);
+        const isFrenzied = Boolean(enemy.isFrenzied || enemy.frenzyActive);
+
+        // Ground Shadow
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.40)';
         ctx.beginPath();
-        ctx.ellipse(sx, sy + 5, enemy.isBoss ? 14 : 6, enemy.isBoss ? 6 : 3, 0, 0, Math.PI * 2);
+        ctx.ellipse(sx, sy + (isBoss ? 8 : 4), isBoss ? 16 : 7, isBoss ? 7 : 3, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        if (enemy.isBoss) {
-            // Aegis Dreadnought Boss (Large 32x32)
-            ctx.fillStyle = pal[0];
-            ctx.fillRect(sx - 14, sy - 18, 28, 26);
-            ctx.fillStyle = (Math.floor(Date.now() / 150) % 2 === 0) ? '#ff1744' : '#d50000';
-            ctx.fillRect(sx - 5, sy - 10, 10, 7);
-            // Heavy armor vents
-            ctx.fillStyle = pal[7];
-            ctx.fillRect(sx - 12, sy - 6, 3, 10);
-            ctx.fillRect(sx + 9, sy - 6, 3, 10);
+        // Monster Frenzy Blood-Red Rage Aura
+        if (isFrenzied) {
+            const ragePulse = 1.0 + 0.2 * Math.sin(Date.now() / 90);
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255, 23, 68, 0.7)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(sx, sy, (isBoss ? 24 : 12) * ragePulse, 0, Math.PI * 2);
+            ctx.stroke();
 
-            // Telegraph beam line if charging attack
-            if (enemy.telegraphTimer > 0) {
-                ctx.strokeStyle = '#ff1744';
-                ctx.lineWidth = 1;
-                ctx.setLineDash([4, 4]);
-                ctx.beginPath();
-                ctx.moveTo(sx, sy);
-                ctx.lineTo(sx, sy + 80);
-                ctx.stroke();
-                ctx.setLineDash([]);
-            }
-
-            // Boss Health bar
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(sx - 18, sy - 26, 36, 5);
+            // Streaming Crimson Eye Flare Trails
+            const trailAngle = (enemy.facingAngle !== undefined) ? enemy.facingAngle + Math.PI : Date.now() / 120;
             ctx.fillStyle = '#ff1744';
-            ctx.fillRect(sx - 17, sy - 25, 34 * Math.max(0, enemy.hp / enemy.maxHp), 3);
+            for (let i = 1; i <= 3; i++) {
+                const tx = sx + Math.cos(trailAngle) * (i * 4) + (Math.random() - 0.5) * 3;
+                const ty = sy + Math.sin(trailAngle) * (i * 4) - 2;
+                ctx.globalAlpha = 0.8 - i * 0.22;
+                ctx.fillRect(tx - 1, ty - 1, 3 - i * 0.5, 3 - i * 0.5);
+            }
+            ctx.restore();
+        }
+
+        const type = (enemy.type || '').toUpperCase();
+
+        if (isBoss) {
+            this.drawBossMonster(ctx, enemy, pal, sx, sy, isFrenzied);
         } else {
-            // Small Nanite Prowler / Scorpions / Wyverns
-            ctx.fillStyle = pal[1];
-            ctx.fillRect(sx - 6, sy - 6, 12, 10);
-            ctx.fillStyle = '#ff5252';
-            ctx.fillRect(sx - 3, sy - 4, 3, 3);
-            ctx.fillRect(sx + 1, sy - 4, 3, 3);
+            this.drawRegularMonster(ctx, enemy, pal, sx, sy, type, isFrenzied);
+        }
+
+        // Enemy / Boss Health Bar
+        if (enemy.hp < enemy.maxHp || isBoss) {
+            const barW = isBoss ? 40 : 16;
+            const barH = isBoss ? 5 : 3;
+            const barY = sy - (isBoss ? 28 : 14);
+            ctx.fillStyle = '#0a0a0f';
+            ctx.fillRect(sx - barW / 2 - 1, barY - 1, barW + 2, barH + 2);
+            ctx.fillStyle = isFrenzied ? '#ff1744' : (isBoss ? '#f59e0b' : '#ef4444');
+            const hpRatio = Math.max(0, enemy.hp / enemy.maxHp);
+            ctx.fillRect(sx - barW / 2, barY, Math.round(barW * hpRatio), barH);
         }
     }
+
+    drawRegularMonster(ctx, enemy, pal, sx, sy, type, isFrenzied) {
+        const runCycle = Math.sin(Date.now() / 90);
+
+        if (type === 'WOLF' || type === 'CRIMSON_WOLF' || type === 'DIREWOLF') {
+            const furBase = isFrenzied ? '#b71c1c' : '#455a64';
+            const furDark = isFrenzied ? '#7f0000' : '#263238';
+            const furLight = isFrenzied ? '#ef5350' : '#78909c';
+            const eyeCol = isFrenzied ? '#ffff00' : '#ff1744';
+
+            ctx.fillStyle = furDark;
+            ctx.fillRect(sx - 6 + runCycle * 2, sy + 3, 2, 3);
+            ctx.fillRect(sx - 3 - runCycle * 2, sy + 3, 2, 3);
+            ctx.fillRect(sx + 2 + runCycle * 2, sy + 3, 2, 3);
+            ctx.fillRect(sx + 5 - runCycle * 2, sy + 3, 2, 3);
+
+            ctx.fillStyle = furBase;
+            ctx.fillRect(sx - 6, sy - 3, 12, 6);
+            ctx.fillStyle = furLight;
+            ctx.fillRect(sx - 5, sy - 5, 8, 2);
+
+            ctx.fillStyle = furDark;
+            ctx.fillRect(sx - 9, sy - 5 + runCycle, 4, 3);
+
+            ctx.fillStyle = furBase;
+            ctx.fillRect(sx + 3, sy - 6, 6, 6);
+            ctx.fillStyle = furDark;
+            ctx.fillRect(sx + 4, sy - 8, 2, 3);
+            ctx.fillRect(sx + 7, sy - 8, 2, 3);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(sx + 7, sy - 2, 3, 2);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(sx + 9, sy - 3, 2, 1);
+
+            ctx.fillStyle = eyeCol;
+            ctx.fillRect(sx + 5, sy - 4, 2, 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(sx + 6, sy - 4, 1, 1);
+
+        } else if (type === 'GOBLIN' || type === 'MARAUDER') {
+            const skinCol = '#2e7d32';
+            const skinDark = '#1b5e20';
+            const eyeCol = isFrenzied ? '#ff0000' : '#ffeb3b';
+
+            ctx.fillStyle = '#3e2723';
+            ctx.fillRect(sx - 4 + (runCycle > 0 ? 1 : 0), sy + 3, 3, 2);
+            ctx.fillRect(sx + 1 + (runCycle <= 0 ? 1 : 0), sy + 3, 3, 2);
+
+            ctx.fillStyle = '#5d4037';
+            ctx.fillRect(sx - 4, sy - 4, 8, 7);
+
+            ctx.fillStyle = skinCol;
+            ctx.fillRect(sx - 3, sy - 10, 6, 6);
+            ctx.fillStyle = skinDark;
+            ctx.fillRect(sx - 6, sy - 8, 3, 2);
+            ctx.fillRect(sx + 3, sy - 8, 3, 2);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(sx - 2, sy - 5, 1, 2);
+            ctx.fillRect(sx + 1, sy - 5, 1, 2);
+
+            ctx.fillStyle = eyeCol;
+            ctx.fillRect(sx - 2, sy - 8, 2, 2);
+            ctx.fillRect(sx + 1, sy - 8, 2, 2);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(sx - 1, sy - 8, 1, 1);
+            ctx.fillRect(sx + 1, sy - 8, 1, 1);
+
+            ctx.fillStyle = '#8d6e63';
+            ctx.fillRect(sx + 5, sy - 8, 2, 11);
+            ctx.fillStyle = '#cfd8dc';
+            ctx.fillRect(sx + 4, sy - 9, 4, 2);
+
+        } else if (type === 'SHADOW_BAT' || type === 'BAT' || type === 'BLOODWING') {
+            const wingFlap = Math.sin(Date.now() / 80) * 4;
+            const batCol = isFrenzied ? '#4a0e17' : '#1e1b4b';
+
+            ctx.fillStyle = batCol;
+            ctx.fillRect(sx - 10, sy - 4 + wingFlap, 6, 5);
+            ctx.fillRect(sx + 4, sy - 4 + wingFlap, 6, 5);
+            ctx.fillStyle = '#ff1744';
+            ctx.fillRect(sx - 9, sy - 5 + wingFlap, 5, 1);
+            ctx.fillRect(sx + 4, sy - 5 + wingFlap, 5, 1);
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(sx - 3, sy - 5, 6, 7);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(sx - 1, sy - 1, 2, 2);
+
+            ctx.fillStyle = '#ff0055';
+            ctx.fillRect(sx - 2, sy - 4, 2, 2);
+            ctx.fillRect(sx + 1, sy - 4, 2, 2);
+
+        } else if (type === 'SCORPION' || type === 'DUNE_STALKER') {
+            const pincerSnap = Math.sin(Date.now() / 110) * 2;
+            const shellCol = isFrenzied ? '#c62828' : '#e65100';
+            const shellDark = isFrenzied ? '#8e0000' : '#bf360c';
+
+            ctx.fillStyle = shellDark;
+            for (let i = 0; i < 3; i++) {
+                ctx.fillRect(sx - 7, sy - 1 + i * 2, 2, 1);
+                ctx.fillRect(sx + 5, sy - 1 + i * 2, 2, 1);
+            }
+
+            ctx.fillStyle = shellCol;
+            ctx.fillRect(sx - 4, sy - 2, 8, 6);
+            ctx.fillStyle = shellDark;
+            ctx.fillRect(sx - 3, sy, 6, 2);
+
+            ctx.fillStyle = shellCol;
+            ctx.fillRect(sx - 7, sy - 5 + pincerSnap, 3, 4);
+            ctx.fillRect(sx + 4, sy - 5 - pincerSnap, 3, 4);
+
+            ctx.fillStyle = shellDark;
+            ctx.fillRect(sx - 2, sy - 5, 3, 3);
+            ctx.fillRect(sx - 3, sy - 8, 3, 3);
+            ctx.fillRect(sx - 1, sy - 10, 4, 2);
+            ctx.fillStyle = '#76ff03';
+            ctx.fillRect(sx + 3, sy - 9, 2, 2);
+
+            ctx.fillStyle = '#ffd54f';
+            ctx.fillRect(sx - 2, sy - 2, 1, 1);
+            ctx.fillRect(sx + 1, sy - 2, 1, 1);
+
+        } else if (type === 'VOID_STALKER' || type === 'CHASM_BEAST') {
+            const tentacleWave = Math.sin(Date.now() / 120);
+            ctx.fillStyle = '#18002e';
+            ctx.fillRect(sx - 6, sy - 6, 12, 10);
+            ctx.fillStyle = '#4a0072';
+            ctx.fillRect(sx - 7 + tentacleWave * 2, sy + 3, 3, 4);
+            ctx.fillRect(sx + 4 - tentacleWave * 2, sy + 3, 3, 4);
+            ctx.fillRect(sx - 8, sy - 2 + tentacleWave, 3, 3);
+            ctx.fillRect(sx + 5, sy - 2 - tentacleWave, 3, 3);
+
+            ctx.fillStyle = '#00e5ff';
+            ctx.fillRect(sx - 3, sy - 3, 6, 5);
+            ctx.fillStyle = '#e040fb';
+            ctx.fillRect(sx - 2, sy - 2, 4, 3);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(sx - 1, sy - 1, 2, 1);
+
+        } else if (type === 'CYBER_DRONE') {
+            const floatBob = Math.sin(Date.now() / 140) * 2;
+            ctx.fillStyle = '#37474f';
+            ctx.fillRect(sx - 5, sy - 6 + floatBob, 10, 8);
+            ctx.fillStyle = '#90a4ae';
+            ctx.fillRect(sx - 8, sy - 8 + floatBob, 16, 2);
+            ctx.fillStyle = '#ff1744';
+            ctx.fillRect(sx - 2, sy - 3 + floatBob, 4, 3);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(sx - 1, sy - 2 + floatBob, 2, 1);
+
+        } else if (type === 'IMP') {
+            ctx.fillStyle = '#e65100';
+            ctx.fillRect(sx - 4, sy - 5, 8, 8);
+            ctx.fillStyle = '#bf360c';
+            ctx.fillRect(sx - 4, sy - 8, 2, 3);
+            ctx.fillRect(sx + 2, sy - 8, 2, 3);
+            ctx.fillStyle = '#ffd54f';
+            ctx.fillRect(sx + 5, sy - 8, 2, 11);
+            ctx.fillStyle = '#ffeb3b';
+            ctx.fillRect(sx - 2, sy - 3, 2, 2);
+            ctx.fillRect(sx + 1, sy - 3, 2, 2);
+
+        } else if (type === 'WYVERN') {
+            const wingFlap = Math.sin(Date.now() / 90) * 3;
+            ctx.fillStyle = '#0284c7';
+            ctx.fillRect(sx - 9, sy - 5 + wingFlap, 5, 6);
+            ctx.fillRect(sx + 4, sy - 5 + wingFlap, 5, 6);
+            ctx.fillStyle = '#0369a1';
+            ctx.fillRect(sx - 4, sy - 6, 8, 8);
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(sx - 1, sy - 8, 2, 2);
+            ctx.fillStyle = '#ff0055';
+            ctx.fillRect(sx + 1, sy - 4, 2, 2);
+
+        } else {
+            ctx.fillStyle = pal[1] || '#455a64';
+            ctx.fillRect(sx - 6, sy - 6, 12, 10);
+            ctx.fillStyle = '#ff1744';
+            ctx.fillRect(sx - 3, sy - 4, 3, 3);
+            ctx.fillRect(sx + 1, sy - 4, 3, 3);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(sx - 2, sy - 3, 1, 1);
+            ctx.fillRect(sx + 2, sy - 3, 1, 1);
+        }
+    }
+
+    drawBossMonster(ctx, enemy, pal, sx, sy, isFrenzied) {
+        const type = (enemy.type || '').toUpperCase();
+        const bossId = (enemy.id || '').toUpperCase();
+
+        if (type === 'CINDER_GOLEM' || bossId.includes('CINDER') || bossId.includes('GOLEM')) {
+            const magmaPulse = Math.sin(Date.now() / 150) > 0 ? '#ff5722' : '#ff9800';
+            ctx.fillStyle = '#100c08';
+            ctx.fillRect(sx - 16, sy - 20, 32, 28);
+            ctx.fillStyle = magmaPulse;
+            ctx.fillRect(sx - 12, sy - 14, 24, 3);
+            ctx.fillRect(sx - 6, sy - 8, 12, 4);
+            ctx.fillRect(sx - 2, sy - 18, 4, 24);
+            ctx.fillStyle = '#ff3d00';
+            ctx.fillRect(sx - 18, sy - 24, 4, 8);
+            ctx.fillRect(sx + 14, sy - 24, 4, 8);
+            ctx.fillStyle = '#ffea00';
+            ctx.fillRect(sx - 4, sy - 12, 8, 6);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(sx - 2, sy - 11, 4, 3);
+
+        } else if (type === 'DUNE_TYRANT' || bossId.includes('DUNE') || bossId.includes('REAVER')) {
+            ctx.fillStyle = '#b45309';
+            ctx.fillRect(sx - 16, sy - 20, 32, 28);
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(sx - 14, sy - 18, 28, 4);
+            ctx.fillRect(sx - 12, sy - 8, 24, 3);
+            ctx.fillStyle = '#ff1744';
+            ctx.fillRect(sx - 8, sy - 12, 4, 4);
+            ctx.fillRect(sx + 4, sy - 12, 4, 4);
+            ctx.fillStyle = '#fbbf24';
+            ctx.fillRect(sx - 20, sy - 24, 4, 22);
+            ctx.fillRect(sx + 16, sy - 24, 4, 22);
+
+        } else if (type === 'FROST_WRAITH' || bossId.includes('ZENITH') || bossId.includes('ARCHON') || type === 'BOSS') {
+            const wingSway = Math.sin(Date.now() / 160) * 3;
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.7)';
+            ctx.fillRect(sx - 24, sy - 18 + wingSway, 10, 18);
+            ctx.fillRect(sx + 14, sy - 18 - wingSway, 10, 18);
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(sx - 14, sy - 20, 28, 26);
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(sx - 10, sy - 16, 20, 18);
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(sx - 12, sy - 24, 24, 3);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(sx - 6, sy - 12, 4, 3);
+            ctx.fillRect(sx + 2, sy - 12, 4, 3);
+
+        } else {
+            ctx.fillStyle = pal[0] || '#263238';
+            ctx.fillRect(sx - 16, sy - 20, 32, 28);
+            ctx.fillStyle = '#455a64';
+            ctx.fillRect(sx - 16, sy - 20, 32, 3);
+            ctx.fillRect(sx - 16, sy + 5, 32, 3);
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(sx - 12, sy - 8, 6, 6);
+            ctx.fillRect(sx + 6, sy - 8, 6, 6);
+            ctx.fillStyle = '#78909c';
+            ctx.fillRect(sx - 14, sy - 24, 4, 5);
+            ctx.fillRect(sx + 10, sy - 24, 4, 5);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+            ctx.fillRect(sx - 15, sy - 27 + (Date.now() / 60 % 4), 5, 3);
+            ctx.fillRect(sx + 9, sy - 27 + (Date.now() / 60 % 4), 5, 3);
+
+            const coreColor = (Math.floor(Date.now() / 150) % 2 === 0) ? '#ff1744' : '#d50000';
+            ctx.fillStyle = coreColor;
+            ctx.fillRect(sx - 6, sy - 11, 12, 9);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(sx - 2, sy - 8, 4, 3);
+        }
+
+        if (enemy.telegraphTimer > 0) {
+            ctx.strokeStyle = '#ff1744';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(sx, sy + 80);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+    }
+
 
     renderSinglePrism(prism, camX, camY, dt) {
         const ctx = this.ctx;
@@ -2952,6 +3651,95 @@ class RetroRenderer {
         ctx.fillRect(sx - 4 - jx, sy - 13, 8, 18);
         ctx.restore();
     }
+
+
+    // =========================================================================
+    // PROCEDURAL AMBIENT ENVIRONMENTAL PARTICLES
+    // =========================================================================
+
+    initAmbientParticles(areaId) {
+        this.ambientParticleArea = areaId || 'DEFAULT';
+        this.ambientParticles = [];
+        const count = 45;
+
+        for (let i = 0; i < count; i++) {
+            this.ambientParticles.push({
+                x: Math.random() * this.width,
+                y: Math.random() * this.height,
+                vx: (Math.random() - 0.5) * 16,
+                vy: (Math.random() - 0.5) * 12,
+                size: 1 + Math.floor(Math.random() * 2),
+                alpha: 0.3 + Math.random() * 0.7,
+                pulseSpeed: 1.5 + Math.random() * 3.0,
+                phase: Math.random() * Math.PI * 2
+            });
+        }
+    }
+
+    renderAmbientParticles(camX, camY, dt, map = null) {
+        const areaId = (map && map.areaId) ? map.areaId : 'DEFAULT';
+        if (this.ambientParticles.length === 0 || this.ambientParticleArea !== areaId) {
+            this.initAmbientParticles(areaId);
+        }
+
+        const ctx = this.ctx;
+        const isDunes = areaId.includes('DUNE') || areaId.includes('SOLARIS');
+        const isGlacier = areaId.includes('GLACIAL') || areaId.includes('FROST');
+        const isVolcano = areaId.includes('ASHEN') || areaId.includes('CHASM');
+        const isSubCore = areaId.includes('SUB_CORE') || areaId.includes('GROTTO') || areaId.includes('BEDROCK');
+
+        ctx.save();
+
+        for (const p of this.ambientParticles) {
+            p.phase += dt * p.pulseSpeed;
+            const currentAlpha = Math.max(0.1, Math.min(1.0, p.alpha * (0.6 + 0.4 * Math.sin(p.phase))));
+
+            if (isGlacier) {
+                p.vx = -18 + Math.sin(p.phase) * 6;
+                p.vy = 22 + Math.cos(p.phase) * 4;
+            } else if (isVolcano) {
+                p.vx = (Math.random() - 0.5) * 14;
+                p.vy = -26 - Math.random() * 8;
+            } else if (isDunes) {
+                p.vx = 28 + Math.sin(p.phase) * 8;
+                p.vy = (Math.random() - 0.5) * 6;
+            } else if (isSubCore) {
+                p.vx = Math.cos(p.phase) * 12;
+                p.vy = Math.sin(p.phase) * 12;
+            } else {
+                p.vx = Math.cos(p.phase) * 10;
+                p.vy = Math.sin(p.phase) * 8;
+            }
+
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+
+            if (p.x < 0) p.x += this.width;
+            if (p.x > this.width) p.x -= this.width;
+            if (p.y < 0) p.y += this.height;
+            if (p.y > this.height) p.y -= this.height;
+
+            if (isGlacier) {
+                ctx.fillStyle = `rgba(224, 242, 254, ${currentAlpha})`;
+                ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
+            } else if (isVolcano) {
+                ctx.fillStyle = `rgba(255, 87, 34, ${currentAlpha})`;
+                ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
+            } else if (isDunes) {
+                ctx.fillStyle = `rgba(251, 191, 36, ${currentAlpha * 0.7})`;
+                ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
+            } else if (isSubCore) {
+                ctx.fillStyle = `rgba(0, 229, 255, ${currentAlpha})`;
+                ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
+            } else {
+                ctx.fillStyle = `rgba(118, 255, 3, ${currentAlpha})`;
+                ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size + 1, p.size + 1);
+            }
+        }
+
+        ctx.restore();
+    }
+
 
     renderEntitiesYSorted(map, player, enemies, npcs, critters, dt, isNight) {
         const camX = Math.round(this.camera.x);
@@ -3069,6 +3857,9 @@ class RetroRenderer {
                 this.renderSingleDecoy(item.ref, camX, camY, dt, map);
             }
         }
+
+        // Ambient Environmental Particles (Fireflies, Leaves, Sand, Snowflakes, Embers, Nanite Dust)
+        this.renderAmbientParticles(camX, camY, dt, map);
     }
 
     computeLightingDarkness(dayProgress, map = null) {
