@@ -1124,17 +1124,17 @@ const BASE_ITEMS = {
     },
     STAR_MATRIX_TOKEN: {
         id: 'STAR_MATRIX_TOKEN',
-        name: 'Star Matrix Token',
+        name: 'Blood Essence Token',
         tier: ITEM_TIER.LEGENDARY,
         tierName: 'Legendary',
         tierBadge: 'T5',
-        tierColor: '#ffb300',
+        tierColor: '#ff1744',
         category: ITEM_CATEGORY.MATERIALS_KEYS,
         type: ITEM_TYPE.KEY_ITEM,
-        icon: '✡',
+        icon: '🩸',
         isCraftable: false,
         source: 'Earned from Title Screen Daily Holding Points and Remains Pity Meter',
-        desc: 'Cosmic currency recognized across dimensional astral bazaars for legendary blessings.'
+        desc: 'Crystalline coagulated blood currency recognized across dimensional astral bazaars for legendary blessings.'
     },
 
     // Tier VI Mythic Key Items

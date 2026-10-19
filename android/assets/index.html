@@ -199,8 +199,26 @@
                             <span class="stat-icon">☥</span>
                             <span class="stat-val" id="start-cores-val">0</span>
                         </div>
-                        <div class="start-stat-chip clickable-chip" id="start-tokens-chip" title="Tap to inspect ALU Star Matrix Tokens">
-                            <span class="stat-icon">✡</span>
+                        <div class="start-stat-chip clickable-chip" id="start-tokens-chip" title="Tap to inspect Blood Currency">
+                            <span class="stat-icon" id="start-tokens-icon">
+                                <svg class="blood-currency-icon" viewBox="0 0 24 32" width="14" height="19" style="vertical-align: middle; display: inline-block; filter: drop-shadow(0 0 4px rgba(255,23,68,0.7));">
+                                    <defs>
+                                        <linearGradient id="bloodGrad_hdr" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#ff5252"/>
+                                            <stop offset="65%" stop-color="#d50000"/>
+                                            <stop offset="100%" stop-color="#880e4f"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <path d="M12 2 C12 2, 2.5 13.5, 2.5 20.5 C2.5 26.3 6.7 30.5 12 30.5 C17.3 30.5 21.5 26.3 21.5 20.5 C21.5 13.5 16.5 7 12 2 Z" fill="url(#bloodGrad_hdr)" stroke="#ff8a80" stroke-width="1.6" stroke-linejoin="round"/>
+                                    <ellipse cx="12" cy="11.5" rx="2.5" ry="1.5" fill="#880e4f" stroke="#ffebee" stroke-width="1.1" transform="rotate(-15 12 11.5)"/>
+                                    <ellipse cx="7.5" cy="17" rx="1.6" ry="1.6" fill="#880e4f" stroke="#ffebee" stroke-width="1.0"/>
+                                    <ellipse cx="13.8" cy="17.8" rx="3.0" ry="1.7" fill="#880e4f" stroke="#ffebee" stroke-width="1.1" transform="rotate(22 13.8 17.8)"/>
+                                    <ellipse cx="13.8" cy="17.8" rx="1.1" ry="0.6" fill="#ffebee" transform="rotate(22 13.8 17.8)"/>
+                                    <ellipse cx="8.8" cy="23.8" rx="2.7" ry="1.6" fill="#880e4f" stroke="#ffebee" stroke-width="1.1" transform="rotate(-12 8.8 23.8)"/>
+                                    <ellipse cx="8.8" cy="23.8" rx="1.0" ry="0.6" fill="#ffebee" transform="rotate(-12 8.8 23.8)"/>
+                                    <path d="M15.8 22.8 C16.6 25 15.2 27.5 13 28.5" fill="none" stroke="#ffebee" stroke-width="1.4" stroke-linecap="round"/>
+                                </svg>
+                            </span>
                             <span class="stat-val" id="start-tokens-val">0</span>
                         </div>
                     </div>
@@ -518,7 +536,7 @@
             <div id="remains-modal" class="game-modal hidden">
                 <div class="modal-content remains-modal-content">
                     <div class="modal-header">
-                        <h3>🔮 AETHERIAL REMAINS & SMOKEY RELIQUARIES</h3>
+                        <h3>🔮 AETHERIAL REMAINS</h3>
                         <button class="modal-close" id="remains-close">✕</button>
                     </div>
                     <div class="remains-top-bar">
@@ -526,15 +544,15 @@
                             <span class="key-icon">🗝️</span>
                             <span>AVAILABLE KEYS: <strong id="remains-keys-display">15/15</strong></span>
                         </div>
-                        <div class="remains-status-tip">Keys unbox ancient smokey relics containing rare spoils, Dyson cores, blueprints, and weapons.</div>
+                        <div class="remains-status-tip">Keys unbox ancient celestial relics containing rare spoils, Dyson cores, blueprints, and weapons.</div>
                     </div>
 
-                    <!-- 3 Creative Non-Copyright Smokey Orb Relics -->
+                    <!-- 3 Creative Non-Copyright Celestial Orb Relics -->
                     <div class="relic-chests-grid">
                         <!-- Tier 1: Astral Vapor Sphere -->
                         <div class="relic-chest-card" data-tier="common">
                             <div class="chest-art-frame">
-                                <div class="smokey-orb-widget orb-wisp">
+                                <div class="celestial-orb-widget orb-wisp">
                                     <div class="orb-aura aura-cyan"></div>
                                     <div class="orb-smoke-layer smoke-1 smoke-cyan"></div>
                                     <div class="orb-smoke-layer smoke-2 smoke-silver"></div>
@@ -550,7 +568,7 @@
                         <!-- Tier 2: Resonant Nebula Orb -->
                         <div class="relic-chest-card featured" data-tier="runic">
                             <div class="chest-art-frame">
-                                <div class="smokey-orb-widget orb-nebula">
+                                <div class="celestial-orb-widget orb-nebula">
                                     <div class="orb-aura aura-violet"></div>
                                     <div class="orb-gyro-ring ring-violet"></div>
                                     <div class="orb-smoke-layer smoke-1 smoke-violet"></div>
@@ -559,18 +577,18 @@
                                 </div>
                             </div>
                             <div class="chest-title">RESONANT NEBULA ORB</div>
-                            <div class="chest-cost">🗝️ 2 KEYS / 30 ✡</div>
+                            <div class="chest-cost">🗝️ 2 KEYS / 30 BLOOD ESSENCE</div>
                             <div class="chest-desc">Dense cosmic vapor charged with Dyson cores, ultrasonic weapons, and armor. (+25 PT)</div>
                             <div class="relic-btn-group">
                                 <button class="relic-open-btn" data-chest="runic">OPEN (2 KEYS)</button>
-                                <button class="relic-alt-btn" data-chest="runic-tokens">30 ✡ TOKENS</button>
+                                <button class="relic-alt-btn" data-chest="runic-tokens">30 BLOOD ESSENCE</button>
                             </div>
                         </div>
 
                         <!-- Tier 3: Primordial Singularity Orb -->
                         <div class="relic-chest-card legendary" data-tier="celestial">
                             <div class="chest-art-frame">
-                                <div class="smokey-orb-widget orb-singularity">
+                                <div class="celestial-orb-widget orb-singularity">
                                     <div class="orb-aura aura-gold"></div>
                                     <div class="orb-gyro-ring ring-gold"></div>
                                     <div class="orb-gyro-ring ring-inner-cyan"></div>
@@ -580,11 +598,11 @@
                                 </div>
                             </div>
                             <div class="chest-title">PRIMORDIAL SINGULARITY</div>
-                            <div class="chest-cost">🗝️ 3 KEYS / 300 ✡</div>
+                            <div class="chest-cost">🗝️ 3 KEYS / 300 BLOOD ESSENCE</div>
                             <div class="chest-desc">Hyper-dense vortex granting guaranteed Dyson Cores, Void Scythes, and Mythics. (+50 PT)</div>
                             <div class="relic-btn-group">
                                 <button class="relic-open-btn" data-chest="celestial">OPEN (3 KEYS)</button>
-                                <button class="relic-alt-btn" data-chest="celestial-tokens">300 ✡ TOKENS</button>
+                                <button class="relic-alt-btn" data-chest="celestial-tokens">300 BLOOD ESSENCE</button>
                             </div>
                         </div>
                     </div>
@@ -603,7 +621,7 @@
 
                     <!-- Unboxing Reward Display -->
                     <div id="remains-reward-display" class="remains-reward-display hidden">
-                        <div class="reward-title">✨ SMOKEY ORB UNBOXED ✨</div>
+                        <div class="reward-title">✨ CELESTIAL ORB UNBOXED ✨</div>
                         <div id="remains-reward-items" class="reward-items-grid"></div>
                         <button id="btn-claim-remains" class="gba-btn-sm primary">CLAIM ALL LOOT</button>
                     </div>
@@ -645,8 +663,26 @@
                             <span>CORES: <strong id="shop-cores-val">0</strong></span>
                         </div>
                         <div class="shop-cur-chip">
-                            <span class="cur-icon">✡</span>
-                            <span>STAR TOKENS: <strong id="shop-tokens-val">0</strong></span>
+                            <span class="cur-icon" id="shop-tokens-icon">
+                                <svg class="blood-currency-icon" viewBox="0 0 24 32" width="16" height="21" style="vertical-align: middle; display: inline-block; filter: drop-shadow(0 0 4px rgba(255,23,68,0.7));">
+                                    <defs>
+                                        <linearGradient id="bloodGrad_shoptok" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <stop offset="0%" stop-color="#ff5252"/>
+                                            <stop offset="65%" stop-color="#d50000"/>
+                                            <stop offset="100%" stop-color="#880e4f"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <path d="M12 2 C12 2, 2.5 13.5, 2.5 20.5 C2.5 26.3 6.7 30.5 12 30.5 C17.3 30.5 21.5 26.3 21.5 20.5 C21.5 13.5 16.5 7 12 2 Z" fill="url(#bloodGrad_shoptok)" stroke="#ff8a80" stroke-width="1.6" stroke-linejoin="round"/>
+                                    <ellipse cx="12" cy="11.5" rx="2.5" ry="1.5" fill="#880e4f" stroke="#ffebee" stroke-width="1.1" transform="rotate(-15 12 11.5)"/>
+                                    <ellipse cx="7.5" cy="17" rx="1.6" ry="1.6" fill="#880e4f" stroke="#ffebee" stroke-width="1.0"/>
+                                    <ellipse cx="13.8" cy="17.8" rx="3.0" ry="1.7" fill="#880e4f" stroke="#ffebee" stroke-width="1.1" transform="rotate(22 13.8 17.8)"/>
+                                    <ellipse cx="13.8" cy="17.8" rx="1.1" ry="0.6" fill="#ffebee" transform="rotate(22 13.8 17.8)"/>
+                                    <ellipse cx="8.8" cy="23.8" rx="2.7" ry="1.6" fill="#880e4f" stroke="#ffebee" stroke-width="1.1" transform="rotate(-12 8.8 23.8)"/>
+                                    <ellipse cx="8.8" cy="23.8" rx="1.0" ry="0.6" fill="#ffebee" transform="rotate(-12 8.8 23.8)"/>
+                                    <path d="M15.8 22.8 C16.6 25 15.2 27.5 13 28.5" fill="none" stroke="#ffebee" stroke-width="1.4" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                            <span>ESSENCE: <strong id="shop-tokens-val">0</strong></span>
                         </div>
                     </div>
                     <div class="shop-items-grid" id="shop-items-container">
@@ -792,27 +828,33 @@
                 </div>
             </div>
 
-            <!-- Authentic GBA Skill Tree & Class Mastery Modal -->
+            <!-- Yggdrasil Tree of Life & Class Mastery Modal (User Requirement) -->
             <div id="skill-tree-modal" class="game-modal hidden">
-                <div class="modal-content skill-tree-frame">
-                    <div class="modal-header">
-                        <h3 id="skill-tree-title">⚔️ PIONEER MASTERY MATRIX</h3>
+                <div class="modal-content skill-tree-frame yggdrasil-frame">
+                    <div class="modal-header yggdrasil-modal-header">
+                        <div class="ygg-header-title-box">
+                            <span class="ygg-tree-glyph">🌳</span>
+                            <h3 id="skill-tree-title">YGGDRASIL TREE OF LIFE</h3>
+                        </div>
                         <button class="modal-close" id="skill-tree-close">✕</button>
                     </div>
-                    <div class="skill-tree-header-info">
+                    <div class="skill-tree-header-info yggdrasil-info-bar">
                         <div class="pioneer-tree-badge">
                             <span id="skill-pioneer-name">ALU-01</span>
                             <span id="skill-pioneer-class" class="pioneer-class-tag">WARRIOR</span>
+                            <span id="skill-pioneer-level" class="pioneer-level-tag">LV. 1/100</span>
                         </div>
-                        <div class="sp-badge">
+                        <div class="sp-badge ygg-sp-badge">
                             AVAILABLE SP: <strong id="skill-points-val">0</strong>
                         </div>
                     </div>
-                    <div id="skill-tree-container" class="skill-tree-grid">
-                        <!-- Populated dynamically based on character class -->
+                    <div class="yggdrasil-scroll-wrap">
+                        <div id="skill-tree-container" class="yggdrasil-tree-container">
+                            <!-- Populated dynamically: Roots, World Trunk & Cross-Skills, Boughs, Canopy, Crown Lv. 100 -->
+                        </div>
                     </div>
-                    <div class="skill-footer-tip">
-                        <span>Tap an unlocked skill node to review mastery details. Key [U] / [SP] button triggers active ability!</span>
+                    <div class="skill-footer-tip ygg-footer-tip">
+                        <span>🌳 Yggdrasil spans Level 1–100: Roots to Apex Crown. Trunk Cross-Skills can be augmented to Rank 5!</span>
                     </div>
                 </div>
             </div>
@@ -888,7 +930,7 @@
                         <button class="dev-act-btn" id="dev-teleport-boss">👾 TELEPORT TO AEGIS DREADNOUGHT BOSS</button>
                         <button class="dev-act-btn" id="dev-teleport-plot">🌱 TELEPORT TO 3x3 SECRET SOIL PLOT</button>
                         <button class="dev-act-btn highlight" id="dev-toggle-god">🛡️ TOGGLE GOD MODE (OFF)</button>
-                        <button class="dev-act-btn" id="dev-unlock-farmer">🌾 UNLOCK SECRET FARMER CLASS</button>
+                        <button class="dev-act-btn highlight" id="dev-grant-sp">🌟 GRANT +10 LEVELS & +15 SP</button>
                         <button class="dev-act-btn" id="dev-grant-coins">
                             GRANT +100 
                             <svg class="blood-currency-icon" viewBox="0 0 24 32" width="14" height="18" style="vertical-align: middle; display: inline-block;">

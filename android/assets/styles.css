@@ -928,10 +928,12 @@ body, html {
 .meta-btn:hover { background: #2c3a4e; color: #fff; }
 .meta-btn:active { background: #ff9800; color: #000; transform: translateY(2px); box-shadow: none; }
 
-/* Setup Modal (GBA Awakening Dialogue Style) */
+/* Setup Modal (GBA Awakening Dialogue Style - Landscape Fit & Scroll) */
 .setup-content {
-    max-width: 580px;
-    width: 90%;
+    max-width: 680px;
+    width: 94%;
+    max-height: 92vh;
+    overflow-y: auto;
     border-color: #ff9800;
 }
 
@@ -1061,17 +1063,26 @@ body, html {
 }
 
 .class-cards-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 14px;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 6px 2px;
 }
 
 .class-card {
+    flex: 1 1 0;
+    min-width: 108px;
+    max-width: 130px;
+    scroll-snap-align: center;
     background: #0e141d;
     border: 2px solid #263342;
     border-radius: 6px;
-    padding: 10px 8px;
+    padding: 8px 6px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
@@ -2583,7 +2594,7 @@ body, html {
     box-shadow: 0 0 12px rgba(255, 213, 79, 0.3);
 }
 
-/* Glowing Detailed Smokey Orb Relic Widgets (User Requirement) */
+/* Glowing Detailed Celestial Orb Relic Widgets (User Requirement) */
 .chest-art-frame {
     width: 64px;
     height: 64px;
@@ -2594,7 +2605,7 @@ body, html {
     position: relative;
 }
 
-.smokey-orb-widget {
+.celestial-orb-widget {
     position: relative;
     width: 52px;
     height: 52px;
@@ -3931,68 +3942,238 @@ body, html {
     color: #fdd835;
 }
 
-/* GBA Skill Tree & Class Mastery Styles */
-.skill-tree-frame {
-    max-width: 440px;
-    background: #0f1622;
-    border: 3px solid #2e3c4e;
-    box-shadow: inset 2px 2px 0px rgba(255,255,255,0.15), inset -2px -2px 0px rgba(0,0,0,0.7), 0 8px 24px rgba(0,0,0,0.8);
+/* Yggdrasil Tree of Life & Pioneer Mastery Styles (User Requirement) */
+.skill-tree-frame.yggdrasil-frame {
+    max-width: 620px;
+    width: 94%;
+    max-height: 92vh;
+    background: radial-gradient(circle at 50% 8%, #0d281e 0%, #0a1818 45%, #050d12 100%);
+    border: 3px solid #2e7d32;
+    border-radius: 6px;
+    box-shadow: 0 0 25px rgba(46, 125, 50, 0.4), inset 0 0 15px rgba(0, 229, 255, 0.12), 0 10px 30px rgba(0,0,0,0.85);
+    padding: 12px 14px;
 }
 
-.skill-tree-header-info {
+.yggdrasil-modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: #16202e;
-    border: 1px solid #2e3c4e;
+    border-bottom: 2px solid #1b5e20;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+}
+
+.ygg-header-title-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ygg-tree-glyph {
+    font-size: 18px;
+    filter: drop-shadow(0 0 6px #69f0ae);
+}
+
+.yggdrasil-modal-header h3 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    color: #a7ffeb;
+    text-shadow: 0 0 8px rgba(105, 240, 174, 0.6);
+    margin: 0;
+    letter-spacing: 0.8px;
+}
+
+.yggdrasil-info-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(14, 36, 23, 0.85);
+    border: 1px solid #2e7d32;
     border-radius: 4px;
     padding: 6px 12px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     font-family: 'Press Start 2P', monospace;
     font-size: 8px;
 }
 
-.sp-badge {
+.pioneer-tree-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pioneer-class-tag {
+    background: #1b5e20;
+    color: #b9f6ca;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+.pioneer-level-tag {
+    background: #00838f;
+    color: #e0f7fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+.ygg-sp-badge {
     color: #ffd54f;
 }
 
-.sp-badge strong {
+.ygg-sp-badge strong {
     color: #00e5ff;
     font-size: 11px;
 }
 
-.skill-tree-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-height: 230px;
+.yggdrasil-scroll-wrap {
+    max-height: 56vh;
     overflow-y: auto;
-    padding-right: 4px;
+    padding-right: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: #2e7d32 #081410;
 }
 
-.skill-node-card {
-    background: #141d29;
-    border: 2px solid #253342;
-    border-radius: 4px;
+.yggdrasil-scroll-wrap::-webkit-scrollbar {
+    width: 6px;
+}
+
+.yggdrasil-scroll-wrap::-webkit-scrollbar-track {
+    background: #081410;
+    border-radius: 3px;
+}
+
+.yggdrasil-scroll-wrap::-webkit-scrollbar-thumb {
+    background: #2e7d32;
+    border-radius: 3px;
+}
+
+.yggdrasil-tree-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+}
+
+/* Tier Sections */
+.ygg-tier-section {
+    background: rgba(10, 24, 20, 0.65);
+    border: 1px solid rgba(46, 125, 50, 0.45);
+    border-radius: 6px;
+    padding: 8px 10px;
+    position: relative;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+
+.ygg-tier-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px dashed rgba(105, 240, 174, 0.35);
+}
+
+.ygg-tier-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8.5px;
+    color: #69f0ae;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.5px;
+}
+
+.ygg-tier-level {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5px;
+    color: #80deea;
+    font-weight: bold;
+}
+
+/* Tier 5 Crown Specifics */
+.ygg-tier-section.tier-crown {
+    background: linear-gradient(135deg, rgba(62, 39, 35, 0.8) 0%, rgba(27, 94, 32, 0.7) 100%);
+    border: 2px solid #ffd54f;
+    box-shadow: 0 0 18px rgba(255, 213, 79, 0.35);
+}
+
+.ygg-tier-section.tier-crown .ygg-tier-title {
+    color: #ffd54f;
+    text-shadow: 0 0 6px rgba(255, 213, 79, 0.8);
+}
+
+/* Tier 2 World Trunk & Cross-Skills Specifics */
+.ygg-tier-section.tier-trunk {
+    border-color: #00b0ff;
+    background: rgba(10, 25, 36, 0.7);
+}
+
+.ygg-tier-section.tier-trunk .ygg-tier-title {
+    color: #40c4ff;
+    text-shadow: 0 0 6px rgba(0, 176, 255, 0.6);
+}
+
+.ygg-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 8px;
+}
+
+/* Individual Skill Node Card */
+.ygg-node-card {
+    background: #0d181e;
+    border: 2px solid #20353c;
+    border-radius: 5px;
     padding: 8px 10px;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    transition: all 0.15s ease;
+    transition: all 0.2s ease;
 }
 
-.skill-node-card.unlocked {
+.ygg-node-card.unlocked {
     border-color: #2e7d32;
-    background: #0e2417;
+    background: #092116;
+    box-shadow: 0 0 8px rgba(46, 125, 50, 0.35);
 }
 
-.skill-node-card.available {
+.ygg-node-card.available {
     border-color: #00e5ff;
-    background: #0d2331;
+    background: #082330;
+    box-shadow: 0 0 10px rgba(0, 229, 255, 0.35);
+    animation: yggAvailableGlow 2.5s infinite alternate;
 }
 
-.skill-node-card.locked {
-    opacity: 0.65;
+@keyframes yggAvailableGlow {
+    from { box-shadow: 0 0 4px rgba(0, 229, 255, 0.3); }
+    to { box-shadow: 0 0 12px rgba(0, 229, 255, 0.7); }
+}
+
+.ygg-node-card.locked {
+    opacity: 0.68;
+    border-color: #17232b;
+    background: #091217;
+}
+
+.ygg-node-card.crown-node {
+    border-color: #ffd54f;
+    background: #1c1809;
+}
+
+.ygg-node-card.crown-node.unlocked {
+    border-color: #ffd54f;
+    background: #2b2207;
+    box-shadow: 0 0 16px rgba(255, 213, 79, 0.55);
+}
+
+.ygg-node-card.cross-skill-card {
+    border-left: 4px solid #ff1744;
+}
+
+.ygg-node-card.cross-skill-card.unlocked {
+    border-left: 4px solid #ff5252;
 }
 
 .skill-node-header {
@@ -4002,36 +4183,102 @@ body, html {
 }
 
 .skill-node-icon {
-    font-size: 16px;
+    font-size: 18px;
     line-height: 1;
+    filter: drop-shadow(0 0 4px rgba(255,255,255,0.2));
 }
 
 .skill-node-title-group {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    flex: 1;
 }
 
 .skill-node-name {
     font-family: 'Press Start 2P', monospace;
-    font-size: 9.5px;
+    font-size: 9px;
     color: #ffffff;
     letter-spacing: 0.5px;
 }
 
+.skill-node-meta-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .skill-node-tier {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
+    font-size: 8.5px;
     color: #80deea;
     font-weight: bold;
 }
 
+.ygg-level-req-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    font-weight: bold;
+    padding: 1px 5px;
+    border-radius: 3px;
+}
+
+.ygg-level-req-badge.met {
+    color: #b9f6ca;
+    background: #1b5e20;
+}
+
+.ygg-level-req-badge.unmet {
+    color: #ff8a80;
+    background: #b71c1c;
+}
+
 .skill-node-desc {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: 9.5px;
     line-height: 1.4;
-    color: #e0e0e0;
+    color: #cfd8dc;
     margin: 3px 0;
+}
+
+/* Rank Progress Pips for Cross-Skills */
+.rank-progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 2px 0 4px 0;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+}
+
+.rank-pips {
+    display: flex;
+    gap: 3px;
+}
+
+.rank-pip {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    border: 1px solid #78909c;
+    background: #18232c;
+}
+
+.rank-pip.filled {
+    background: #ff1744;
+    border-color: #ff8a80;
+    box-shadow: 0 0 5px #ff1744;
+}
+
+.rank-pip.crown {
+    background: #ffd54f;
+    border-color: #fff59d;
+    box-shadow: 0 0 5px #ffd54f;
+}
+
+.rank-text {
+    color: #ff8a80;
+    font-size: 7.5px;
 }
 
 .skill-node-footer {
@@ -4043,18 +4290,18 @@ body, html {
 
 .skill-cost-badge {
     font-family: 'Press Start 2P', monospace;
-    font-size: 8px;
+    font-size: 7.5px;
     color: #ffd54f;
-    background: #263238;
-    padding: 3px 8px;
+    background: #1c272e;
+    padding: 3px 6px;
     border-radius: 3px;
     border: 1px solid #37474f;
 }
 
 .skill-status-tag {
     font-family: 'Press Start 2P', monospace;
-    font-size: 8px;
-    padding: 3px 8px;
+    font-size: 7.5px;
+    padding: 3px 6px;
     border-radius: 3px;
 }
 
@@ -4069,10 +4316,11 @@ body, html {
     background: #37474f;
 }
 
-.skill-unlock-btn {
+.skill-unlock-btn,
+.ygg-upgrade-btn {
     font-family: 'Press Start 2P', monospace;
-    font-size: 8.5px;
-    padding: 6px 12px;
+    font-size: 8px;
+    padding: 5px 10px;
     background: #00e5ff;
     color: #000;
     border: none;
@@ -4083,17 +4331,57 @@ body, html {
     transition: transform 0.05s, background 0.05s;
 }
 
-.skill-unlock-btn:active {
+.ygg-upgrade-btn.cross-btn {
+    background: #ff1744;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(255,23,68,0.4);
+}
+
+.skill-unlock-btn:active,
+.ygg-upgrade-btn:active {
     transform: translateY(1px);
     background: #64ffda;
 }
 
-.skill-footer-tip {
+.ygg-upgrade-btn.cross-btn:active {
+    background: #ff5252;
+}
+
+.skill-unlock-btn:disabled,
+.ygg-upgrade-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #37474f;
+    color: #90a4ae;
+    box-shadow: none;
+}
+
+.skill-footer-tip.ygg-footer-tip {
     font-family: 'JetBrains Mono', monospace;
     font-size: 9px;
-    color: #90a4ae;
+    color: #80cbc4;
     text-align: center;
     margin-top: 8px;
+    border-top: 1px solid #1b5e20;
+    padding-top: 6px;
+}
+
+/* Fallback for legacy class selectors */
+.skill-tree-frame {
+    max-width: 620px;
+    background: #0f1622;
+    border: 3px solid #2e3c4e;
+}
+.skill-tree-header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.sp-badge {
+    color: #ffd54f;
+}
+.sp-badge strong {
+    color: #00e5ff;
 }
 
 /* ==========================================================================
@@ -4367,14 +4655,16 @@ body.font-mode-large .font-preview-box {
         min-height: 85px;
     }
 
-    .setup-classes {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr) !important;
-        gap: 6px;
+    .class-cards-container {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 6px !important;
+        overflow-x: auto !important;
     }
 
     .class-card {
-        padding: 6px 4px;
+        padding: 6px 4px !important;
+        min-width: 100px !important;
     }
 }
 

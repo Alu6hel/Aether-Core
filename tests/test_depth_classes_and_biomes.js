@@ -37,20 +37,21 @@ console.log("--- TEST 1: 5 Character Classes & 8-Skill Trees ---");
         assert.ok(CHARACTER_CLASS[cls], `CHARACTER_CLASS must include ${cls}`);
         const tree = CLASS_SKILL_TREES[cls];
         assert.ok(tree, `CLASS_SKILL_TREES must include entry for ${cls}`);
-        assert.strictEqual(tree.length, 8, `${cls} must have exactly 8 skills in its skill tree`);
+        assert.ok(tree.length >= 8, `${cls} must have at least 8 skills in its skill tree`);
 
-        // Check tier distribution: exactly 2 skills per tier (1, 2, 3, 4)
-        const tierCounts = { 1: 0, 2: 0, 3: 0, 4: 0 };
+        // Check tier distribution: skills distributed across Yggdrasil tiers 1..5
+        const tierCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
         for (const skill of tree) {
             assert.ok(skill.id, `Skill must have an id`);
             assert.ok(skill.name, `Skill must have a name`);
-            assert.ok(skill.tier >= 1 && skill.tier <= 4, `Skill tier must be 1..4`);
+            assert.ok(skill.tier >= 1 && skill.tier <= 5, `Skill tier must be 1..5`);
             tierCounts[skill.tier]++;
             assert.ok(typeof skill.passive === 'boolean' || skill.type, `Skill must specify passive or type`);
         }
         for (let t = 1; t <= 4; t++) {
-            assert.strictEqual(tierCounts[t], 2, `${cls} Tier ${t} must have exactly 2 skill choices`);
+            assert.ok(tierCounts[t] >= 2, `${cls} Tier ${t} must have at least 2 skill choices`);
         }
+        assert.ok(tierCounts[5] >= 1, `${cls} Tier 5 Crown must have at least 1 Pinnacle mastery`);
     }
 
     // Verify Player class stats for all 5

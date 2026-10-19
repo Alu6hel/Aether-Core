@@ -3113,23 +3113,23 @@ class RetroRenderer {
             }
         }
 
-        // 3. Six Title Screen Holding Points & Glowing Smokey Orbs (User Requirement)
-        // Up to 6 consecutive days accumulation. If uncollected by end of 6th day or reset, resets to 0.
+        // 3. Six Title Screen Holding Points & Glowing Celestial Orbs (User Requirement: No Text, None Behind Button)
+        // Balanced 3-pedestal arcs flanking the centerpiece hub, completely unblocked by [GAME START]
         const holdingPoints = [
-            { id: 1, x: originX - 115, y: originY - 32, day: 1, type: 'wisp' },       // Day 1: West high
-            { id: 2, x: originX + 115, y: originY - 32, day: 2, type: 'sol' },        // Day 2: East high
-            { id: 3, x: originX - 175, y: originY + 12, day: 3, type: 'nebula' },     // Day 3: Far West
-            { id: 4, x: originX + 175, y: originY + 12, day: 4, type: 'chronos' },    // Day 4: Far East
-            { id: 5, x: originX - 115, y: originY + 56, day: 5, type: 'eclipse' },    // Day 5: West low
-            { id: 6, x: originX + 115, y: originY + 56, day: 6, type: 'singularity' } // Day 6: East low
+            { id: 1, x: originX - 148, y: originY - 36, day: 1, type: 'wisp' },       // Day 1: Upper West flank
+            { id: 2, x: originX + 148, y: originY - 36, day: 2, type: 'sol' },        // Day 2: Upper East flank
+            { id: 3, x: originX - 188, y: originY + 16, day: 3, type: 'nebula' },     // Day 3: Outer West wing
+            { id: 4, x: originX + 188, y: originY + 16, day: 4, type: 'chronos' },    // Day 4: Outer East wing
+            { id: 5, x: originX - 156, y: originY + 68, day: 5, type: 'eclipse' },    // Day 5: Lower West flank (pulled clear of button)
+            { id: 6, x: originX + 156, y: originY + 68, day: 6, type: 'singularity' } // Day 6: Lower East flank (pulled clear of button)
         ];
 
         // Retrieve daily holding state from game or storage
         const dailyState = (this.game && this.game.getDailyHoldingState) ? this.game.getDailyHoldingState() : { currentDay: 1, claimedDays: [] };
         this.holdingPointPositions = [];
 
-        // Helper: Draw Glowing Detailed Smokey Orb (User Requirement)
-        const drawSmokeyOrb = (ox, oy, orbType, dayNum) => {
+        // Helper: Draw Glowing Detailed Celestial Orb (No Text, Pure Atmosphere)
+        const drawCelestialOrb = (ox, oy, orbType, dayNum) => {
             ctx.save();
             const hoverY = oy - 20 + Math.sin(t * 2.8 + dayNum) * 4;
             const rot = t * 1.2 + dayNum * 0.8;
@@ -3145,7 +3145,7 @@ class RetroRenderer {
             ctx.ellipse(ox, oy + 4, 28, 12, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // 2. Swirling Smokey Clouds & Wisps
+            // 2. Swirling Celestial Clouds & Wisps
             const smokeColors = {
                 wisp: ['rgba(224, 247, 250, 0.65)', 'rgba(0, 229, 255, 0.45)', 'rgba(0, 145, 234, 0.25)'],
                 sol: ['rgba(255, 249, 196, 0.70)', 'rgba(255, 213, 79, 0.50)', 'rgba(255, 152, 0, 0.25)'],
@@ -3156,7 +3156,7 @@ class RetroRenderer {
             };
             const pal = smokeColors[orbType] || smokeColors.wisp;
 
-            // Outer rotating ethereal smoke plumes
+            // Outer rotating ethereal celestial plumes
             for (let w = 0; w < 6; w++) {
                 const angle = rot + (w * Math.PI * 2) / 6;
                 const dist = (12 + 4 * Math.sin(t * 3.0 + w * 2)) * pulse;
@@ -3213,7 +3213,7 @@ class RetroRenderer {
             ctx.arc(ox, hoverY, coreRad, 0, Math.PI * 2);
             ctx.fill();
 
-            // Ascending Smoke Sparks & Embers
+            // Ascending Sparks & Embers
             for (let sp = 0; sp < 4; sp++) {
                 const sparkProg = (t * 20 + sp * 25 + dayNum * 17) % 36;
                 const spX = ox + Math.sin(t * 3.5 + sp * 2) * (6 + sparkProg * 0.2);
@@ -3223,12 +3223,7 @@ class RetroRenderer {
                 ctx.fillRect(spX, spY, 1.5, 1.5);
             }
 
-            // Pulsing Day Pill Tag above the Orb
-            ctx.font = '6px "Press Start 2P", monospace';
-            ctx.textAlign = 'center';
-            ctx.fillStyle = 'rgba(255, 213, 79, 0.95)';
-            ctx.fillText(`DAY ${dayNum}`, ox, hoverY - 17);
-
+            // User Requirement: No writing / no text rendered on holding points
             ctx.restore();
         };
 
@@ -3276,27 +3271,28 @@ class RetroRenderer {
             });
 
             if (isUnlocked && !isClaimed) {
-                // Active Glowing Detailed Smokey Orb ready to collect!
-                drawSmokeyOrb(cl.x, cl.y, cl.type, cl.day);
+                // Active Glowing Celestial Orb ready to collect!
+                drawCelestialOrb(cl.x, cl.y, cl.type, cl.day);
             } else if (isClaimed) {
-                // Claimed serene starlight font in basin
+                // Claimed serene starlight font in basin (pure starlight pool, no text)
                 ctx.save();
-                const fontPulse = 0.4 + 0.3 * Math.sin(t * 3.0 + cl.day);
+                const fontPulse = 0.45 + 0.35 * Math.sin(t * 3.0 + cl.day);
                 ctx.fillStyle = `rgba(0, 229, 255, ${fontPulse})`;
                 ctx.beginPath();
                 ctx.ellipse(cl.x, cl.y - 5, 7, 3.5, 0, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.font = '5px "Press Start 2P", monospace';
-                ctx.textAlign = 'center';
-                ctx.fillStyle = 'rgba(0, 229, 255, 0.7)';
-                ctx.fillText(`CLAIMED`, cl.x, cl.y - 12);
+                // Gentle starlight glint
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(cl.x - 1, cl.y - 6, 2, 2);
                 ctx.restore();
             } else {
-                // Locked future day pedestal
-                ctx.font = '5px "Press Start 2P", monospace';
-                ctx.textAlign = 'center';
-                ctx.fillStyle = '#546e7a';
-                ctx.fillText(`DAY ${cl.day}`, cl.x, cl.y - 12);
+                // Locked future day pedestal: dormant runic indentation in stone (no text)
+                ctx.save();
+                ctx.fillStyle = '#212933';
+                ctx.beginPath();
+                ctx.ellipse(cl.x, cl.y - 5, 5, 2.5, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
             }
         }
 

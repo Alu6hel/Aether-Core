@@ -682,6 +682,15 @@ class GameApp {
         if (shopCores) shopCores.innerText = `${curCores}`;
         if (shopTokens) shopTokens.innerText = `${curTokens}`;
 
+        const startTokensIcon = document.getElementById('start-tokens-icon');
+        if (startTokensIcon && !startTokensIcon.querySelector('svg')) {
+            startTokensIcon.innerHTML = typeof getBloodDropSvg === 'function' ? getBloodDropSvg(14) : '🩸';
+        }
+        const shopTokensIcon = document.getElementById('shop-tokens-icon');
+        if (shopTokensIcon && !shopTokensIcon.querySelector('svg')) {
+            shopTokensIcon.innerHTML = typeof getBloodDropSvg === 'function' ? getBloodDropSvg(16) : '🩸';
+        }
+
         this.updateRemainsPityDisplay();
     }
 
@@ -801,8 +810,8 @@ class GameApp {
             // 1. Check 6 Holding Points on Title Screen
             const pts = this.renderer.holdingPointPositions || [];
             for (const pt of pts) {
-                const dist = Math.hypot(canvasX - pt.x, canvasY - (pt.y - 14));
-                if (dist < 42) {
+                const dist = Math.hypot(canvasX - pt.x, canvasY - pt.y);
+                if (dist < (pt.radius || 24)) {
                     this.handleHoldingPointTap(pt);
                     return;
                 }
@@ -920,11 +929,13 @@ class GameApp {
             if (labelEl) labelEl.innerText = 'CORES HARVESTED:';
             if (valEl) valEl.innerText = `${curCores}`;
         } else if (type === 'TOKENS') {
-            if (titleEl) titleEl.innerText = '✡ STAR MATRIX TOKENS';
-            if (iconEl) iconEl.innerText = '✡';
-            if (headlineEl) headlineEl.innerText = 'Astral Bazaar Currency';
-            if (descEl) descEl.innerText = 'Rare astral currency earned by completing Milestones and claiming 7-Day Attendance rewards. Spend them in the Star Matrix Bazaar for permanent character passives and boons.';
-            if (labelEl) labelEl.innerText = 'STAR TOKENS:';
+            if (titleEl) titleEl.innerText = '🩸 BLOOD CURRENCY';
+            if (iconEl) {
+                iconEl.innerHTML = typeof getBloodDropSvg === 'function' ? getBloodDropSvg(32) : '🩸';
+            }
+            if (headlineEl) headlineEl.innerText = 'Sacred Erythrocyte Essence';
+            if (descEl) descEl.innerText = 'Transcendence currency containing microscopic erythrocyte organelles and vital cellular lifeforce. Earned from milestones, relic unboxing, and daily attendance. Spend in the Bazaar for permanent boons and cross-skill augmentations.';
+            if (labelEl) labelEl.innerText = 'BLOOD ESSENCE:';
             if (valEl) valEl.innerText = `${curTokens}`;
         } else if (type === 'PIONEER') {
             const rank = Math.min(5, 1 + Math.floor(curCores / 2));
@@ -1004,13 +1015,13 @@ class GameApp {
         const state = this.getDailyHoldingState();
         if (!pt.isUnlocked) {
             if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(180, 'sawtooth', 0.2, 0.1);
-            this.showToast(`🔒 Day ${pt.day} Smokey Orb awakens tomorrow! (Streak: Day ${state.currentDay}/6)`, 'info');
+            this.showToast(`🔒 Day ${pt.day} Celestial Orb awakens tomorrow! (Streak: Day ${state.currentDay}/6)`, 'info');
             return;
         }
 
         if (pt.isClaimed || state.claimedDays.includes(pt.day)) {
             if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(280, 'sine', 0.15, 0.08);
-            this.showToast(`✓ Day ${pt.day} Smokey Orb already collected for this cycle!`, 'info');
+            this.showToast(`✓ Day ${pt.day} Celestial Orb already collected for this cycle!`, 'info');
             return;
         }
 
@@ -1050,7 +1061,7 @@ class GameApp {
             coins = 220;
             keys = 3;
             tokens = 2;
-            rewardNames.push(`${dropIcon} 220`, "3 🗝️ Keys", "2 ✡ Tokens", "2 ⚡ Conduits");
+            rewardNames.push(`${dropIcon} 220`, "3 🗝️ Keys", "2 Blood Essence", "2 ⚡ Conduits");
             if (this.player && this.player.inventory) this.player.inventory.addItem('ANCIENT_CONDUIT', 2);
             if (this.inventory) this.inventory.addItem('ANCIENT_CONDUIT', 2);
         } else if (day === 4) {
@@ -1058,7 +1069,7 @@ class GameApp {
             keys = 3;
             cores = 2;
             tokens = 2;
-            rewardNames.push(`${dropIcon} 300`, "3 🗝️ Keys", "2 ☥ Cores", "2 ✡ Tokens", "1 ✨ Master Elixir");
+            rewardNames.push(`${dropIcon} 300`, "3 🗝️ Keys", "2 ☥ Cores", "2 Blood Essence", "1 ✨ Master Elixir");
             if (this.player && this.player.inventory) this.player.inventory.addItem('SUPER_SALVE', 1);
             if (this.inventory) this.inventory.addItem('SUPER_SALVE', 1);
         } else if (day === 5) {
@@ -1066,7 +1077,7 @@ class GameApp {
             keys = 4;
             cores = 2;
             tokens = 3;
-            rewardNames.push(`${dropIcon} 450`, "4 🗝️ Keys", "2 ☥ Cores", "3 ✡ Tokens", "3 🪨 Titanium");
+            rewardNames.push(`${dropIcon} 450`, "4 🗝️ Keys", "2 ☥ Cores", "3 Blood Essence", "3 🪨 Titanium");
             if (this.player && this.player.inventory) this.player.inventory.addItem('TITANIUM_ORE', 3);
             if (this.inventory) this.inventory.addItem('TITANIUM_ORE', 3);
         } else if (day === 6) {
@@ -1074,7 +1085,7 @@ class GameApp {
             keys = 5;
             cores = 3;
             tokens = 5;
-            rewardNames.push(`${dropIcon} 600`, "5 🗝️ Keys", "3 ☥ Cores", "5 ✡ Tokens", "1 🌌 Primordial Ambrosia [T6]");
+            rewardNames.push(`${dropIcon} 600`, "5 🗝️ Keys", "3 ☥ Cores", "5 Blood Essence", "1 🌌 Primordial Ambrosia [T6]");
             if (this.player && this.player.inventory) {
                 this.player.inventory.addItem('SUPER_SALVE', 3);
                 this.player.inventory.addItem('PRIMORDIAL_AMBROSIA', 1);
@@ -1101,12 +1112,12 @@ class GameApp {
         }
 
         const orbTitle = (type || 'ASTRAL').toUpperCase();
-        this.showToast(`✨ DAY ${day} ${orbTitle} SMOKEY ORB CLAIMED!\n${rewardNames.join(' • ')}`, 'success');
+        this.showToast(`✨ DAY ${day} ${orbTitle} CELESTIAL ORB CLAIMED!\n${rewardNames.join(' • ')}`, 'success');
         this.updateStartCurrencies();
 
         if (state.claimedDays.length >= 6) {
             setTimeout(() => {
-                this.showToast(`🌟 ALL 6 SMOKEY ORBS COLLECTED! The Astral Altar will reset on your next day cycle.`, 'success');
+                this.showToast(`🌟 ALL 6 CELESTIAL ORBS COLLECTED! The Astral Altar will reset on your next day cycle.`, 'success');
             }, 3000);
         }
     }
@@ -1131,7 +1142,7 @@ class GameApp {
     }
 
     /* ==========================================================================
-       OPEN REMAINS / SMOKEY RELIQUARY & PITY CONVERGENCE (USER REQ)
+       OPEN REMAINS / CELESTIAL RELIQUARY & PITY CONVERGENCE (USER REQ)
        ========================================================================== */
     updateRemainsPityDisplay() {
         const pityVal = document.getElementById('remains-pity-val');
@@ -1196,7 +1207,7 @@ class GameApp {
             const curTokens = this.starTokens || 0;
             if (curTokens < tokenCost) {
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(130, 'sawtooth', 0.2, 0.1);
-                this.showToast(`Not enough Star Tokens! Need ${tokenCost} ✡ Tokens.`, 'error');
+                this.showToast(`Not enough Blood Essence! Need ${tokenCost} Blood Essence.`, 'error');
                 return;
             }
             this.starTokens = curTokens - tokenCost;
@@ -1242,13 +1253,13 @@ class GameApp {
                 loot.push({ type: 'cores', name: 'Ancient Dyson Core', icon: '☥', qty: 1 });
             }
             if (Math.random() < 0.40) {
-                loot.push({ type: 'tokens', name: 'Star Matrix Token', icon: '✡', qty: 1 });
+                loot.push({ type: 'tokens', name: 'Blood Essence', icon: bloodDropIcon, qty: 1 });
             }
         } else { // celestial or celestial-tokens
             const coins = 300 + Math.floor(Math.random() * 150);
             loot.push({ type: 'coins', name: '', icon: bloodDropIcon, qty: coins });
             loot.push({ type: 'cores', name: 'Quantum Dyson Core', icon: '☥', qty: 1 + (Math.random() < 0.5 ? 1 : 0) });
-            loot.push({ type: 'tokens', name: 'Star Matrix Tokens', icon: '✡', qty: 2 });
+            loot.push({ type: 'tokens', name: 'Blood Essence', icon: bloodDropIcon, qty: 2 });
             loot.push({ type: 'item', id: 'PRIMORDIAL_AMBROSIA', name: 'Primordial Ambrosia [T6]', icon: '🌌', qty: 1 });
             loot.push({ type: 'item', id: 'TITANIUM_ORE', name: 'Singularity Ingot', icon: '💠', qty: 2 });
             // Top Tier VI weapons and armor in celestial remains
@@ -1353,6 +1364,7 @@ class GameApp {
     }
 
     getShopCatalog() {
+        const bloodDrop = typeof getBloodDropSvg === 'function' ? getBloodDropSvg(16) : '🩸';
         return [
             { key: 'provisions', name: 'Field Provisions (x3)', desc: 'Maeve\'s fresh baked bread. Restores 60 HP.', icon: '🍞', costCoins: 25 },
             { key: 'energy_salve', name: 'Energy Salve (x2)', desc: 'Synthesized herbal ointment. Restores 70 Energy.', icon: '🧪', costCoins: 40 },
@@ -1360,7 +1372,7 @@ class GameApp {
             { key: 'deflect_charm', name: 'Nine Sols Deflector', desc: 'Permanent boon: Increases parry window by 25%.', icon: '🛡️', costCoins: 120 },
             { key: 'dash_booster', name: 'Kinetic Dash Booster', desc: 'Permanent boon: Reduces dash cooldown by 25%.', icon: '⚡', costCoins: 150 },
             { key: 'dyson_core', name: 'Ancient Dyson Core', desc: 'Quantum cell needed for high-tier relic activation.', icon: '☥', costCoins: 250 },
-            { key: 'star_token', name: 'Star Matrix Token', desc: 'Transcendence currency for deific character boons.', icon: '✡', costCoins: 500 },
+            { key: 'star_token', name: 'Blood Essence Phial', desc: 'Concentrated erythrocyte currency for deific character boons.', icon: bloodDrop, costCoins: 500 },
             { key: 'vitality_boon', name: 'Vitality Matrix Boon', desc: 'Permanent blessing: +25 Max Health.', icon: '💖', costTokens: 2 },
             { key: 'aether_surge', name: 'Aether Surge Boon', desc: 'Permanent blessing: +20 Max Energy.', icon: '🌀', costTokens: 2 }
         ];
@@ -1376,7 +1388,7 @@ class GameApp {
             const card = document.createElement('div');
             card.className = 'shop-item-card';
             const bloodDrop = typeof getBloodDropSvg === 'function' ? getBloodDropSvg(13) : '';
-            const costStr = item.costTokens ? `${item.costTokens} ✡` : `${bloodDrop} ${item.costCoins}`;
+            const costStr = item.costTokens ? `${bloodDrop} ${item.costTokens} Essence` : `${bloodDrop} ${item.costCoins}`;
 
             card.innerHTML = `
                 <div class="shop-item-left">
@@ -1418,7 +1430,7 @@ class GameApp {
         } else if (item.costTokens) {
             if (playerTokens < item.costTokens) {
                 if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playTone(130, 'sawtooth', 0.15, 0.1);
-                this.showToast(`Insufficient Star Tokens! Need ${item.costTokens} ✡.`, 'error');
+                this.showToast(`Insufficient Blood Essence! Need ${item.costTokens} Blood Essence.`, 'error');
                 return;
             }
             this.starTokens -= item.costTokens;
@@ -1480,7 +1492,7 @@ class GameApp {
             { day: 2, name: '1 Dyson Core', icon: '☥' },
             { day: 3, name: '3 Keys', icon: '🗝️' },
             { day: 4, name: '+120', icon: dropIcon },
-            { day: 5, name: '2 Tokens', icon: '✡' },
+            { day: 5, name: '2 Blood Essence', icon: dropIcon },
             { day: 6, name: 'Master Salve', icon: '🧪' },
             { day: 7, name: 'Matrix Coffer', icon: '👑' }
         ];
@@ -1642,7 +1654,7 @@ class GameApp {
                 icon: typeof getBloodDropSvg === 'function' ? getBloodDropSvg(20) : '🩸',
                 target: 300,
                 current: () => (this.player ? this.player.coinsCollected : 0),
-                rewardText: `${drop} +200, 2 Tokens`,
+                rewardText: `${drop} +200, 2 Blood Essence`,
                 reward: () => { this.addCoins(200); this.starTokens = (this.starTokens || 0) + 2; try { localStorage.setItem('aether_star_tokens', this.starTokens); } catch (e) {} }
             },
             {
@@ -1652,7 +1664,7 @@ class GameApp {
                 icon: '👾',
                 target: 1,
                 current: () => (this.bossSlainCount || 0),
-                rewardText: `${drop} +300, 3 Tokens`,
+                rewardText: `${drop} +300, 3 Blood Essence`,
                 reward: () => { this.addCoins(300); this.starTokens = (this.starTokens || 0) + 3; try { localStorage.setItem('aether_star_tokens', this.starTokens); } catch (e) {} }
             }
         ];
@@ -1898,6 +1910,11 @@ class GameApp {
 
             if (slot.coins && this.player) this.player.coinsCollected = slot.coins;
             if (slot.hp && this.player) this.player.hp = slot.hp;
+            if (slot.level && this.player) this.player.level = slot.level;
+            if (slot.exp && this.player) this.player.exp = slot.exp;
+            if (slot.skillPoints !== undefined && this.player) this.player.skillPoints = slot.skillPoints;
+            if (slot.skillRanks && this.player) this.player.skillRanks = slot.skillRanks;
+            if (slot.unlockedSkills && this.player) this.player.unlockedSkills = slot.unlockedSkills;
             if (slot.inventorySlots && this.player && this.player.inventory) {
                 this.player.inventory.slots = slot.inventorySlots;
             }
@@ -1918,6 +1935,11 @@ class GameApp {
             currentLayer: this.currentLayer,
             coins: this.player.coinsCollected,
             hp: this.player.hp,
+            level: this.player.level,
+            exp: this.player.exp,
+            skillPoints: this.player.skillPoints,
+            skillRanks: this.player.skillRanks,
+            unlockedSkills: this.player.unlockedSkills,
             inventorySlots: this.player.inventory ? this.player.inventory.slots : []
         };
         this.writeSaveSlots();
@@ -2116,6 +2138,11 @@ class GameApp {
         this.player.callsign = this.pioneerName || 'ALU-01';
         this.player.game = this;
         this.player.inventory = this.inventory;
+
+        const pioneerRank = Math.min(5, 1 + Math.floor((this.coresExtractedCount || 0) / 2));
+        if (typeof this.player.applyPioneerPerks === 'function') {
+            this.player.applyPioneerPerks(pioneerRank);
+        }
         
         // Update header ticker info
         const hubTickerInfo = document.getElementById('hub-ticker-info');
@@ -2699,6 +2726,20 @@ class GameApp {
         const devUnlockFarmer = document.getElementById('dev-unlock-farmer');
         if (devUnlockFarmer) this.bindTap(devUnlockFarmer, () => this.unlockFarmerDev());
 
+        const devGrantSp = document.getElementById('dev-grant-sp');
+        if (devGrantSp) {
+            this.bindTap(devGrantSp, () => {
+                if (!this.player) return;
+                this.player.skillPoints = (this.player.skillPoints || 0) + 15;
+                this.player.level = Math.min(100, (this.player.level || 1) + 10);
+                this.updateHUD();
+                this.renderSkillTree();
+                this.saveState();
+                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playCoin();
+                this.renderer.addFloatingText(this.player.x, this.player.y - 30, `+10 LVLS & +15 SP!`, '#ffd54f');
+            });
+        }
+
         const devGrantCoins = document.getElementById('dev-grant-coins');
         if (devGrantCoins) this.bindTap(devGrantCoins, () => this.grantCoinsDev(100));
 
@@ -3140,66 +3181,185 @@ class GameApp {
         const container = document.getElementById('skill-tree-container');
         if (!container) return;
 
-        const charClass = this.player ? this.player.charClass : (this.selectedClass || 'SUPER_SOLDIER');
+        const player = this.player;
+        const playerLevel = player ? player.level : 1;
+        const playerSp = player ? (player.skillPoints || 0) : 0;
+        const charClass = player ? player.charClass : (this.selectedClass || 'SUPER_SOLDIER');
         const trees = (typeof CLASS_SKILL_TREES !== 'undefined') ? CLASS_SKILL_TREES : {};
-        const skills = trees[charClass] || [];
+        const allSkills = trees[charClass] || [];
 
         const pioneerNameElem = document.getElementById('skill-pioneer-name');
         const pioneerClassElem = document.getElementById('skill-pioneer-class');
+        const pioneerLevelElem = document.getElementById('skill-pioneer-level');
         const skillPointsVal = document.getElementById('skill-points-val');
 
         if (pioneerNameElem) pioneerNameElem.innerText = this.pioneerName || 'ALU-01';
         if (pioneerClassElem) pioneerClassElem.innerText = charClass.replace('_', ' ');
-        if (skillPointsVal) skillPointsVal.innerText = `${this.player ? (this.player.skillPoints || 0) : 0}`;
+        if (pioneerLevelElem) pioneerLevelElem.innerText = `LV. ${playerLevel}/100`;
+        if (skillPointsVal) skillPointsVal.innerText = `${playerSp}`;
 
         container.innerHTML = '';
 
-        skills.forEach(skill => {
-            const isUnlocked = this.player ? this.player.hasSkill(skill.id) : false;
-            const prereqMet = !skill.req || (this.player && this.player.hasSkill(skill.req));
-            const canAfford = this.player && (this.player.skillPoints >= skill.cost);
-            const canUnlock = !isUnlocked && prereqMet && canAfford;
+        // Separate Class Skills and Universal Cross-Skills
+        const classSkills = allSkills.filter(s => !s.isCrossSkill);
+        const crossSkills = (typeof CROSS_SKILLS !== 'undefined') ? CROSS_SKILLS : allSkills.filter(s => s.isCrossSkill);
 
-            const card = document.createElement('div');
-            card.className = `skill-node-card tier-${skill.tier} ${isUnlocked ? 'unlocked' : (canUnlock ? 'available' : 'locked')}`;
+        // Group into Yggdrasil 5-Tier Cosmological Structure
+        const tiers = [
+            {
+                tierId: 'crown',
+                tierNum: 5,
+                title: '👑 YGGDRASIL APEX CROWN',
+                subtitle: 'Level 100 Godhood Pinnacle',
+                sectionClass: 'tier-crown',
+                skills: classSkills.filter(s => s.tier === 5)
+            },
+            {
+                tierId: 'canopy',
+                tierNum: 4,
+                title: '🌌 CELESTIAL CANOPY',
+                subtitle: 'Level 70–90 Grand Ultimates',
+                sectionClass: 'tier-canopy',
+                skills: classSkills.filter(s => s.tier === 4)
+            },
+            {
+                tierId: 'boughs',
+                tierNum: 3,
+                title: '🍃 VERDANT BOUGHS',
+                subtitle: 'Level 40–65 Branching Masteries',
+                sectionClass: 'tier-boughs',
+                skills: classSkills.filter(s => s.tier === 3)
+            },
+            {
+                tierId: 'trunk',
+                tierNum: 2,
+                title: '🌳 THE WORLD TRUNK & CROSS-SKILLS',
+                subtitle: 'Level 15–35 Core & Universal Ranks (1-5)',
+                sectionClass: 'tier-trunk',
+                // Combine Cross Skills + Tier 2 Class skills
+                skills: [...crossSkills, ...classSkills.filter(s => s.tier === 2)]
+            },
+            {
+                tierId: 'roots',
+                tierNum: 1,
+                title: '🌿 ROOTS OF YGGDRASIL',
+                subtitle: 'Level 1–10 Foundational Matrix',
+                sectionClass: 'tier-roots',
+                skills: classSkills.filter(s => s.tier === 1)
+            }
+        ];
 
-            const prereqSkill = skill.req ? skills.find(s => s.id === skill.req) : null;
-            const reqLabel = prereqSkill ? `Req: ${prereqSkill.name}` : 'Tier 1 Initial';
+        tiers.forEach(tierDef => {
+            if (!tierDef.skills || tierDef.skills.length === 0) return;
 
-            card.innerHTML = `
-                <div class="skill-node-header">
-                    <span class="skill-node-icon">${skill.icon || '⚔️'}</span>
-                    <div class="skill-node-title-group">
-                        <span class="skill-node-name">${skill.name}</span>
-                        <span class="skill-node-tier">TIER ${skill.tier} ${skill.passive ? 'PASSIVE' : 'ACTIVE'} • ${reqLabel}</span>
-                    </div>
+            const section = document.createElement('div');
+            section.className = `ygg-tier-section ${tierDef.sectionClass}`;
+
+            section.innerHTML = `
+                <div class="ygg-tier-header">
+                    <span class="ygg-tier-title">${tierDef.title}</span>
+                    <span class="ygg-tier-level">${tierDef.subtitle}</span>
                 </div>
-                <div class="skill-node-desc">${skill.desc}</div>
-                <div class="skill-node-footer">
-                    <span class="skill-cost-badge">COST: ${skill.cost} SP</span>
-                    ${isUnlocked 
-                        ? '<span class="skill-status-tag mastered">MASTERED ✓</span>'
-                        : (!prereqMet 
-                            ? `<span class="skill-status-tag locked">LOCKED (${prereqSkill ? prereqSkill.name : 'Req'})</span>`
-                            : `<button class="skill-unlock-btn" data-skill-id="${skill.id}" ${canUnlock ? '' : 'disabled'}>${canUnlock ? `UNLOCK (${skill.cost} SP)` : `NEED ${skill.cost} SP`}</button>`
-                          )
-                    }
-                </div>
+                <div class="ygg-cards-grid"></div>
             `;
 
-            const btn = card.querySelector('.skill-unlock-btn');
-            if (btn && canUnlock) {
-                this.bindTap(btn, () => {
-                    if (this.player && this.player.unlockSkill(skill.id)) {
-                        if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playSkillUnlocked();
-                        this.renderer.addFloatingText(`MASTERY: ${skill.name}!`, this.player.pos.x, this.player.pos.y - 20, '#00e5ff');
-                        this.renderSkillTree();
-                        this.updateHUD();
-                    }
-                });
-            }
+            const cardsGrid = section.querySelector('.ygg-cards-grid');
 
-            container.appendChild(card);
+            tierDef.skills.forEach(skill => {
+                const isCross = !!skill.isCrossSkill;
+                const curRank = player ? player.getSkillRank(skill.id) : 0;
+                const maxRank = skill.maxRank || 1;
+                const isMastered = isCross ? (curRank >= maxRank) : (curRank > 0);
+                const reqLevel = skill.unlockLevel || 1;
+                const levelMet = playerLevel >= reqLevel;
+                const prereqSkill = skill.req ? allSkills.find(s => s.id === skill.req) : null;
+                const prereqMet = !skill.req || (player && player.hasSkill(skill.req));
+                const cost = skill.cost || 1;
+                const canAfford = playerSp >= cost;
+                const canUpgrade = !isMastered && levelMet && prereqMet && canAfford;
+
+                const card = document.createElement('div');
+                let cardState = 'locked';
+                if (isMastered) cardState = 'unlocked';
+                else if (canUpgrade) cardState = 'available';
+
+                card.className = `ygg-node-card ${cardState} ${skill.tier === 5 ? 'crown-node' : ''} ${isCross ? 'cross-skill-card' : ''}`;
+
+                // Rank Pips for Cross Skills
+                let rankProgressHtml = '';
+                if (isCross) {
+                    let pipsHtml = '';
+                    for (let r = 1; r <= maxRank; r++) {
+                        pipsHtml += `<span class="rank-pip ${r <= curRank ? 'filled' : ''}"></span>`;
+                    }
+                    rankProgressHtml = `
+                        <div class="rank-progress-wrap">
+                            <span class="rank-text">RANK ${curRank}/${maxRank}</span>
+                            <div class="rank-pips">${pipsHtml}</div>
+                        </div>
+                    `;
+                }
+
+                // Requirements tag
+                const reqLabel = prereqSkill ? `Req: ${prereqSkill.name}` : (isCross ? 'Universal Boon' : 'Foundational');
+
+                card.innerHTML = `
+                    <div class="skill-node-header">
+                        <span class="skill-node-icon">${skill.icon || '⚔️'}</span>
+                        <div class="skill-node-title-group">
+                            <span class="skill-node-name">${skill.name}</span>
+                            <div class="skill-node-meta-line">
+                                <span class="skill-node-tier">${isCross ? 'CROSS-SKILL' : `TIER ${skill.tier}`} ${skill.passive ? 'PASSIVE' : 'ACTIVE'}</span>
+                                <span class="ygg-level-req-badge ${levelMet ? 'met' : 'unmet'}">LV. ${reqLevel}</span>
+                            </div>
+                        </div>
+                    </div>
+                    ${rankProgressHtml}
+                    <div class="skill-node-desc">${skill.desc}</div>
+                    <div class="skill-node-footer">
+                        <span class="skill-cost-badge">COST: ${cost} SP</span>
+                        ${isMastered
+                            ? `<span class="skill-status-tag mastered">${skill.tier === 5 ? '👑 TRANSCENDED ✓' : (isCross ? `MAX RANK ${maxRank} ✓` : 'MASTERED ✓')}</span>`
+                            : (!levelMet
+                                ? `<span class="skill-status-tag locked">REQUIRES LV. ${reqLevel}</span>`
+                                : (!prereqMet
+                                    ? `<span class="skill-status-tag locked">LOCKED (${prereqSkill ? prereqSkill.name : 'Req'})</span>`
+                                    : `<button class="ygg-upgrade-btn ${isCross ? 'cross-btn' : ''}" data-skill-id="${skill.id}" ${canUpgrade ? '' : 'disabled'}>${isCross ? (curRank > 0 ? `UPGRADE R${curRank + 1} (${cost} SP)` : `UNLOCK R1 (${cost} SP)`) : `UNLOCK (${cost} SP)`}</button>`
+                                  )
+                              )
+                        }
+                    </div>
+                `;
+
+                const btn = card.querySelector('.ygg-upgrade-btn');
+                if (btn && canUpgrade) {
+                    this.bindTap(btn, () => {
+                        if (this.player && this.player.unlockSkill(skill.id)) {
+                            if (skill.tier === 5) {
+                                if (this.soundEnabled && this.sfxEnabled) {
+                                    this.renderer.audio.playTone(523.25, 'triangle', 0.2, 0.2);
+                                    setTimeout(() => this.renderer.audio.playTone(659.25, 'triangle', 0.2, 0.2), 150);
+                                    setTimeout(() => this.renderer.audio.playTone(783.99, 'triangle', 0.35, 0.25), 300);
+                                    setTimeout(() => this.renderer.audio.playTone(1046.50, 'sine', 0.6, 0.3), 500);
+                                }
+                                this.renderer.addFloatingText(`👑 ASCENDED: ${skill.name}!`, this.player.pos.x, this.player.pos.y - 30, '#ffd54f');
+                            } else if (isCross) {
+                                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playSkillUnlocked();
+                                this.renderer.addFloatingText(`RANK ${this.player.getSkillRank(skill.id)}: ${skill.name}!`, this.player.pos.x, this.player.pos.y - 20, '#ff1744');
+                            } else {
+                                if (this.soundEnabled && this.sfxEnabled) this.renderer.audio.playSkillUnlocked();
+                                this.renderer.addFloatingText(`MASTERY: ${skill.name}!`, this.player.pos.x, this.player.pos.y - 20, '#00e5ff');
+                            }
+                            this.renderSkillTree();
+                            this.updateHUD();
+                        }
+                    });
+                }
+
+                cardsGrid.appendChild(card);
+            });
+
+            container.appendChild(section);
         });
     }
 
